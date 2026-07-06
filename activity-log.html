@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Activity Log - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .log-item { display: flex; gap: 12px; padding: 14px 16px; background: #fff; border-bottom: 1px solid #F3F4F6; align-items: flex-start; }
+        .log-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .log-content { flex: 1; }
+        .log-action { font-size: 13px; font-weight: 600; }
+        .log-user { font-size: 11px; color: var(--accent); }
+        .log-time { font-size: 10px; color: var(--text3); margin-top: 2px; }
+        .empty-state { text-align: center; padding: 60px; color: var(--text2); }
+        .empty-state i { font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><h2 class="page-title"><i class="fas fa-history" style="color:var(--accent);margin-right:6px;"></i>Activity Log</h2></div>
+        <div id="logList"><div style="text-align:center;padding:40px;">Loading activity...</div></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    var auth = firebase.auth(), db = firebase.firestore();
+    auth.onAuthStateChanged(async function(user) {
+        if (!user) { window.location.href = 'login.html'; return; }
+        var allStores = await db.collection('stores').get();
+        var myStore = allStores.docs.find(function(d) { return d.data().ownerId === user.uid; });
+        if (!myStore) return;
+        var allLogs = await db.collection('activityLogs').get();
+        var logs = allLogs.docs.map(function(d) { return d.data(); }).filter(function(l) { return l.storeId === myStore.id; }).sort(function(a, b) { return (b.timestamp?.toDate?.() || 0) - (a.timestamp?.toDate?.() || 0); });
+        var container = document.getElementById('logList');
+        if (logs.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><h3>No activity yet</h3><p>Actions will appear here</p></div>';
+            return;
+        }
+        container.innerHTML = logs.slice(0, 50).map(function(l) {
+            var icons = { product_added: 'fa-plus-circle', product_edited: 'fa-edit', order_processed: 'fa-box', discount_created: 'fa-tags', member_invited: 'fa-user-plus', refund_processed: 'fa-undo', price_changed: 'fa-dollar-sign' };
+            var colors = { product_added: '#2ECC71', product_edited: '#3B82F6', order_processed: '#6C3CF0', discount_created: '#F4B400', member_invited: '#2ECC71', refund_processed: '#FF4D4F' };
+            return '<div class="log-item"><div class="log-icon" style="background:' + (colors[l.action] ? 'rgba(' + (l.action==='product_added'?'46,204,113':l.action==='product_edited'?'59,130,246':'108,60,240') + ',0.1)' : '#F3F4F6') + ';color:' + (colors[l.action] || '#6B7280') + ';"><i class="fas ' + (icons[l.action] || 'fa-circle') + '"></i></div><div class="log-content"><div class="log-action">' + (l.description || l.action) + '</div><div class="log-user">by ' + (l.userName || 'Team') + '</div><div class="log-time">' + (l.timestamp?.toDate ? l.timestamp.toDate().toLocaleString() : 'Recently') + '</div></div></div>';
+        }).join('');
+    });
+    </script>
+</body>
+</html>

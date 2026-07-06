@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Checkout - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 10px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .currency-badge { background: var(--accent); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .digital-badge { background: rgba(46,204,113,0.1); color: var(--success); padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+        .btn-saved-address { width: 100%; padding: 12px; background: #fff; border: 2px dashed var(--accent); border-radius: 12px; color: var(--accent); font-weight: 600; font-size: 13px; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .section-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 12px 16px; }
+        .section-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .section-title i { color: var(--accent); font-size: 14px; }
+        .form-group { margin-bottom: 12px; }
+        .form-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: var(--font); background: #fff; color: var(--text); }
+        .form-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(108,60,240,0.06); }
+        .form-input:disabled { background: #F9FAFB; color: var(--text2); cursor: not-allowed; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        textarea.form-input { resize: vertical; min-height: 60px; }
+        select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; cursor: pointer; background-color: #fff; }
+        select.form-input option { background: #fff; color: var(--text); }
+        .order-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #F3F4F6; align-items: center; }
+        .order-item:last-child { border-bottom: none; }
+        .order-item img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #E5E7EB; }
+        .order-item-info { flex: 1; min-width: 0; }
+        .order-item-name { font-weight: 600; font-size: 13px; }
+        .order-item-qty { font-size: 11px; color: var(--text2); }
+        .order-item-prices { text-align: right; }
+        .order-item-price { font-weight: 700; font-size: 14px; color: var(--success); }
+        .order-item-converted { font-size: 10px; color: var(--text3); margin-top: 1px; }
+        .shipping-option { display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background: #fff; }
+        .shipping-option.selected { border-color: var(--accent); background: rgba(108,60,240,0.03); }
+        .shipping-option .scountry { flex: 1; font-weight: 600; font-size: 13px; }
+        .shipping-option .srate { font-weight: 700; color: var(--accent); font-size: 14px; }
+        .shipping-option .sest { font-size: 11px; color: var(--text2); }
+        .no-delivery { text-align: center; padding: 20px; }
+        .no-delivery i { font-size: 36px; color: var(--error); opacity: 0.6; display: block; margin-bottom: 8px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+        .summary-row.total { font-weight: 800; font-size: 18px; border-top: 2px solid var(--border); padding-top: 10px; margin-top: 6px; color: var(--success); }
+        .summary-row.total-usd { font-size: 11px; color: var(--text3); padding-top: 2px; }
+        .summary-row.discount { color: var(--error); }
+        .summary-row.fee { color: var(--text2); font-size: 12px; }
+        .discount-box { display: flex; gap: 8px; margin-bottom: 8px; }
+        .discount-box input { flex: 1; }
+        .btn-apply { padding: 12px 16px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; }
+        .payment-method { display: flex; align-items: center; gap: 10px; padding: 14px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; margin-bottom: 8px; transition: all 0.2s; background: #fff; }
+        .payment-method.selected { border-color: var(--accent); background: rgba(108,60,240,0.03); }
+        .btn-pay { width: 100%; padding: 16px; background: var(--success); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-pay:active { transform: scale(0.97); }
+        .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; }
+        .secure-badge { text-align: center; padding: 12px; font-size: 11px; color: var(--text2); }
+        .rate-info { background: rgba(108,60,240,0.05); border: 1px solid rgba(108,60,240,0.1); border-radius: 10px; padding: 10px 14px; margin: 0 16px 12px; font-size: 12px; color: var(--text2); text-align: center; }
+        .address-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; align-items: flex-end; justify-content: center; }
+        .address-modal.show { display: flex; }
+        .address-sheet { background: #fff; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; max-height: 70vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .saved-address-item { padding: 14px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; cursor: pointer; }
+        .saved-address-name { font-weight: 700; font-size: 14px; }
+        .saved-address-detail { font-size: 12px; color: var(--text2); margin-top: 2px; }
+        .saved-address-badge { display: inline-block; background: rgba(46,204,113,0.1); color: var(--success); padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+        .toast.error { background: #FF4D4F; }
+        .toast.warning { background: #F4B400; color: #1A1A2E; }
+        .toast-actions { display: flex; gap: 10px; margin-top: 10px; justify-content: center; }
+        .toast-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.5); background: transparent; color: #fff; cursor: pointer; font-size: 12px; font-weight: 600; font-family: var(--font); }
+        .loading-wrap { display: flex; justify-content: center; padding: 80px 0; }
+        .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title">Checkout</h2>
+            <span class="currency-badge" id="currencyBadge">USD</span>
+        </div>
+        <div id="checkoutContent"><div class="loading-wrap"><div class="spinner"></div></div></div>
+    </div>
+
+    <div class="address-modal" id="addressModal">
+        <div class="address-sheet">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3>Saved Addresses</h3>
+                <button style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);" onclick="closeAddressModal()">&times;</button>
+            </div>
+            <div id="savedAddressesList"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        console.log('💳 Checkout Final - Starting...');
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, userData, cartItems=[], productDataMap={}, subtotalUSD=0, discountUSD=0, shippingUSD=0, feeUSD=0, totalUSD=0, appliedDiscount=null, exchangeRates={}, userCurrency='USD', userCurrencySymbol='$', selectedShipping=null, countryList=[], savedAddresses=[], isDigitalProduct=false, currentSelectedCountry='', canDeliver=true;
+
+        // ============ LOAD FLUTTERWAVE ============
+        function loadFlutterwaveScript(cb) {
+            if (typeof FlutterwaveCheckout !== 'undefined') { console.log('✅ FW ready'); if(cb)cb(); return; }
+            var s = document.createElement('script');
+            s.src = 'https://checkout.flutterwave.com/v3.js';
+            s.onload = function() { console.log('✅ FW loaded'); if(cb)cb(); };
+            s.onerror = function() { console.error('❌ FW failed'); };
+            document.head.appendChild(s);
+        }
+        loadFlutterwaveScript();
+
+        // ============ COUNTRIES ============
+        function getCountries() {
+            if (typeof countries !== 'undefined' && Array.isArray(countries) && countries.length) return countries;
+            if (typeof window.countries !== 'undefined' && Array.isArray(window.countries) && window.countries.length) return window.countries;
+            if (typeof COUNTRIES !== 'undefined' && Array.isArray(COUNTRIES) && COUNTRIES.length) return COUNTRIES;
+            return [];
+        }
+
+        function getCurrencyForCountryCode(code) {
+            var c = countryList.find(function(x) { return (x.code||x.iso2||x.alpha2) === code; });
+            return c ? (c.currency||'USD') : 'USD';
+        }
+
+        function getCurrencySymbol(code) {
+            var s = { USD:'$', NGN:'₦', GHS:'GH₵', KES:'KSh', ZAR:'R', EUR:'€', GBP:'£', INR:'₹', CAD:'C$', AUD:'A$', XAF:'FCFA', XOF:'CFA', TZS:'TSh', UGX:'USh', RWF:'RF', ZMW:'ZK', ETB:'Br', GMD:'D', SLL:'Le', LRD:'L$', MZN:'MT', AOA:'Kz', NAD:'N$', BWP:'P', MAD:'د.م.', EGP:'E£', DZD:'د.ج', TND:'د.ت', SDG:'ج.س.', SOS:'Sh.So.' };
+            return s[code] || code;
+        }
+
+        function getCountryFlag(name) {
+            var c = countryList.find(function(x) { return (x.name||x.country||x.countryName) === name; });
+            return c ? (c.flag||c.emoji||c.flagEmoji||'') : '';
+        }
+
+        function getCountryCodeFromName(name) {
+            var c = countryList.find(function(x) { return (x.name||x.country||x.countryName) === name; });
+            return c ? (c.code||c.iso2||c.alpha2||'') : '';
+        }
+
+        function convertPrice(usd, curr) {
+            if (!curr || curr === 'USD' || !usd) return usd;
+            var rate = exchangeRates[curr] || 1;
+            return usd * rate;
+        }
+
+        function recalc() { feeUSD = subtotalUSD * 0.01; totalUSD = subtotalUSD + shippingUSD + feeUSD - discountUSD; }
+
+        async function fetchRates() {
+            try {
+                var r = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                var d = await r.json();
+                exchangeRates = d.rates;
+                sessionStorage.setItem('exchangeRates', JSON.stringify(d.rates));
+            } catch(e) {
+                var c = sessionStorage.getItem('exchangeRates');
+                if (c) exchangeRates = JSON.parse(c);
+            }
+        }
+
+        function showToast(msg, type, actions) {
+            var t = document.querySelector('.toast'); if (t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type||'');
+            t.innerHTML = msg + (actions ? '<div class="toast-actions">' + actions + '</div>' : '');
+            document.body.appendChild(t);
+            setTimeout(function() { t.classList.add('show'); }, 10);
+            setTimeout(function() { t.classList.remove('show'); setTimeout(function() { t.remove(); }, 300); }, 4000);
+        }
+
+        // ============ BUILD COUNTRY OPTIONS ============
+        function buildCountryOptions(selectedName) {
+            if (!countryList.length) return '<option value="">Loading countries...</option>';
+            var h = '<option value="">Select country</option>';
+            countryList.forEach(function(c) {
+                var flag = c.flag||c.emoji||c.flagEmoji||'';
+                var name = c.name||c.country||c.countryName||'';
+                var code = c.code||c.iso2||c.alpha2||'';
+                var currency = c.currency||'USD';
+                var sel = (selectedName && name === selectedName) ? ' selected' : '';
+                h += '<option value="' + name + '" data-code="' + code + '" data-currency="' + currency + '"' + sel + '>' + flag + ' ' + name + ' (' + currency + ')</option>';
+            });
+            return h;
+        }
+
+        // ============ COLLECT SHIPPING OPTIONS ============
+        function getShippingOptionsForCountry(countryName) {
+            var opts = [], seen = {};
+            for (var item of cartItems) {
+                if (item.productId && productDataMap[item.productId]) {
+                    var rates = productDataMap[item.productId].shippingRates || [];
+                    rates.forEach(function(r) {
+                        if (r.country === countryName) {
+                            var k = r.country + '_' + r.rate;
+                            if (!seen[k]) { seen[k] = true; opts.push(r); }
+                        }
+                    });
+                }
+            }
+            return opts;
+        }
+
+        function canDeliverToCountry(countryName) {
+            if (isDigitalProduct) return true;
+            var opts = getShippingOptionsForCountry(countryName);
+            return opts.length > 0;
+        }
+
+        // ============ AUTH ============
+        auth.onAuthStateChanged(async function(user) {
+            if (!user || !user.emailVerified) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            var uDoc = await db.collection('users').doc(user.uid).get();
+            userData = uDoc.exists ? uDoc.data() : {};
+            
+            countryList = getCountries();
+            console.log('🌍 Countries:', countryList.length);
+            
+            if (userData.country) {
+                userCurrency = getCurrencyForCountryCode(userData.country);
+            }
+            if (!userCurrency || userCurrency === 'USD') userCurrency = userData.currency || 'USD';
+            userCurrencySymbol = getCurrencySymbol(userCurrency);
+            console.log('💱 Currency:', userCurrency, userCurrencySymbol);
+            
+            await fetchRates();
+
+            var allCart = await db.collection('cart').get();
+            cartItems = allCart.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(c) { return c.userId === user.uid; });
+            if (!cartItems.length) {
+                document.getElementById('checkoutContent').innerHTML = '<div style="text-align:center;padding:80px;"><i class="fas fa-shopping-cart" style="font-size:48px;opacity:0.2;display:block;margin-bottom:16px;color:var(--text3);"></i><h3>Cart is empty</h3><button onclick="window.location.href=\'home.html\'" style="margin-top:12px;padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;">Browse Products</button></div>';
+                return;
+            }
+
+            for (var item of cartItems) {
+                if (item.productId && !productDataMap[item.productId]) {
+                    try { var pDoc = await db.collection('products').doc(item.productId).get(); if (pDoc.exists) productDataMap[item.productId] = pDoc.data(); } catch(e) {}
+                }
+            }
+
+            isDigitalProduct = Object.values(productDataMap).every(function(p) { return p.isPhysical === false || p.category === 'Digital Products' || p.category === 'Software' || p.category === 'E-Books' || p.category === 'Courses'; });
+            console.log('📱 Digital:', isDigitalProduct);
+
+            var allAddresses = await db.collection('addresses').get();
+            savedAddresses = allAddresses.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(a) { return a.userId === user.uid; });
+
+            subtotalUSD = cartItems.reduce(function(s, i) { return s + ((i.price||0)*(i.quantity||1)); }, 0);
+            
+            // Set initial country from user profile
+            if (userData.country && countryList.length) {
+                var fc = countryList.find(function(x) { return (x.code||x.iso2||x.alpha2) === userData.country; });
+                if (fc) {
+                    currentSelectedCountry = fc.name || fc.country || '';
+                    canDeliver = canDeliverToCountry(currentSelectedCountry);
+                    if (canDeliver && !isDigitalProduct) {
+                        var opts = getShippingOptionsForCountry(currentSelectedCountry);
+                        if (opts.length > 0) { shippingUSD = opts[0].rate; }
+                    }
+                }
+            }
+            
+            recalc();
+            renderCheckout();
+        });
+
+        function renderCheckout() {
+            var sym = userCurrencySymbol;
+            var rate = exchangeRates[userCurrency] || 1;
+            var dSub = convertPrice(subtotalUSD, userCurrency);
+            var dShip = convertPrice(shippingUSD, userCurrency);
+            var dFee = convertPrice(feeUSD, userCurrency);
+            var dDisc = convertPrice(discountUSD, userCurrency);
+            var dTotal = convertPrice(totalUSD, userCurrency);
+            
+            document.getElementById('currencyBadge').textContent = userCurrency;
+
+            var c = document.getElementById('checkoutContent'), h = '';
+            
+            // Exchange rate info
+            if (userCurrency !== 'USD' && rate > 0) {
+                h += '<div class="rate-info"><i class="fas fa-exchange-alt"></i> <strong>1 USD = ' + rate.toFixed(2) + ' ' + userCurrency + '</strong> • All prices shown in ' + userCurrency + '</div>';
+            }
+
+            // Digital badge
+            if (isDigitalProduct) {
+                h += '<div style="padding:0 16px;margin-bottom:8px;"><span class="digital-badge"><i class="fas fa-download"></i> Digital Product • No shipping needed</span></div>';
+            }
+
+            // Customer Info
+            h += '<div class="section-card"><div class="section-title"><i class="fas fa-user"></i> Your Information</div>';
+            h += '<div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-input" id="addrName" value="' + (userData?.name||currentUser?.displayName||'') + '"></div>';
+            h += '<div class="form-group"><label class="form-label">Phone Number *</label><input type="tel" class="form-input" id="addrPhone" value="' + (userData?.phone||'') + '"></div>';
+            h += '<div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" value="' + (currentUser?.email||'') + '" disabled></div>';
+            h += '<div class="form-group"><label class="form-label">Country *</label><select class="form-input" id="addrCountry" onchange="onCountryChanged()">' + buildCountryOptions(currentSelectedCountry) + '</select></div>';
+            h += '</div>';
+
+            // Physical product shipping
+            if (!isDigitalProduct) {
+                // Saved addresses button
+                if (savedAddresses.length > 0) {
+                    h += '<div style="padding:0 16px;"><button class="btn-saved-address" onclick="openSavedAddresses()"><i class="fas fa-address-book"></i> Use Saved Address (' + savedAddresses.length + ')</button></div>';
+                }
+
+                if (currentSelectedCountry && canDeliver) {
+                    // Show shipping address fields
+                    h += '<div class="section-card"><div class="section-title"><i class="fas fa-map-marker-alt"></i> Shipping Address</div>';
+                    h += '<div class="form-row"><div class="form-group"><label class="form-label">City *</label><input type="text" class="form-input" id="addrCity"></div><div class="form-group"><label class="form-label">State/Region</label><input type="text" class="form-input" id="addrState"></div></div>';
+                    h += '<div class="form-group"><label class="form-label">Street Address *</label><textarea class="form-input" id="addrFull" placeholder="House number, street name, estate"></textarea></div>';
+                    h += '<div class="form-row"><div class="form-group"><label class="form-label">Postal Code</label><input type="text" class="form-input" id="addrZip"></div><div class="form-group"><label class="form-label">Nearest Landmark</label><input type="text" class="form-input" id="addrLandmark"></div></div>';
+                    h += '</div>';
+
+                    // Shipping options
+                    var opts = getShippingOptionsForCountry(currentSelectedCountry);
+                    if (opts.length > 0) {
+                        h += '<div class="section-card"><div class="section-title"><i class="fas fa-truck"></i> Shipping Method</div>';
+                        opts.forEach(function(o, i) {
+                            var cr = convertPrice(o.rate, userCurrency);
+                            var isSel = (selectedShipping && selectedShipping.country === o.country && selectedShipping.rate === o.rate) || (!selectedShipping && i === 0);
+                            h += '<div class="shipping-option' + (isSel ? ' selected' : '') + '" onclick="selectShipping(' + o.rate + ',this)"><div style="flex:1;"><div class="scountry">' + getCountryFlag(o.country) + ' ' + o.country + '</div><div class="sest"><i class="fas fa-clock"></i> ' + (o.estimatedDelivery||'3-7 days') + '</div></div><div class="srate">' + sym + cr.toFixed(2) + '</div></div>';
+                        });
+                        h += '</div>';
+                        if (!selectedShipping) { shippingUSD = opts[0].rate; recalc(); }
+                    }
+                } else if (currentSelectedCountry && !canDeliver) {
+                    // Cannot deliver
+                    h += '<div class="section-card"><div class="no-delivery"><i class="fas fa-truck"></i><p style="font-weight:600;color:var(--error);">Sorry, we cannot deliver to ' + currentSelectedCountry + '</p><p style="font-size:12px;color:var(--text2);margin:8px 0;">This product doesn\'t ship to your selected country.</p><p style="font-size:12px;color:var(--text2);">Please select a different country or browse other products.</p><button onclick="window.location.href=\'home.html\'" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Browse Other Products</button></div></div>';
+                    shippingUSD = 0; recalc();
+                } else {
+                    h += '<div class="section-card"><div class="section-title"><i class="fas fa-truck"></i> Shipping</div><p style="color:var(--text2);font-size:13px;text-align:center;">Select your country above to see shipping options</p></div>';
+                }
+            } else {
+                shippingUSD = 0; recalc();
+            }
+
+            // Recalculate display values
+            dSub = convertPrice(subtotalUSD, userCurrency);
+            dShip = convertPrice(shippingUSD, userCurrency);
+            dFee = convertPrice(feeUSD, userCurrency);
+            dDisc = convertPrice(discountUSD, userCurrency);
+            dTotal = convertPrice(totalUSD, userCurrency);
+
+            // Order Summary
+            h += '<div class="section-card"><div class="section-title"><i class="fas fa-receipt"></i> Order Summary</div>';
+            cartItems.forEach(function(item) {
+                var it = (item.price||0)*(item.quantity||1);
+                var ct = convertPrice(it, userCurrency);
+                h += '<div class="order-item"><img src="' + (item.image||'https://via.placeholder.com/50') + '" onerror="this.src=\'https://via.placeholder.com/50\'"><div class="order-item-info"><div class="order-item-name">' + (item.name||'Product') + '</div><div class="order-item-qty">Qty: ' + (item.quantity||1) + (item.variant?' • '+item.variant:'') + '</div></div><div class="order-item-prices"><div class="order-item-price">' + sym + ct.toFixed(2) + '</div>' + (userCurrency!=='USD'?'<div class="order-item-converted">≈ $' + it.toFixed(2) + ' USD</div>':'') + '</div></div>';
+            });
+            h += '<div class="summary-row"><span>Subtotal</span><span>' + sym + dSub.toFixed(2) + '</span></div>';
+            if (discountUSD > 0) h += '<div class="summary-row discount"><span>Discount</span><span>-' + sym + dDisc.toFixed(2) + '</span></div>';
+            if (!isDigitalProduct) {
+                h += '<div class="summary-row"><span>Shipping</span><span>' + (shippingUSD > 0 ? sym + dShip.toFixed(2) : (currentSelectedCountry && !canDeliver ? 'N/A' : '—')) + '</span></div>';
+            }
+            h += '<div class="summary-row fee"><span><i class="fas fa-info-circle"></i> Service Fee (1%)</span><span>' + sym + dFee.toFixed(2) + '</span></div>';
+            h += '<div class="summary-row total"><span>Total</span><span>' + sym + dTotal.toFixed(2) + '</span></div>';
+            if (userCurrency !== 'USD') h += '<div class="summary-row total-usd"><span></span><span>≈ $' + totalUSD.toFixed(2) + ' USD</span></div>';
+            h += '</div>';
+
+            // Discount
+            h += '<div class="section-card"><div class="section-title"><i class="fas fa-tags"></i> Discount Code</div><div class="discount-box"><input type="text" class="form-input" id="discountCode" placeholder="Enter code"><button class="btn-apply" onclick="applyDiscount()">Apply</button></div><div id="discountMsg" style="font-size:12px;min-height:16px;"></div></div>';
+
+            // Payment
+            h += '<div class="section-card"><div class="section-title"><i class="fas fa-credit-card"></i> Payment</div><div class="payment-method selected"><i class="fas fa-credit-card" style="font-size:20px;color:var(--accent);"></i><div style="flex:1;"><div style="font-weight:600;font-size:13px;">Flutterwave</div><div style="font-size:11px;color:var(--text2);">Pay in ' + userCurrency + ' • Card, Bank, USSD</div></div><i class="fas fa-check-circle" style="color:var(--accent);"></i></div></div>';
+
+            // Pay button - disabled if cannot deliver
+            var canPay = isDigitalProduct || (currentSelectedCountry && canDeliver);
+            h += '<div style="padding:0 16px;"><button class="btn-pay" id="btnPay" onclick="processPayment()"' + (!canPay ? ' disabled' : '') + '><i class="fas fa-lock"></i> Pay ' + sym + dTotal.toFixed(2) + '</button></div>';
+            h += '<div class="secure-badge"><i class="fas fa-shield-alt"></i> Secured by Flutterwave • ' + userCurrency + '</div>';
+
+            c.innerHTML = h;
+            
+            // Re-select country in dropdown
+            if (currentSelectedCountry) {
+                document.getElementById('addrCountry').value = currentSelectedCountry;
+            }
+        }
+
+        // ============ COUNTRY CHANGE ============
+        window.onCountryChanged = function() {
+            var sel = document.getElementById('addrCountry');
+            var opt = sel.options[sel.selectedIndex];
+            if (!opt || !opt.value) {
+                currentSelectedCountry = '';
+                canDeliver = false;
+                shippingUSD = 0;
+                selectedShipping = null;
+                recalc();
+                renderCheckout();
+                return;
+            }
+            
+            currentSelectedCountry = opt.value;
+            var newCurrency = opt.getAttribute('data-currency') || 'USD';
+            
+            // Update currency if different
+            if (newCurrency !== userCurrency) {
+                userCurrency = newCurrency;
+                userCurrencySymbol = getCurrencySymbol(userCurrency);
+                document.getElementById('currencyBadge').textContent = userCurrency;
+            }
+            
+            // Check delivery
+            canDeliver = canDeliverToCountry(currentSelectedCountry);
+            
+            // Reset shipping
+            shippingUSD = 0;
+            selectedShipping = null;
+            
+            // Auto-select first shipping option if available
+            if (canDeliver && !isDigitalProduct) {
+                var opts = getShippingOptionsForCountry(currentSelectedCountry);
+                if (opts.length > 0) {
+                    shippingUSD = opts[0].rate;
+                }
+            }
+            
+            recalc();
+            renderCheckout();
+        };
+
+        window.selectShipping = function(rate, el) {
+            shippingUSD = rate;
+            recalc();
+            document.querySelectorAll('.shipping-option').forEach(function(s) { s.classList.remove('selected'); });
+            el.classList.add('selected');
+            renderCheckout();
+        };
+
+        window.openSavedAddresses = function() {
+            var list = document.getElementById('savedAddressesList');
+            list.innerHTML = savedAddresses.length === 0 ? '<div style="text-align:center;padding:30px;color:var(--text2);">No saved addresses</div>' :
+                savedAddresses.map(function(a) {
+                    return '<div class="saved-address-item" onclick="useAddress(\'' + a.id + '\')"><div class="saved-address-name">' + (a.fullName||'N/A') + (a.isDefault?' <span class="saved-address-badge">Default</span>':'') + '</div><div class="saved-address-detail">' + (a.streetAddress||'') + ', ' + (a.city||'') + ', ' + (a.state||'') + ', ' + (a.country||'') + '</div><div class="saved-address-detail">📞 ' + (a.phone||'N/A') + (a.landmark?' • 📍 '+a.landmark:'') + '</div></div>';
+                }).join('');
+            document.getElementById('addressModal').classList.add('show');
+        };
+        
+        window.closeAddressModal = function() { document.getElementById('addressModal').classList.remove('show'); };
+        
+        window.useAddress = function(id) {
+            var a = savedAddresses.find(function(x) { return x.id === id; }); if (!a) return;
+            document.getElementById('addrName').value = a.fullName || '';
+            document.getElementById('addrPhone').value = a.phone || '';
+            if (a.country) {
+                currentSelectedCountry = a.country;
+                canDeliver = canDeliverToCountry(a.country);
+                if (canDeliver && !isDigitalProduct) {
+                    var opts = getShippingOptionsForCountry(a.country);
+                    if (opts.length > 0) { shippingUSD = opts[0].rate; }
+                }
+                recalc();
+            }
+            document.getElementById('addrCity').value = a.city || '';
+            document.getElementById('addrState').value = a.state || '';
+            document.getElementById('addrFull').value = a.streetAddress || '';
+            document.getElementById('addrZip').value = a.postalCode || '';
+            document.getElementById('addrLandmark').value = a.landmark || '';
+            closeAddressModal();
+            renderCheckout();
+            showToast('Address loaded! ✅', 'success');
+        };
+
+        window.applyDiscount = async function() {
+            var code = document.getElementById('discountCode').value.trim().toUpperCase();
+            var msg = document.getElementById('discountMsg');
+            if (!code) { showToast('Enter code','warning'); return; }
+            var allD = await db.collection('discountCodes').get();
+            var d = allD.docs.map(function(x){return{id:x.id,...x.data()};}).find(function(x){return x.code===code&&x.active;});
+            if (!d) { msg.textContent='Invalid code';msg.style.color='var(--error)';return; }
+            var now = new Date();
+            if (d.validFrom&&d.validFrom.toDate&&d.validFrom.toDate()>now) { msg.textContent='Not active yet';msg.style.color='var(--error)';return; }
+            if (d.validUntil&&d.validUntil.toDate&&d.validUntil.toDate()<now) { msg.textContent='Expired';msg.style.color='var(--error)';return; }
+            if (d.maxUses&&d.currentUses>=d.maxUses) { msg.textContent='Limit reached';msg.style.color='var(--error)';return; }
+            if (d.minimumPurchase&&subtotalUSD<d.minimumPurchase) { showToast('Min: $'+d.minimumPurchase,'warning');return; }
+            discountUSD = d.type==='percentage'?(subtotalUSD*d.value/100):d.value;
+            appliedDiscount = d;
+            recalc();
+            var sym = userCurrencySymbol;
+            msg.textContent = '✅ Saved ' + sym + convertPrice(discountUSD,userCurrency).toFixed(2);
+            msg.style.color='var(--success)';
+            showToast('Discount applied!','success');
+            renderCheckout();
+        };
+
+        window.processPayment = function() {
+            var name = document.getElementById('addrName').value.trim();
+            var phone = document.getElementById('addrPhone').value.trim();
+            var country = document.getElementById('addrCountry').value;
+            
+            if (!name) { showToast('Enter your name','warning'); return; }
+            if (!phone) { showToast('Enter phone number','warning'); return; }
+            if (!country) { showToast('Select your country','warning'); return; }
+
+            if (!isDigitalProduct && !canDeliver) {
+                showToast('Cannot deliver to this country. Please select another.','error');
+                return;
+            }
+
+            if (!isDigitalProduct) {
+                var city = document.getElementById('addrCity').value.trim();
+                var address = document.getElementById('addrFull').value.trim();
+                if (!city) { showToast('Enter city','warning'); return; }
+                if (!address) { showToast('Enter street address','warning'); return; }
+            }
+
+            // Ensure Flutterwave is loaded
+            if (typeof FlutterwaveCheckout === 'undefined') {
+                showToast('Loading payment system...','warning');
+                loadFlutterwaveScript(function() { showToast('Ready! Click Pay again','success'); });
+                return;
+            }
+
+            var btn = document.getElementById('btnPay');
+            var origHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening Flutterwave...';
+            btn.disabled = true;
+
+            var txRef = 'STL-' + Date.now() + '-' + Math.random().toString(36).substr(2,6).toUpperCase();
+            
+            // FLUTTERWAVE GETS THE CONVERTED AMOUNT IN USER CURRENCY
+            var flutterwaveAmount = convertPrice(totalUSD, userCurrency);
+            flutterwaveAmount = Math.round(flutterwaveAmount * 100) / 100;
+            
+            console.log('💳 Flutterwave Payment:');
+            console.log('   USD Total: $' + totalUSD.toFixed(2));
+            console.log('   ' + userCurrency + ' Total: ' + userCurrencySymbol + flutterwaveAmount.toFixed(2));
+            console.log('   Rate: 1 USD = ' + (exchangeRates[userCurrency]||1).toFixed(2) + ' ' + userCurrency);
+
+            FlutterwaveCheckout({
+                public_key: CONFIG.flutterwaveKey,
+                tx_ref: txRef,
+                amount: flutterwaveAmount,
+                currency: userCurrency,
+                payment_options: 'card,banktransfer,ussd',
+                customer: { email: currentUser.email, name: name, phonenumber: phone },
+                customizations: { title: 'STOLIY', description: isDigitalProduct ? 'Digital Product' : 'Order Payment', logo: 'app-icon.png' },
+                callback: async function(r) {
+                    console.log('📩 Flutterwave response:', r);
+                    if (r.status === 'successful' || r.status === 'completed') {
+                        btn.innerHTML = '✅ Payment Successful!';
+                        showToast('Payment successful! 🎉', 'success',
+                            '<button class="toast-btn" onclick="window.location.href=\'orders.html\'">📦 View Orders</button>' +
+                            (isDigitalProduct ? '<button class="toast-btn" onclick="window.location.href=\'profile.html\'">👤 Profile</button>' : '') +
+                            (!isDigitalProduct && savedAddresses.length === 0 ? '<button class="toast-btn" onclick="saveAddress()">💾 Save Address</button>' : '')
+                        );
+                        await createOrders(name, phone, country, txRef, r.transaction_id||r.tx_ref);
+                    } else {
+                        showToast('Payment failed. Please try again.','error');
+                        btn.innerHTML = origHTML; btn.disabled = false;
+                    }
+                },
+                onclose: function() {
+                    if (btn.disabled && btn.innerHTML.indexOf('Successful') === -1) {
+                        showToast('Payment cancelled','warning');
+                        btn.innerHTML = origHTML; btn.disabled = false;
+                    }
+                }
+            });
+        };
+
+        window.saveAddress = function() {
+            var data = {
+                userId: currentUser.uid,
+                fullName: document.getElementById('addrName').value.trim(),
+                phone: document.getElementById('addrPhone').value.trim(),
+                country: document.getElementById('addrCountry').value,
+                state: document.getElementById('addrState')?.value?.trim() || '',
+                city: document.getElementById('addrCity')?.value?.trim() || '',
+                streetAddress: document.getElementById('addrFull')?.value?.trim() || '',
+                postalCode: document.getElementById('addrZip')?.value?.trim() || '',
+                landmark: document.getElementById('addrLandmark')?.value?.trim() || '',
+                isDefault: savedAddresses.length === 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            db.collection('addresses').add(data).then(function() {
+                showToast('Address saved! ✅','success');
+                document.querySelector('.toast')?.remove();
+            });
+        };
+
+        async function createOrders(name, phone, country, txRef, txnId) {
+            var shipping = {
+                name: name, phone: phone, country: country,
+                city: isDigitalProduct ? '' : document.getElementById('addrCity')?.value?.trim() || '',
+                state: isDigitalProduct ? '' : document.getElementById('addrState')?.value?.trim() || '',
+                address: isDigitalProduct ? 'Digital Product' : document.getElementById('addrFull')?.value?.trim() || '',
+                zip: isDigitalProduct ? '' : document.getElementById('addrZip')?.value?.trim() || '',
+                landmark: isDigitalProduct ? '' : document.getElementById('addrLandmark')?.value?.trim() || ''
+            };
+            var groups = {};
+            cartItems.forEach(function(i) { var s = i.storeId||'unknown'; if(!groups[s]) groups[s]=[]; groups[s].push(i); });
+            for (var sid in groups) {
+                await db.collection('orders').add({
+                    userId: currentUser.uid, storeId: sid,
+                    orderNumber: 'ORD-' + Date.now().toString(36).toUpperCase(),
+                    items: groups[sid], subtotalUSD, discountUSD, shippingCostUSD: shippingUSD,
+                    maintenanceFeeUSD: feeUSD, totalAmountUSD: totalUSD,
+                    currency: userCurrency, baseCurrency: 'USD', exchangeRate: exchangeRates[userCurrency]||1,
+                    shippingAddress: shipping, paymentReference: txnId||txRef,
+                    paymentMethod: 'flutterwave', isDigital: isDigitalProduct,
+                    status: isDigitalProduct ? 'completed' : 'paid',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            for (var item of cartItems) { await db.collection('cart').doc(item.id).delete(); }
+            if (appliedDiscount?.id) { await db.collection('discountCodes').doc(appliedDiscount.id).update({ currentUses: firebase.firestore.FieldValue.increment(1) }); }
+        }
+
+        document.getElementById('addressModal').addEventListener('click', function(e) { if (e.target === this) closeAddressModal(); });
+    })();
+    // In checkout.html, add to createOrders function:
+// Get affiliate and campaign for order attribution
+var affiliateId = STOLIY_Router.getAffiliateId();
+var campaign = STOLIY_Router.getCampaign();
+
+// Add to order data:
+if (affiliateId) orderData.affiliateId = affiliateId;
+if (campaign) orderData.campaign = campaign;
+    </script>
+</body>
+</html>

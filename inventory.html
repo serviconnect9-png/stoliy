@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Inventory - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .stats-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding: 14px 16px; }
+        .stat-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+        .stat-val { font-size: 20px; font-weight: 800; }
+        .stat-lbl { font-size: 10px; color: var(--text2); }
+        .product-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #F3F4F6; }
+        .product-row img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+        .product-info { flex: 1; }
+        .product-name { font-weight: 600; font-size: 13px; }
+        .product-sku { font-size: 10px; color: var(--text2); }
+        .stock-input { width: 60px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 13px; }
+        .stock-status { font-size: 10px; font-weight: 700; }
+        .in-stock { color: var(--success); }
+        .low-stock { color: var(--warning); }
+        .out-stock { color: var(--error); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><h2 class="page-title">Inventory</h2></div>
+        <div class="stats-cards">
+            <div class="stat-card"><div class="stat-val" style="color:var(--success);" id="totalStock">0</div><div class="stat-lbl">Total Stock</div></div>
+            <div class="stat-card"><div class="stat-val" style="color:var(--warning);" id="lowStock">0</div><div class="stat-lbl">Low Stock</div></div>
+            <div class="stat-card"><div class="stat-val" style="color:var(--error);" id="outStock">0</div><div class="stat-lbl">Out of Stock</div></div>
+        </div>
+        <div id="inventoryList"><div style="text-align:center;padding:40px;">Loading...</div></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    const auth = firebase.auth(), db = firebase.firestore();
+    let storeId = null;
+
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        const allStores = await db.collection('stores').get();
+        const myStore = allStores.docs.find(d => d.data().ownerId === user.uid);
+        if (!myStore) { window.location.href = 'wizard.html'; return; }
+        storeId = myStore.id;
+        loadInventory();
+    });
+
+    async function loadInventory() {
+        const allProducts = await db.collection('products').get();
+        const myProducts = allProducts.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.storeId === storeId);
+        
+        let totalStock = 0, lowStock = 0, outStock = 0;
+        myProducts.forEach(p => {
+            totalStock += p.stockQuantity || 0;
+            if (p.stockQuantity === 0 || p.inStock === false) outStock++;
+            else if (p.stockQuantity <= 5) lowStock++;
+        });
+
+        document.getElementById('totalStock').textContent = totalStock;
+        document.getElementById('lowStock').textContent = lowStock;
+        document.getElementById('outStock').textContent = outStock;
+
+        document.getElementById('inventoryList').innerHTML = myProducts.length === 0 ? 
+            '<div style="text-align:center;padding:40px;color:var(--text2);">No products</div>' :
+            myProducts.map(p => `
+                <div class="product-row">
+                    <img src="${(p.images&&p.images[0])||'https://via.placeholder.com/44'}" onerror="this.src='https://via.placeholder.com/44'">
+                    <div class="product-info"><div class="product-name">${p.name}</div><div class="product-sku">SKU: ${p.sku||'N/A'}</div></div>
+                    <input type="number" class="stock-input" value="${p.stockQuantity||0}" onchange="updateStock('${p.id}', this.value)">
+                    <span class="stock-status ${p.stockQuantity===0||p.inStock===false?'out-stock':p.stockQuantity<=5?'low-stock':'in-stock'}">${p.stockQuantity===0||p.inStock===false?'Out':p.stockQuantity<=5?'Low':'OK'}</span>
+                </div>
+            `).join('');
+    }
+
+    async function updateStock(productId, qty) {
+        const newQty = parseInt(qty) || 0;
+        await db.collection('products').doc(productId).update({ stockQuantity: newQty, inStock: newQty > 0 });
+        loadInventory();
+    }
+
+    window.updateStock = updateStock;
+    </script>
+</body>
+</html>

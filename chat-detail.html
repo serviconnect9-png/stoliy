@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Chat - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0B0B14; --card: #151521; --text: #FFFFFF; --text2: #A0A0B8; --text3: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, textarea { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, textarea:focus { outline: none !important; box-shadow: none !important; }
+        button:active { transform: scale(0.96); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .chat-header { padding: 12px 14px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .btn-back { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 14px; }
+        .chat-partner-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--card); border: 1px solid var(--border); }
+        .chat-partner-info { flex: 1; }
+        .chat-partner-name { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+        .chat-partner-status { font-size: 10px; color: var(--text3); }
+        .btn-chat-actions { width: 34px; height: 34px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 14px; }
+        
+        .chat-messages { flex: 1; padding: 16px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 2px; }
+        .msg-date-divider { text-align: center; font-size: 10px; color: var(--text3); margin: 14px 0; }
+        .msg-date-divider span { background: var(--card); padding: 4px 14px; border-radius: 10px; }
+        .msg-bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.5; word-wrap: break-word; position: relative; }
+        .msg-received { align-self: flex-start; background: var(--card); color: var(--text); border-bottom-left-radius: 4px; }
+        .msg-sent { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+        .msg-bubble a { text-decoration: underline; word-break: break-all; }
+        .msg-received a { color: #A78BFA; }
+        .msg-sent a { color: #FFD54F; }
+        .msg-bubble img { max-width: 220px; max-height: 220px; border-radius: 10px; cursor: pointer; display: block; margin: 4px 0; }
+        .msg-bubble video { max-width: 220px; max-height: 220px; border-radius: 10px; display: block; margin: 4px 0; }
+        .msg-time { font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: right; }
+        
+        .quick-replies { display: flex; gap: 6px; padding: 8px 14px; overflow-x: auto; background: var(--card); border-top: 1px solid var(--border); }
+        .quick-reply { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--text2); cursor: pointer; font-size: 11px; white-space: nowrap; font-family: var(--font); transition: all 0.15s; }
+        .quick-reply:hover { border-color: var(--accent); color: #fff; }
+        .quick-reply:active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        
+        .chat-input-bar { padding: 10px 14px 22px; background: var(--card); border-top: 1px solid var(--border); display: flex; gap: 6px; align-items: flex-end; }
+        .btn-media { width: 40px; height: 40px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border); color: var(--text2); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .btn-media:hover { border-color: var(--accent); color: var(--accent); }
+        .chat-input-bar textarea { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 22px; background: var(--bg); color: #fff; font-size: 13px; font-family: var(--font); resize: none; min-height: 42px; max-height: 100px; }
+        .chat-input-bar textarea:focus { border-color: var(--accent); }
+        .btn-send { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        
+        .product-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; margin: 4px 0; cursor: pointer; display: flex; gap: 10px; align-items: center; max-width: 260px; }
+        .product-card img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+        .product-card .info { flex: 1; }
+        .product-card .name { font-size: 12px; font-weight: 600; }
+        .product-card .price { font-size: 11px; color: var(--success); font-weight: 700; }
+        
+        .order-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; margin: 4px 0; max-width: 260px; }
+        .order-card .order-id { font-size: 11px; color: var(--accent); font-weight: 700; }
+        .order-card .order-status { font-size: 10px; }
+        
+        .empty-chat { text-align: center; padding: 60px 20px; color: var(--text2); }
+        .empty-chat i { font-size: 48px; opacity: 0.15; margin-bottom: 12px; display: block; }
+        .empty-chat .store-name { font-weight: 700; color: #fff; margin-bottom: 4px; }
+        
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #0B0B14; padding: 12px 22px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appRoot">
+        <div class="loading-wrap" style="display:flex;justify-content:center;align-items:center;flex:1;"><div class="spinner" style="width:36px;height:36px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;"></div></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, chatId, storeId, partnerId, partnerName, partnerImg, messagesListener;
+
+        var params = new URLSearchParams(window.location.search);
+        chatId = params.get('id');
+        storeId = params.get('store');
+        partnerId = params.get('user');
+
+        var quickReplies = [
+            'Hello! How can I help you?',
+            'Thank you for your order!',
+            'Your order has been shipped 📦',
+            'Is this item still available?',
+            'What\'s the delivery time?',
+            'Can I get a discount?',
+            'I\'ll check and get back to you',
+            'Please share your order number'
+        ];
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            await initializeChat();
+        });
+
+        async function initializeChat() {
+            // If chat ID provided, open existing chat
+            if (chatId) {
+                var chatDoc = await db.collection('chats').doc(chatId).get();
+                if (chatDoc.exists) {
+                    var data = chatDoc.data();
+                    partnerId = data.participants.find(function(p) { return p !== currentUser.uid; }) || currentUser.uid;
+                    partnerName = (data.participantNames || {})[partnerId] || 'Customer';
+                    partnerImg = (data.participantPhotos || {})[partnerId] || '';
+                    renderChat(chatId, partnerId, partnerName, partnerImg);
+                    return;
+                }
+            }
+            
+            // If store ID provided, chat with store owner
+            if (storeId) {
+                var storeDoc = await db.collection('stores').doc(storeId).get();
+                if (storeDoc.exists) {
+                    var store = storeDoc.data();
+                    partnerId = store.ownerId;
+                    partnerName = store.name || 'Store';
+                    partnerImg = store.logo || '';
+                    
+                    // Find or create chat
+                    var allChats = await db.collection('chats').get();
+                    var existing = allChats.docs.find(function(d) {
+                        var c = d.data();
+                        return c.participants && c.participants.includes(currentUser.uid) && c.participants.includes(partnerId);
+                    });
+                    
+                    if (existing) {
+                        chatId = existing.id;
+                    } else {
+                        var ref = await db.collection('chats').add({
+                            participants: [currentUser.uid, partnerId],
+                            participantNames: { [currentUser.uid]: currentUser.displayName || 'Customer', [partnerId]: partnerName },
+                            participantPhotos: { [currentUser.uid]: currentUser.photoURL || '', [partnerId]: partnerImg },
+                            storeId: storeId,
+                            lastMessage: '', lastMediaType: null,
+                            unreadCount: { [currentUser.uid]: 0, [partnerId]: 0 },
+                            status: 'active',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        chatId = ref.id;
+                    }
+                    renderChat(chatId, partnerId, partnerName, partnerImg);
+                    return;
+                }
+            }
+            
+            // If user ID provided, chat with that user
+            if (partnerId) {
+                var userDoc = await db.collection('users').doc(partnerId).get();
+                if (userDoc.exists) {
+                    var u = userDoc.data();
+                    partnerName = u.name || u.username || 'User';
+                    partnerImg = u.photoURL || '';
+                    
+                    var allChats = await db.collection('chats').get();
+                    var existing = allChats.docs.find(function(d) {
+                        var c = d.data();
+                        return c.participants && c.participants.includes(currentUser.uid) && c.participants.includes(partnerId);
+                    });
+                    
+                    if (existing) { chatId = existing.id; }
+                    else {
+                        var ref = await db.collection('chats').add({
+                            participants: [currentUser.uid, partnerId],
+                            participantNames: { [currentUser.uid]: currentUser.displayName || 'Customer', [partnerId]: partnerName },
+                            participantPhotos: { [currentUser.uid]: currentUser.photoURL || '', [partnerId]: partnerImg },
+                            lastMessage: '', lastMediaType: null,
+                            unreadCount: { [currentUser.uid]: 0, [partnerId]: 0 },
+                            status: 'active',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        chatId = ref.id;
+                    }
+                    renderChat(chatId, partnerId, partnerName, partnerImg);
+                    return;
+                }
+            }
+            
+            document.getElementById('appRoot').innerHTML = '<div class="empty-chat"><i class="fas fa-comments"></i><h3>Chat not found</h3><p>Go back and try again</p></div>';
+        }
+
+        function renderChat(cid, pid, pname, pimg) {
+            chatId = cid;
+            partnerId = pid;
+            partnerName = pname;
+            partnerImg = pimg;
+            
+            var root = document.getElementById('appRoot');
+            root.innerHTML = 
+                '<div class="chat-header">' +
+                    '<button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>' +
+                    '<img src="' + (partnerImg || 'https://via.placeholder.com/40') + '" class="chat-partner-img" onerror="this.src=\'https://via.placeholder.com/40\'">' +
+                    '<div class="chat-partner-info">' +
+                        '<div class="chat-partner-name">' + partnerName + '</div>' +
+                        '<div class="chat-partner-status">● Online</div>' +
+                    '</div>' +
+                    '<button class="btn-chat-actions" onclick="window.location.href=\'store.html?id=' + (storeId || '') + '\'"><i class="fas fa-store"></i></button>' +
+                '</div>' +
+                '<div class="chat-messages" id="chatMessages"><div class="empty-chat"><i class="fas fa-comment-dots"></i><div class="store-name">' + partnerName + '</div><p>Start a conversation</p></div></div>' +
+                '<div class="quick-replies" id="quickReplies">' + quickReplies.map(function(r) { return '<button class="quick-reply" onclick="sendQuickReply(\'' + r.replace(/'/g,"\\'") + '\')">' + r + '</button>'; }).join('') + '</div>' +
+                '<div class="chat-input-bar">' +
+                    '<button class="btn-media" onclick="document.getElementById(\'imageInput\').click()" title="Send Image"><i class="fas fa-image"></i></button>' +
+                    '<input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="sendMedia(this,\'image\')">' +
+                    '<button class="btn-media" onclick="document.getElementById(\'videoInput\').click()" title="Send Video"><i class="fas fa-video"></i></button>' +
+                    '<input type="file" id="videoInput" accept="video/*" style="display:none;" onchange="sendMedia(this,\'video\')">' +
+                    '<textarea id="chatInput" placeholder="Type a message..." rows="1" onkeypress="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>' +
+                    '<button class="btn-send" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>' +
+                '</div>';
+            
+            // Mark as read
+            db.collection('chats').doc(chatId).update({ ['unreadCount.' + currentUser.uid]: 0 });
+            
+            // Listen for messages
+            if (messagesListener) messagesListener();
+            messagesListener = db.collection('chats').doc(chatId).collection('messages').orderBy('timestamp','asc')
+                .onSnapshot(function(snap) {
+                    var msgs = snap.docs.map(function(d) { return d.data(); });
+                    var container = document.getElementById('chatMessages');
+                    if (msgs.length === 0) { 
+                        container.innerHTML = '<div class="empty-chat"><i class="fas fa-comment-dots"></i><div class="store-name">' + partnerName + '</div><p>Start a conversation</p></div>'; 
+                        return; 
+                    }
+                    var html = '', lastDate = '';
+                    msgs.forEach(function(m) {
+                        var d = m.timestamp?.toDate ? m.timestamp.toDate() : new Date();
+                        var ds = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+                        if (ds !== lastDate) { html += '<div class="msg-date-divider"><span>' + ds + '</span></div>'; lastDate = ds; }
+                        var sent = m.senderId === currentUser.uid;
+                        var content = '';
+                        if (m.type === 'image') {
+                            content = '<img src="' + m.mediaUrl + '" onclick="window.open(\'' + m.mediaUrl + '\')" loading="lazy">';
+                            if (m.text) content += '<br>' + linkifyText(m.text);
+                        } else if (m.type === 'video') {
+                            content = '<video src="' + m.mediaUrl + '" controls style="max-width:220px;max-height:220px;border-radius:10px;"></video>';
+                            if (m.text) content += '<br>' + linkifyText(m.text);
+                        } else if (m.type === 'product') {
+                            content += '<div class="product-card" onclick="window.location.href=\'products.html?id=' + (m.productId || '') + '\'"><img src="' + (m.productImage || '') + '" onerror="this.src=\'https://via.placeholder.com/50\'"><div class="info"><div class="name">' + (m.productName || 'Product') + '</div><div class="price">$' + (m.productPrice || 0).toFixed(2) + '</div></div></div>';
+                            if (m.text) content += linkifyText(m.text);
+                        } else if (m.type === 'order') {
+                            content += '<div class="order-card"><div class="order-id">Order #' + (m.orderNumber || '') + '</div><div class="order-status" style="color:' + (m.orderStatus === 'delivered' ? 'var(--success)' : 'var(--warning)') + ';">' + (m.orderStatus || 'Processing') + '</div></div>';
+                            if (m.text) content += linkifyText(m.text);
+                        } else {
+                            content = linkifyText(m.text || '');
+                        }
+                        html += '<div class="msg-bubble ' + (sent ? 'msg-sent' : 'msg-received') + '">' + content + '<div class="msg-time">' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + (sent ? ' ✓' : '') + '</div></div>';
+                    });
+                    container.innerHTML = html;
+                    container.scrollTop = container.scrollHeight;
+                });
+            
+            document.getElementById('chatInput').focus();
+        }
+
+        function linkifyText(text) {
+            if (!text) return '';
+            text = text.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+            return text.replace(/\n/g, '<br>');
+        }
+
+        // ============ SEND MESSAGE ============
+        window.sendMessage = async function() {
+            var input = document.getElementById('chatInput');
+            var text = input.value.trim();
+            if (!text || !chatId) return;
+            input.value = '';
+            await db.collection('chats').doc(chatId).collection('messages').add({
+                senderId: currentUser.uid, text: text, type: 'text',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await db.collection('chats').doc(chatId).update({
+                lastMessage: text.substring(0, 100), lastMediaType: 'text',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                ['unreadCount.' + partnerId]: firebase.firestore.FieldValue.increment(1)
+            });
+            if (partnerId !== currentUser.uid) {
+                await db.collection('notifications').add({
+                    userId: partnerId, type: 'new_message',
+                    message: (currentUser.displayName||'Customer') + ': ' + text.substring(0,50),
+                    link: 'chat-detail.html?id=' + chatId, read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        };
+
+        // ============ QUICK REPLY ============
+        window.sendQuickReply = async function(text) {
+            document.getElementById('chatInput').value = text;
+            await sendMessage();
+        };
+
+        // ============ SEND MEDIA ============
+        window.sendMedia = async function(input, type) {
+            if (!input.files || !input.files[0] || !chatId) return;
+            var file = input.files[0];
+            showToast('Uploading...');
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
+            try {
+                var cloudName = CONFIG.cloudinaryCloudName || 'serviconnect';
+                var res = await fetch('https://api.cloudinary.com/v1_1/' + cloudName + '/' + (type === 'video' ? 'video' : 'image') + '/upload', { method: 'POST', body: fd });
+                var data = await res.json();
+                if (data.secure_url) {
+                    await db.collection('chats').doc(chatId).collection('messages').add({
+                        senderId: currentUser.uid, type: type, mediaUrl: data.secure_url, text: '',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('chats').doc(chatId).update({
+                        lastMessage: type === 'image' ? '📷 Photo' : '🎬 Video', lastMediaType: type,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        ['unreadCount.' + partnerId]: firebase.firestore.FieldValue.increment(1)
+                    });
+                    showToast('Sent!', 'success');
+                }
+            } catch(e) { showToast('Upload failed'); }
+            input.value = '';
+        };
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type||'');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); }, 10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 2000);
+        }
+
+        window.addEventListener('beforeunload', function() { if (messagesListener) messagesListener(); });
+    })();
+    </script>
+</body>
+</html>

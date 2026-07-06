@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Notifications - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .btn-mark-all { font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 600; background: none; border: none; font-family: var(--font); padding: 8px; }
+        .unread-count { background: var(--error); color: #fff; font-size: 10px; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; margin-left: 4px; }
+        
+        .filter-tabs { display: flex; gap: 4px; padding: 10px 16px; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+        .filter-tabs::-webkit-scrollbar { display: none; }
+        .filter-tab { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap; transition: all 0.2s; font-family: var(--font); flex-shrink: 0; }
+        .filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        
+        .notif-item { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #F3F4F6; cursor: pointer; transition: background 0.2s; align-items: flex-start; position: relative; }
+        .notif-item:active { background: #FAFAFA; }
+        .notif-item.unread { background: rgba(108,60,240,0.02); }
+        .notif-item.unread::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); border-radius: 0 2px 2px 0; }
+        .notif-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+        .notif-content { flex: 1; min-width: 0; }
+        .notif-title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+        .notif-body { font-size: 12px; color: var(--text2); line-height: 1.4; }
+        .notif-time { font-size: 10px; color: var(--text3); margin-top: 4px; }
+        .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 5px; }
+        .notif-arrow { color: var(--text3); font-size: 12px; flex-shrink: 0; margin-top: 4px; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+        .empty-state i { font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: #fff; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 0 22px; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--text3); border: none; background: none; font-family: var(--font); padding: 5px 10px; text-decoration: none; position: relative; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+        .nav-badge { position: absolute; top: -2px; right: 2px; background: var(--error); color: #fff; font-size: 9px; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; padding: 0 4px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-bell" style="color:var(--accent);margin-right:6px;"></i>Notifications <span class="unread-count" id="unreadBadge" style="display:none;">0</span></h2>
+            <button class="btn-mark-all" onclick="markAllRead()">Mark All Read</button>
+        </div>
+        
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterNotifs('all',this)">All</button>
+            <button class="filter-tab" onclick="filterNotifs('unread',this)">Unread</button>
+            <button class="filter-tab" onclick="filterNotifs('order',this)">Orders</button>
+            <button class="filter-tab" onclick="filterNotifs('ticket',this)">Tickets</button>
+            <button class="filter-tab" onclick="filterNotifs('store',this)">Store</button>
+            <button class="filter-tab" onclick="filterNotifs('message',this)">Messages</button>
+            <button class="filter-tab" onclick="filterNotifs('team',this)">Team</button>
+        </div>
+        
+        <div id="notifList"><div style="text-align:center;padding:60px;color:var(--text3);">Loading notifications...</div></div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a class="nav-item" href="home.html"><i class="fas fa-home"></i><span>Home</span></a>
+        <a class="nav-item" href="search.html"><i class="fas fa-search"></i><span>Search</span></a>
+        <a class="nav-item" href="cart.html"><i class="fas fa-shopping-bag"></i><span>Cart</span></a>
+        <a class="nav-item" href="orders.html"><i class="fas fa-box"></i><span>Orders</span></a>
+        <a class="nav-item active"><i class="fas fa-bell"></i><span>Alerts</span><span class="nav-badge" id="navBadge" style="display:none;">0</span></a>
+    </nav>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, allNotifications = [], currentFilter = 'all';
+
+        var typeConfig = {
+            order_placed: { icon: 'fa-shopping-bag', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', title: 'Order Placed', link: 'orders.html' },
+            order_confirmed: { icon: 'fa-check-circle', color: '#2ECC71', bg: 'rgba(46,204,113,0.1)', title: 'Order Confirmed', link: 'orders.html' },
+            order_shipped: { icon: 'fa-truck', color: '#6C3CF0', bg: 'rgba(108,60,240,0.1)', title: 'Order Shipped', link: 'orders.html' },
+            order_delivered: { icon: 'fa-box-open', color: '#2ECC71', bg: 'rgba(46,204,113,0.1)', title: 'Order Delivered', link: 'orders.html' },
+            order_cancelled: { icon: 'fa-times-circle', color: '#FF4D4F', bg: 'rgba(255,77,79,0.1)', title: 'Order Cancelled', link: 'orders.html' },
+            new_order: { icon: 'fa-shopping-bag', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', title: 'New Order', link: 'orders.html' },
+            payment_received: { icon: 'fa-money-bill-wave', color: '#2ECC71', bg: 'rgba(46,204,113,0.1)', title: 'Payment Received', link: 'orders.html' },
+            refund_processed: { icon: 'fa-undo', color: '#F4B400', bg: 'rgba(244,180,0,0.1)', title: 'Refund Processed', link: 'orders.html' },
+            ticket_purchased: { icon: 'fa-ticket-alt', color: '#6C3CF0', bg: 'rgba(108,60,240,0.1)', title: 'Ticket Confirmed', link: 'my-tickets.html' },
+            event_reminder: { icon: 'fa-calendar-alt', color: '#FF4D4F', bg: 'rgba(255,77,79,0.1)', title: 'Event Reminder', link: 'my-tickets.html' },
+            event_checkin: { icon: 'fa-check-circle', color: '#2ECC71', bg: 'rgba(46,204,113,0.1)', title: 'Checked In', link: 'my-tickets.html' },
+            store_follow: { icon: 'fa-user-plus', color: '#6C3CF0', bg: 'rgba(108,60,240,0.1)', title: 'New Follower', link: 'followers.html' },
+            store_new_product: { icon: 'fa-plus-circle', color: '#2ECC71', bg: 'rgba(46,204,113,0.1)', title: 'New Product', link: 'home.html' },
+            flash_sale: { icon: 'fa-bolt', color: '#F4B400', bg: 'rgba(244,180,0,0.1)', title: 'Flash Sale', link: 'flashsale.html' },
+            discount_available: { icon: 'fa-tags', color: '#FF4D4F', bg: 'rgba(255,77,79,0.1)', title: 'Discount', link: 'home.html' },
+            price_drop: { icon: 'fa-arrow-down', color: '#2ECC71', bg: 'rgba(46,204,113,0.1)', title: 'Price Drop', link: 'products.html' },
+            back_in_stock: { icon: 'fa-box', color: '#2ECC71', bg: 'rgba(46,204,113,0.1)', title: 'Back in Stock', link: 'products.html' },
+            preorder_available: { icon: 'fa-clock', color: '#F4B400', bg: 'rgba(244,180,0,0.1)', title: 'Pre-Order', link: 'products.html' },
+            waitlist_notify: { icon: 'fa-bell', color: '#6C3CF0', bg: 'rgba(108,60,240,0.1)', title: 'Waitlist', link: 'products.html' },
+            new_message: { icon: 'fa-comment-dots', color: '#6C3CF0', bg: 'rgba(108,60,240,0.1)', title: 'New Message', link: 'chat.html' },
+            review_reply: { icon: 'fa-reply', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', title: 'Review Reply', link: 'orders.html' },
+            team_invite: { icon: 'fa-user-friends', color: '#2ECC71', bg: 'rgba(46,204,113,0.1)', title: 'Team Invite', link: 'team.html' },
+            team_removed: { icon: 'fa-user-slash', color: '#FF4D4F', bg: 'rgba(255,77,79,0.1)', title: 'Removed', link: 'profile.html' },
+            team_role_changed: { icon: 'fa-user-edit', color: '#F4B400', bg: 'rgba(244,180,0,0.1)', title: 'Role Updated', link: 'team.html' },
+            system: { icon: 'fa-info-circle', color: '#6B7280', bg: 'rgba(107,114,128,0.1)', title: 'System', link: null },
+            welcome: { icon: 'fa-hand-sparkles', color: '#6C3CF0', bg: 'rgba(108,60,240,0.1)', title: 'Welcome', link: 'home.html' }
+        };
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            
+            // GET ALL NOTIFICATIONS - NO WHERE QUERIES
+            var allNotifsSnap = await db.collection('notifications').get();
+            allNotifications = allNotifsSnap.docs
+                .map(function(d) { return { id: d.id, ...d.data() }; })
+                .filter(function(n) { return n.userId === currentUser.uid; })
+                .sort(function(a, b) {
+                    var aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+                    var bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+                    return bTime - aTime;
+                });
+            
+            console.log('🔔 Loaded ' + allNotifications.length + ' notifications');
+            renderNotifications();
+            updateBadges();
+            
+            // Set up polling every 10 seconds for new notifications
+            setInterval(async function() {
+                var snap = await db.collection('notifications').get();
+                var fresh = snap.docs
+                    .map(function(d) { return { id: d.id, ...d.data() }; })
+                    .filter(function(n) { return n.userId === currentUser.uid; })
+                    .sort(function(a, b) {
+                        var aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+                        var bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+                        return bTime - aTime;
+                    });
+                
+                // Check if there are new notifications
+                if (fresh.length > allNotifications.length) {
+                    allNotifications = fresh;
+                    renderNotifications();
+                    updateBadges();
+                }
+            }, 10000);
+        });
+
+        function renderNotifications() {
+            var container = document.getElementById('notifList');
+            var filtered = allNotifications;
+            
+            if (currentFilter === 'unread') {
+                filtered = filtered.filter(function(n) { return !n.read; });
+            } else if (currentFilter === 'order') {
+                filtered = filtered.filter(function(n) { return n.type && (n.type.startsWith('order_') || n.type === 'new_order' || n.type === 'payment_received' || n.type === 'refund_processed'); });
+            } else if (currentFilter === 'ticket') {
+                filtered = filtered.filter(function(n) { return n.type && (n.type.startsWith('ticket_') || n.type.startsWith('event_')); });
+            } else if (currentFilter === 'store') {
+                filtered = filtered.filter(function(n) { return n.type && (n.type.startsWith('store_') || n.type === 'flash_sale' || n.type === 'discount_available' || n.type === 'price_drop' || n.type === 'back_in_stock'); });
+            } else if (currentFilter === 'message') {
+                filtered = filtered.filter(function(n) { return n.type === 'new_message' || n.type === 'review_reply'; });
+            } else if (currentFilter === 'team') {
+                filtered = filtered.filter(function(n) { return n.type && n.type.startsWith('team_'); });
+            }
+
+            if (filtered.length === 0) {
+                var msgs = { all: 'You\'re all caught up!', unread: 'No unread notifications!', order: 'No order notifications', ticket: 'No ticket notifications', store: 'No store notifications', message: 'No new messages', team: 'No team notifications' };
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-bell-slash"></i><h3>No notifications</h3><p>' + (msgs[currentFilter] || 'No notifications') + '</p></div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(function(n) {
+                var config = typeConfig[n.type] || typeConfig['system'];
+                var timeAgo = getTimeAgo(n.createdAt?.toDate ? n.createdAt.toDate() : new Date());
+                var link = n.link || config.link || null;
+                
+                return '<div class="notif-item' + (!n.read ? ' unread' : '') + '" onclick="handleClick(\'' + n.id + '\',\'' + (link || '') + '\')">' +
+                    '<div class="notif-icon" style="background:' + config.bg + ';color:' + config.color + ';"><i class="fas ' + config.icon + '"></i></div>' +
+                    '<div class="notif-content">' +
+                        '<div class="notif-title">' + (config.title || 'Notification') + '</div>' +
+                        '<div class="notif-body">' + (n.message || '') + '</div>' +
+                        '<div class="notif-time"><i class="far fa-clock"></i> ' + timeAgo + '</div>' +
+                    '</div>' +
+                    (!n.read ? '<div class="notif-dot"></div>' : '') +
+                    (link ? '<i class="fas fa-chevron-right notif-arrow"></i>' : '') +
+                '</div>';
+            }).join('');
+        }
+
+        function updateBadges() {
+            var unread = allNotifications.filter(function(n) { return !n.read; }).length;
+            var unreadBadge = document.getElementById('unreadBadge');
+            var navBadge = document.getElementById('navBadge');
+            
+            if (unreadBadge) {
+                unreadBadge.textContent = unread;
+                unreadBadge.style.display = unread > 0 ? 'inline-flex' : 'none';
+            }
+            if (navBadge) {
+                navBadge.textContent = unread > 99 ? '99+' : unread;
+                navBadge.style.display = unread > 0 ? 'flex' : 'none';
+            }
+        }
+
+        function getTimeAgo(date) {
+            var seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 10) return 'Just now';
+            if (seconds < 60) return seconds + 's ago';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        window.handleClick = async function(notifId, link) {
+            await db.collection('notifications').doc(notifId).update({ read: true });
+            // Update local state
+            var notif = allNotifications.find(function(n) { return n.id === notifId; });
+            if (notif) notif.read = true;
+            renderNotifications();
+            updateBadges();
+            
+            if (link) {
+                window.location.href = link;
+            }
+        };
+
+        window.filterNotifs = function(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+            btn.classList.add('active');
+            renderNotifications();
+        };
+
+        window.markAllRead = async function() {
+            var unreadNotifs = allNotifications.filter(function(n) { return !n.read; });
+            if (unreadNotifs.length === 0) return;
+            
+            for (var n of unreadNotifs) {
+                await db.collection('notifications').doc(n.id).update({ read: true });
+                n.read = true;
+            }
+            renderNotifications();
+            updateBadges();
+            
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#2ECC71;color:#fff;padding:12px 24px;border-radius:30px;font-size:13px;font-weight:600;z-index:9999;';
+            toast.textContent = unreadNotifs.length + ' marked as read ✓';
+            document.body.appendChild(toast);
+            setTimeout(function(){ toast.remove(); }, 2000);
+        };
+    })();
+    </script>
+</body>
+</html>

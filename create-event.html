@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Create Event - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0B0B14; --card: #151521; --input: #1E1E30; --text: #FFFFFF; --text2: #A0A0B8; --text3: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, textarea, select { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, textarea:focus, select:focus { outline: none !important; box-shadow: none !important; }
+        button:active { transform: scale(0.97); }
+        
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 38px; height: 38px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 16px; }
+        .page-title { font-size: 17px; font-weight: 700; flex: 1; }
+        .btn-draft { padding: 8px 14px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--text2); font-weight: 600; font-size: 12px; cursor: pointer; }
+        
+        .form-section { padding: 16px; }
+        .section-title { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        .section-title:first-child { margin-top: 0; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; display: block; }
+        .form-sublabel { font-size: 10px; color: var(--text3); margin-top: 3px; }
+        .form-input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font); background: var(--input); color: var(--text); transition: all 0.2s; }
+        .form-input:focus { border-color: var(--accent); }
+        .form-input::placeholder { color: var(--text3); }
+        textarea.form-input { resize: vertical; min-height: 80px; }
+        select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 44px; cursor: pointer; }
+        select.form-input option { background: var(--card); color: #fff; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        
+        .upload-zone { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 24px; text-align: center; cursor: pointer; background: var(--input); transition: all 0.2s; }
+        .upload-zone:hover { border-color: var(--accent); }
+        .upload-zone i { font-size: 28px; color: var(--text3); margin-bottom: 6px; display: block; }
+        .upload-zone span { font-size: 12px; color: var(--text2); }
+        .upload-zone img { max-width: 100%; max-height: 120px; border-radius: 10px; margin-top: 10px; }
+        
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+        .toggle-label { font-weight: 600; font-size: 13px; }
+        .toggle-switch { width: 48px; height: 28px; border-radius: 14px; background: var(--border); cursor: pointer; position: relative; transition: background 0.3s; flex-shrink: 0; }
+        .toggle-switch.on { background: var(--success); }
+        .toggle-switch::after { content: ''; width: 24px; height: 24px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.3s; }
+        .toggle-switch.on::after { left: 22px; }
+        
+        .ticket-type-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 10px; }
+        .ticket-type-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ticket-type-name { font-weight: 700; font-size: 14px; }
+        .btn-remove { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,77,79,0.1); color: var(--error); border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        .btn-add { width: 100%; padding: 14px; background: transparent; border: 2px dashed var(--border); border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 13px; color: var(--accent); }
+        .btn-add:hover { border-color: var(--accent); }
+        
+        .btn-submit { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .btn-submit:active { background: #5A2FD4; }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #0B0B14; padding: 14px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; color: #fff; }
+        .toast.error { background: #FF4D4F; color: #fff; }
+        .toast.warning { background: #F4B400; color: #0B0B14; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-calendar-plus" style="color:var(--accent);margin-right:6px;"></i>Create Event</h2>
+            <button class="btn-draft" onclick="saveEvent('draft')">Save Draft</button>
+        </div>
+        
+        <div class="form-section">
+            <!-- EVENT DETAILS -->
+            <div class="section-title">Event Details</div>
+            <div class="form-group"><label class="form-label">Event Name *</label><input type="text" class="form-input" id="eventName" placeholder="e.g. Stoliy Tech Summit 2027"></div>
+            <div class="form-group"><label class="form-label">Event Type</label><select class="form-input" id="eventType"><option value="Concert">Concert</option><option value="Conference">Conference</option><option value="Sports">Sports</option><option value="Workshop">Workshop</option><option value="Festival">Festival</option><option value="Seminar">Seminar</option><option value="Webinar">Webinar</option><option value="Networking">Networking</option><option value="Church">Church</option><option value="Private">Private Event</option></select></div>
+            <div class="form-group"><label class="form-label">Organizer Name</label><input type="text" class="form-input" id="organizer" placeholder="Your brand or company name"></div>
+            <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="eventDesc" placeholder="Describe your event - what attendees can expect, schedule highlights, special guests..."></textarea></div>
+            <div class="form-group"><label class="form-label">Event Banner</label><div class="upload-zone" onclick="document.getElementById('bannerInput').click()"><i class="fas fa-image"></i><span>Tap to upload banner image</span><span class="form-sublabel">Recommended: 1200x400px</span><img id="bannerPreview" style="display:none;"><input type="file" id="bannerInput" accept="image/*" style="display:none;" onchange="previewUpload('banner',this)"></div></div>
+
+            <!-- LOCATION -->
+            <div class="section-title">Location</div>
+            <div class="form-group"><label class="form-label">Location Type</label><select class="form-input" id="locationType" onchange="toggleLocation()"><option value="physical">Physical Venue</option><option value="online">Online Event</option><option value="hybrid">Hybrid (Both)</option></select></div>
+            <div id="physicalFields">
+                <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="venue" placeholder="e.g. Accra International Conference Centre"></div>
+                <div class="form-group"><label class="form-label">Full Address</label><input type="text" class="form-input" id="address" placeholder="Street address, landmarks"></div>
+                <div class="form-row"><div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" id="city" placeholder="e.g. Accra"></div><div class="form-group"><label class="form-label">Country</label><input type="text" class="form-input" id="country" placeholder="e.g. Ghana"></div></div>
+            </div>
+            <div id="onlineFields" style="display:none;">
+                <div class="form-group"><label class="form-label">Platform</label><input type="text" class="form-input" id="platform" placeholder="e.g. Zoom, Google Meet, Microsoft Teams"></div>
+                <div class="form-group"><label class="form-label">Meeting Link</label><input type="url" class="form-input" id="meetingLink" placeholder="https://..."></div>
+                <div class="form-group"><label class="form-label">Access Password (Optional)</label><input type="text" class="form-input" id="meetingPass" placeholder="Leave empty if not required"></div>
+            </div>
+
+            <!-- SCHEDULE -->
+            <div class="section-title">Schedule</div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Start Date & Time *</label><input type="datetime-local" class="form-input" id="startDate"></div><div class="form-group"><label class="form-label">End Date & Time *</label><input type="datetime-local" class="form-input" id="endDate"></div></div>
+
+            <!-- TICKET TYPES -->
+            <div class="section-title">Ticket Types</div>
+            <div id="ticketTypesContainer">
+                <div class="ticket-type-card">
+                    <div class="ticket-type-header"><span class="ticket-type-name">General Admission</span></div>
+                    <div class="form-row"><div class="form-group"><label class="form-label">Ticket Name</label><input type="text" class="form-input ticket-name" value="General Admission"></div><div class="form-group"><label class="form-label">Price ($) *</label><input type="number" class="form-input ticket-price" value="0" step="0.01" min="0"></div></div>
+                    <div class="form-row"><div class="form-group"><label class="form-label">Quantity Available</label><input type="number" class="form-input ticket-qty" value="100" min="1"></div><div class="form-group"><label class="form-label">Benefits/Perks</label><input type="text" class="form-input ticket-benefits" placeholder="e.g. Free drinks, Front row"></div></div>
+                </div>
+            </div>
+            <button class="btn-add" onclick="addTicketType()"><i class="fas fa-plus"></i> Add Ticket Type</button>
+
+            <!-- SETTINGS -->
+            <div class="section-title">Settings</div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Max Tickets Per Customer</label><input type="number" class="form-input" id="maxPerCustomer" value="6" min="1"></div><div class="form-group"><label class="form-label">Refund Cutoff (Days Before)</label><input type="number" class="form-input" id="refundDays" value="7" min="0"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Allow Ticket Transfer</span><div class="toggle-switch on" id="transferToggle" onclick="this.classList.toggle('on')"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Enable Waitlist When Sold Out</span><div class="toggle-switch on" id="waitlistToggle" onclick="this.classList.toggle('on')"></div></div>
+
+            <button class="btn-submit" id="btnSubmit" onclick="saveEvent('published')"><i class="fas fa-rocket"></i> Publish Event</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, storeId, bannerFile;
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d) { return d.data().ownerId === user.uid; });
+            if (!myStore) { showToast('Create a store first', 'warning'); setTimeout(function(){ window.location.href = 'wizard.html'; }, 1500); return; }
+            storeId = myStore.id;
+            // Pre-fill organizer name
+            document.getElementById('organizer').value = myStore.data().name || '';
+        });
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type || '');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); }, 10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 2500);
+        }
+
+        window.toggleLocation = function() {
+            var type = document.getElementById('locationType').value;
+            document.getElementById('physicalFields').style.display = (type === 'physical' || type === 'hybrid') ? 'block' : 'none';
+            document.getElementById('onlineFields').style.display = (type === 'online' || type === 'hybrid') ? 'block' : 'none';
+        };
+
+        window.previewUpload = function(type, input) {
+            if (!input.files || !input.files[0]) return;
+            bannerFile = input.files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var preview = document.getElementById(type + 'Preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(bannerFile);
+        };
+
+        window.addTicketType = function() {
+            var container = document.getElementById('ticketTypesContainer');
+            var count = container.querySelectorAll('.ticket-type-card').length + 1;
+            var div = document.createElement('div');
+            div.className = 'ticket-type-card';
+            div.innerHTML = '<div class="ticket-type-header"><span class="ticket-type-name">Ticket Type ' + count + '</span><button class="btn-remove" onclick="this.closest(\'.ticket-type-card\').remove()">✕</button></div>' +
+                '<div class="form-row"><div class="form-group"><label class="form-label">Ticket Name</label><input type="text" class="form-input ticket-name" placeholder="e.g. VIP"></div><div class="form-group"><label class="form-label">Price ($) *</label><input type="number" class="form-input ticket-price" value="0" step="0.01" min="0"></div></div>' +
+                '<div class="form-row"><div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-input ticket-qty" value="50" min="1"></div><div class="form-group"><label class="form-label">Benefits</label><input type="text" class="form-input ticket-benefits" placeholder="e.g. Backstage access"></div></div>';
+            container.appendChild(div);
+        };
+
+        async function uploadBanner() {
+            if (!bannerFile) return null;
+            var fd = new FormData();
+            fd.append('file', bannerFile);
+            fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
+            fd.append('folder', 'events/' + storeId);
+            try {
+                var res = await fetch('https://api.cloudinary.com/v1_1/' + (CONFIG.cloudinaryCloudName || 'serviconnect') + '/image/upload', { method: 'POST', body: fd });
+                var data = await res.json();
+                return data.secure_url || null;
+            } catch(e) { return null; }
+        }
+
+        window.saveEvent = async function(status) {
+            var btn = document.getElementById('btnSubmit');
+            var name = document.getElementById('eventName').value.trim();
+            var startDate = document.getElementById('startDate').value;
+            var endDate = document.getElementById('endDate').value;
+
+            if (!name) { showToast('Event name is required', 'warning'); return; }
+            if (!startDate || !endDate) { showToast('Start and end dates are required', 'warning'); return; }
+            if (new Date(endDate) <= new Date(startDate)) { showToast('End date must be after start date', 'warning'); return; }
+
+            // Collect ticket types
+            var ticketTypes = [];
+            var cards = document.querySelectorAll('.ticket-type-card');
+            var hasValidTicket = false;
+            cards.forEach(function(card) {
+                var tName = card.querySelector('.ticket-name')?.value?.trim();
+                var tPrice = parseFloat(card.querySelector('.ticket-price')?.value) || 0;
+                var tQty = parseInt(card.querySelector('.ticket-qty')?.value) || 0;
+                var tBenefits = card.querySelector('.ticket-benefits')?.value?.trim() || '';
+                if (tName) {
+                    ticketTypes.push({ name: tName, price: tPrice, quantity: tQty, benefits: tBenefits, sold: 0 });
+                    hasValidTicket = true;
+                }
+            });
+
+            if (!hasValidTicket && status === 'published') { showToast('Add at least one ticket type', 'warning'); return; }
+
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                var bannerUrl = await uploadBanner();
+
+                var eventData = {
+                    storeId: storeId,
+                    name: name,
+                    eventType: document.getElementById('eventType').value,
+                    organizer: document.getElementById('organizer').value.trim(),
+                    description: document.getElementById('eventDesc').value.trim(),
+                    banner: bannerUrl || '',
+                    locationType: document.getElementById('locationType').value,
+                    venue: document.getElementById('venue')?.value?.trim() || '',
+                    address: document.getElementById('address')?.value?.trim() || '',
+                    city: document.getElementById('city')?.value?.trim() || '',
+                    country: document.getElementById('country')?.value?.trim() || '',
+                    platform: document.getElementById('platform')?.value?.trim() || '',
+                    meetingLink: document.getElementById('meetingLink')?.value?.trim() || '',
+                    meetingPass: document.getElementById('meetingPass')?.value?.trim() || '',
+                    startDate: startDate,
+                    endDate: endDate,
+                    ticketTypes: ticketTypes,
+                    maxPerCustomer: parseInt(document.getElementById('maxPerCustomer').value) || 6,
+                    refundDays: parseInt(document.getElementById('refundDays').value) || 7,
+                    allowTransfer: document.getElementById('transferToggle').classList.contains('on'),
+                    waitlistEnabled: document.getElementById('waitlistToggle').classList.contains('on'),
+                    status: status,
+                    ticketsSold: 0,
+                    checkins: 0,
+                    revenue: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('events').add(eventData);
+
+                // Log activity
+                await db.collection('activityLogs').add({
+                    storeId: storeId,
+                    userId: currentUser.uid,
+                    userName: currentUser.displayName || 'Owner',
+                    action: 'event_created',
+                    description: 'Created event: ' + name,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast(status === 'published' ? '🎉 Event published!' : '📝 Draft saved!', 'success');
+                setTimeout(function() { window.location.href = 'events.html'; }, 1500);
+            } catch(e) {
+                console.error('Save error:', e);
+                showToast('Failed to save event', 'error');
+                btn.textContent = 'Publish Event';
+                btn.disabled = false;
+            }
+        };
+    })();
+    </script>
+</body>
+</html>

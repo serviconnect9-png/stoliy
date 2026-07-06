@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Product - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="apple-touch-icon" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; --transition: all 0.2s ease; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, a { font-family: var(--font); outline: none; cursor: pointer; }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 130px; }
+        
+        .top-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #fff; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .top-title { font-size: 14px; font-weight: 600; color: var(--text2); flex: 1; }
+        .btn-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .btn-icon.liked { color: var(--error); background: rgba(255,77,79,0.1); border-color: rgba(255,77,79,0.2); }
+        
+        .image-gallery { width: 100%; height: 380px; background: #fff; position: relative; overflow: hidden; }
+        .gallery-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.4s; display: flex; align-items: center; justify-content: center; background: #fff; }
+        .gallery-slide.active { opacity: 1; }
+        .gallery-slide img { width: 100%; height: 100%; object-fit: contain; }
+        .gallery-slide video { width: 100%; height: 100%; object-fit: contain; }
+        .gallery-dots { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3; }
+        .gallery-dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(0,0,0,0.2); border: none; cursor: pointer; padding: 0; transition: all 0.3s; }
+        .gallery-dot.active { background: var(--accent); width: 20px; }
+        .gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.9); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; font-size: 14px; color: var(--text); }
+        .gallery-nav.prev { left: 10px; }
+        .gallery-nav.next { right: 10px; }
+        .discount-badge { position: absolute; top: 12px; left: 12px; background: var(--error); color: #fff; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; z-index: 2; }
+        .digital-badge { position: absolute; top: 12px; right: 12px; background: var(--success); color: #fff; padding: 5px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; z-index: 2; }
+        
+        .product-info { padding: 16px; }
+        .product-name { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; }
+        .product-category { display: inline-block; font-size: 11px; color: var(--accent); background: rgba(108,60,240,0.08); padding: 3px 10px; border-radius: 12px; margin-bottom: 12px; }
+        .price-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .current-price { font-size: 28px; font-weight: 800; color: var(--success); }
+        .original-price { font-size: 16px; color: var(--text3); text-decoration: line-through; }
+        .saved { font-size: 12px; color: var(--error); font-weight: 600; }
+        .converted-price { font-size: 12px; color: var(--text2); margin-top: 2px; display: block; }
+        .rating-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 13px; }
+        .stars { color: var(--warning); }
+        .stock-badge { font-size: 12px; font-weight: 600; }
+        .in-stock { color: var(--success); }
+        .out-stock { color: var(--error); }
+        
+        .store-card { display: flex; align-items: center; gap: 10px; padding: 12px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); margin: 0 16px 12px; cursor: pointer; }
+        .store-card img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .store-name { font-weight: 600; font-size: 13px; }
+        .store-meta { font-size: 11px; color: var(--text2); }
+        
+        .section-block { padding: 0 16px 12px; }
+        .section-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .section-title i { color: var(--accent); font-size: 13px; }
+        .desc-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
+        
+        .shipping-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .shipping-country-name { font-weight: 600; font-size: 13px; }
+        .shipping-details { font-size: 11px; color: var(--text2); }
+        .shipping-rate { font-weight: 700; color: var(--accent); }
+        .shipping-rate-converted { font-size: 10px; color: var(--text3); }
+        
+        .variant-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .variant-chip { padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 500; transition: var(--transition); }
+        .variant-chip.selected { border-color: var(--accent); background: rgba(108,60,240,0.08); color: var(--accent); font-weight: 700; }
+        
+        .review-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; }
+        .review-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .review-name { font-weight: 600; font-size: 12px; }
+        .review-date { font-size: 10px; color: var(--text3); }
+        .review-stars { color: var(--warning); font-size: 10px; margin-bottom: 4px; }
+        .review-text { font-size: 12px; color: var(--text2); }
+        .review-images { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+        .review-images img { width: 60px; height: 60px; border-radius: 6px; object-fit: cover; cursor: pointer; }
+        .review-video { margin-top: 6px; }
+        .review-video video { width: 100%; max-width: 250px; border-radius: 8px; }
+        .verified-purchase { font-size: 9px; background: rgba(46,204,113,0.1); color: var(--success); padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
+        
+        .btn-review { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; margin-top: 8px; }
+        .btn-review:active { transform: scale(0.97); }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet { background: #fff; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; max-height: 85vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+        .star-rating-input { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
+        .star-rating-input i { font-size: 32px; color: #E5E7EB; cursor: pointer; transition: color 0.15s; }
+        .star-rating-input i.active { color: var(--warning); }
+        .form-input { width: 100%; padding: 13px 15px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: var(--font); background: #fff; color: var(--text); }
+        .form-input:focus { border-color: var(--accent); outline: none; }
+        textarea.form-input { resize: vertical; min-height: 60px; }
+        .btn-submit { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 12px; }
+        .btn-cancel { width: 100%; padding: 14px; background: #F3F4F6; color: var(--text); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+        
+        .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: #fff; border-top: 1px solid var(--border); padding: 10px 14px 24px; display: flex; gap: 8px; align-items: center; z-index: 100; }
+        .qty-control { display: flex; align-items: center; gap: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 3px; }
+        .qty-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .qty-val { font-weight: 700; min-width: 24px; text-align: center; font-size: 14px; }
+        .btn-cart { flex: 1; padding: 13px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .btn-buy { flex: 1; padding: 13px; background: var(--success); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .btn-cart:active, .btn-buy:active { transform: scale(0.97); }
+        .btn-cart:disabled, .btn-buy:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .rate-info { background: rgba(108,60,240,0.05); border: 1px solid rgba(108,60,240,0.1); border-radius: 10px; padding: 8px 12px; margin: 0 16px 8px; font-size: 11px; color: var(--text2); text-align: center; }
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 12px 20px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+        
+        .loading-wrap { display: flex; justify-content: center; align-items: center; padding: 100px 0; }
+        .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appRoot">
+        <div class="loading-wrap"><div class="spinner"></div></div>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal-sheet">
+            <div class="modal-title">Write a Review</div>
+            <div class="star-rating-input" id="starRating">
+                <i class="fas fa-star" onclick="setRating(1)"></i>
+                <i class="fas fa-star" onclick="setRating(2)"></i>
+                <i class="fas fa-star" onclick="setRating(3)"></i>
+                <i class="fas fa-star" onclick="setRating(4)"></i>
+                <i class="fas fa-star" onclick="setRating(5)"></i>
+            </div>
+            <div style="margin-bottom:12px;"><textarea class="form-input" id="reviewComment" placeholder="Share your experience with this product..." rows="3"></textarea></div>
+            <div style="margin-bottom:8px;font-size:11px;color:var(--text2);">Add Photos (Optional)</div>
+            <input type="file" id="reviewImages" accept="image/*" multiple style="margin-bottom:8px;">
+            <div style="margin-bottom:8px;font-size:11px;color:var(--text2);">Add Video (Optional)</div>
+            <input type="file" id="reviewVideo" accept="video/*" style="margin-bottom:12px;">
+            <input type="hidden" id="reviewRating" value="5">
+            <button class="btn-submit" onclick="submitReview()">Submit Review</button>
+            <button class="btn-cancel" onclick="closeReviewModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth();
+        var db = firebase.firestore();
+        
+        var currentUser = null;
+        var userData = null;
+        var productData = null;
+        var storeData = null;
+        var currentImage = 0;
+        var quantity = 1;
+        var selectedVariant = null;
+        var isWishlisted = false;
+        var userCurrency = 'USD';
+        var userCurrencySymbol = '$';
+        var exchangeRates = {};
+        var countryList = [];
+        var hasPurchased = false;
+        var reviewRating = 5;
+
+        var params = new URLSearchParams(window.location.search);
+        var productId = params.get('id');
+        var productSlug = params.get('slug');
+        var affiliateId = params.get('ref') || params.get('affiliate') || params.get('aff');
+        var campaignId = params.get('campaign') || params.get('utm_campaign');
+        var couponCode = params.get('coupon') || params.get('code');
+
+        if (affiliateId) {
+            var affData = { id: affiliateId, timestamp: Date.now(), expiry: Date.now() + (30*86400000) };
+            localStorage.setItem('stoliy_affiliate', JSON.stringify(affData));
+        }
+        if (campaignId) { sessionStorage.setItem('stoliy_campaign', campaignId); }
+        if (couponCode) { sessionStorage.setItem('stoliy_coupon', couponCode.toUpperCase()); }
+
+        function loadCountries() {
+            if (typeof countries !== 'undefined' && Array.isArray(countries) && countries.length) countryList = countries;
+            else if (typeof window.countries !== 'undefined' && Array.isArray(window.countries) && window.countries.length) countryList = window.countries;
+        }
+        loadCountries(); setTimeout(loadCountries,300); setTimeout(loadCountries,800);
+
+        function getCurrencyForCountry(code) { var c=countryList.find(function(x){return (x.code||x.iso2||x.alpha2)===code;}); return c?(c.currency||'USD'):'USD'; }
+        function getCurrencySymbol(code) { var s={USD:'$',NGN:'₦',GHS:'GH₵',KES:'KSh',ZAR:'R',EUR:'€',GBP:'£'}; return s[code]||'$'; }
+        function getCountryFlag(name) { var c=countryList.find(function(x){return (x.name||x.country)===name;}); return c?(c.flag||c.emoji||''):''; }
+        function convertPrice(usd, curr) { if(!curr||curr==='USD'||!usd) return usd; var rate=exchangeRates[curr]||1; return usd*rate; }
+
+        async function fetchRates() {
+            try { var r=await fetch('https://api.exchangerate-api.com/v4/latest/USD'); var d=await r.json(); exchangeRates=d.rates; sessionStorage.setItem('exchangeRates',JSON.stringify(d.rates)); } catch(e) { var c=sessionStorage.getItem('exchangeRates'); if(c) exchangeRates=JSON.parse(c); }
+        }
+
+        function showToast(msg, type) {
+            var t=document.querySelector('.toast'); if(t)t.remove();
+            t=document.createElement('div'); t.className='toast '+(type||''); t.textContent=msg; document.body.appendChild(t);
+            setTimeout(function(){t.classList.add('show')},10);
+            setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},2000);
+        }
+
+        if (!productId && !productSlug) {
+            document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px 20px;"><i class="fas fa-box-open" style="font-size:48px;opacity:0.3;display:block;margin-bottom:16px;color:var(--text3);"></i><h3>No Product Specified</h3><button onclick="history.back()" style="margin-top:16px;padding:12px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Go Back</button></div>';
+            return;
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            
+            var uDoc = await db.collection('users').doc(user.uid).get();
+            userData = uDoc.exists ? uDoc.data() : {};
+            
+            if (userData.country) userCurrency = getCurrencyForCountry(userData.country);
+            if (!userCurrency || userCurrency === 'USD') userCurrency = userData.currency || 'USD';
+            userCurrencySymbol = getCurrencySymbol(userCurrency);
+            
+            await fetchRates();
+            await loadProduct();
+        });
+
+        async function loadProduct() {
+            try {
+                var doc;
+                if (productId) {
+                    doc = await db.collection('products').doc(productId).get();
+                } else if (productSlug) {
+                    var allProducts = await db.collection('products').get();
+                    var found = allProducts.docs.find(function(d) {
+                        var p = d.data(); var slug = p.slug || (p.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        return slug === productSlug;
+                    });
+                    if (found) { doc = found; productId = found.id; } else doc = { exists: false };
+                }
+
+                if (!doc || !doc.exists) {
+                    document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px;"><i class="fas fa-box-open" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;"></i><h3>Product Not Found</h3><button onclick="history.back()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;">Go Back</button></div>';
+                    return;
+                }
+                productData = { id: doc.id, ...doc.data() };
+
+                if (productData.storeId) {
+                    var storeDoc = await db.collection('stores').doc(productData.storeId).get();
+                    if (storeDoc.exists) storeData = { id: storeDoc.id, ...storeDoc.data() };
+                }
+
+                // Check wishlist
+                var allWishlist = await db.collection('wishlist').get();
+                isWishlisted = allWishlist.docs.some(function(d) { var w = d.data(); return w.userId === currentUser.uid && w.productId === productId; });
+
+                // Check if user purchased this product
+                var allOrders = await db.collection('orders').get();
+                hasPurchased = allOrders.docs.some(function(d) {
+                    var o = d.data();
+                    return o.userId === currentUser.uid && o.items && o.items.some(function(i) { return i.productId === productId; });
+                });
+
+                // Load reviews
+                var allReviews = await db.collection('reviews').get();
+                var reviews = allReviews.docs.map(function(d) { return d.data(); }).filter(function(r) { return r.productId === productId; });
+
+                renderProduct(reviews);
+            } catch(e) {
+                console.error('Load error:', e);
+                document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px;"><i class="fas fa-exclamation-triangle" style="font-size:48px;opacity:0.3;display:block;"></i><h3>Error loading product</h3><button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;">Retry</button></div>';
+            }
+        }
+
+        function renderProduct(reviews) {
+            var p = productData;
+            var images = p.images || [];
+            if (images.length === 0) images = ['https://via.placeholder.com/400'];
+            
+            var hasVideo = !!p.video;
+            
+            var priceUSD = p.price || 0;
+            var origPriceUSD = p.originalPrice || 0;
+            var discount = origPriceUSD > priceUSD ? Math.round((1 - priceUSD/origPriceUSD)*100) : 0;
+            var inStock = p.inStock !== false && (p.stockQuantity || 0) > 0;
+            var rating = p.rating || 0;
+            var totalSales = p.totalSales || 0;
+            var variants = p.variants || [];
+            var shippingRates = p.shippingRates || [];
+            var isDigital = p.isPhysical === false || p.productType === 'digital' || p.productType === 'ticket';
+            var rate = exchangeRates[userCurrency] || 1;
+            
+            var displayPrice = convertPrice(priceUSD, userCurrency);
+            var displayOrigPrice = convertPrice(origPriceUSD, userCurrency);
+            var sym = userCurrencySymbol;
+
+            var html = '';
+            
+            if (userCurrency !== 'USD' && rate > 0 && rate !== 1) {
+                html += '<div class="rate-info"><i class="fas fa-exchange-alt"></i> 1 USD = ' + rate.toFixed(2) + ' ' + userCurrency + ' • Prices shown in ' + userCurrency + '</div>';
+            }
+            
+            html += '<div class="top-bar"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><span class="top-title">Product Details</span><button class="btn-icon' + (isWishlisted ? ' liked' : '') + '" onclick="toggleWishlist()" id="wishlistBtn"><i class="fas fa-heart"></i></button><button class="btn-icon" onclick="shareProduct()"><i class="fas fa-share-alt"></i></button></div>';
+
+            // Image/Video Gallery
+            html += '<div class="image-gallery" id="gallery">';
+            images.forEach(function(img, i) {
+                html += '<div class="gallery-slide' + (i===0?' active':'') + '"><img src="' + img + '" alt="Product" onerror="this.src=\'https://via.placeholder.com/400\'"></div>';
+            });
+            if (hasVideo) {
+                html += '<div class="gallery-slide"><video src="' + p.video + '" controls style="width:100%;height:100%;object-fit:contain;"></video></div>';
+            }
+            if (discount > 0) html += '<span class="discount-badge">-' + discount + '% OFF</span>';
+            if (isDigital) html += '<span class="digital-badge"><i class="fas fa-download"></i> Digital</span>';
+            if (images.length > 1 || hasVideo) {
+                html += '<button class="gallery-nav prev" onclick="navigateGallery(-1)"><i class="fas fa-chevron-left"></i></button>';
+                html += '<button class="gallery-nav next" onclick="navigateGallery(1)"><i class="fas fa-chevron-right"></i></button>';
+                html += '<div class="gallery-dots">';
+                images.forEach(function(_, i) { html += '<button class="gallery-dot' + (i===0?' active':'') + '" onclick="goToImage(' + i + ')"></button>'; });
+                if (hasVideo) html += '<button class="gallery-dot" onclick="goToImage(' + images.length + ')"></button>';
+                html += '</div>';
+            }
+            html += '</div>';
+
+            html += '<div class="product-info">';
+            html += '<h1 class="product-name">' + (p.name || 'Product') + '</h1>';
+            if (p.category) html += '<span class="product-category"><i class="fas fa-tag"></i> ' + p.category + '</span>';
+            if (isDigital) html += ' <span class="product-category" style="background:rgba(46,204,113,0.1);color:var(--success);"><i class="fas fa-download"></i> ' + (p.productType || 'Digital') + '</span>';
+            
+            html += '<div class="price-row">';
+            html += '<span class="current-price">' + sym + displayPrice.toFixed(2) + '</span>';
+            if (discount > 0) html += '<span class="original-price">' + sym + displayOrigPrice.toFixed(2) + '</span><span class="saved">Save ' + sym + (displayOrigPrice-displayPrice).toFixed(2) + '</span>';
+            html += '</div>';
+            if (userCurrency !== 'USD') html += '<span class="converted-price">≈ USD $' + priceUSD.toFixed(2) + '</span>';
+
+            if (rating > 0) {
+                html += '<div class="rating-row"><span class="stars">' + '★'.repeat(Math.floor(rating)) + '☆'.repeat(5-Math.floor(rating)) + '</span><span>' + rating.toFixed(1) + ' (' + (p.totalReviews||reviews.length) + ' reviews)</span><span style="margin-left:auto;color:var(--text2);">' + totalSales + ' sold</span></div>';
+            }
+
+            html += '<span class="stock-badge ' + (inStock?'in-stock':'out-stock') + '"><i class="fas fa-circle" style="font-size:6px;"></i> ' + (inStock?'In Stock':'Out of Stock') + '</span>';
+            html += '</div>';
+
+            if (storeData) {
+                html += '<div class="store-card" onclick="window.location.href=\'store.html?id=' + storeData.id + '\'">';
+                html += '<img src="' + (storeData.logo||'https://via.placeholder.com/40') + '" onerror="this.src=\'https://via.placeholder.com/40\'">';
+                html += '<div style="flex:1;"><div class="store-name">' + storeData.name + (storeData.verified?' <i class="fas fa-check-circle" style="color:#6C3CF0;font-size:10px;"></i>':'') + '</div><div class="store-meta">' + (storeData.followers||0) + ' followers • ' + (storeData.totalProducts||0) + ' products</div></div>';
+                html += '<i class="fas fa-chevron-right" style="color:var(--text3);"></i></div>';
+            }
+
+            if (variants.length > 0) {
+                html += '<div class="section-block"><div class="section-title"><i class="fas fa-palette"></i> Options</div><div class="variant-chips">';
+                variants.forEach(function(v, i) {
+                    var vPrice = convertPrice(v.price || priceUSD, userCurrency);
+                    html += '<button class="variant-chip' + (i===0?' selected':'') + '" onclick="selectVariant(' + i + ',this)">' + v.name + ' - ' + sym + vPrice.toFixed(2) + '</button>';
+                });
+                html += '</div></div>';
+                selectedVariant = variants[0];
+            }
+
+            if (p.description) {
+                html += '<div class="section-block"><div class="section-title"><i class="fas fa-align-left"></i> Description</div><p class="desc-text">' + p.description.replace(/\n/g, '<br>') + '</p></div>';
+            }
+
+            if (isDigital && p.license) {
+                html += '<div class="section-block"><div class="section-title"><i class="fas fa-file-contract"></i> License</div><p class="desc-text">' + p.license + ' License</p></div>';
+            }
+
+            if (!isDigital && shippingRates.length > 0) {
+                html += '<div class="section-block"><div class="section-title"><i class="fas fa-truck"></i> Shipping</div>';
+                shippingRates.forEach(function(s) {
+                    var sRate = convertPrice(s.rate || 0, userCurrency);
+                    html += '<div class="shipping-card"><div><div class="shipping-country-name">' + getCountryFlag(s.country) + ' ' + s.country + '</div><div class="shipping-details">Est: ' + (s.estimatedDelivery||'3-7 days') + '</div></div><div><div class="shipping-rate">' + sym + sRate.toFixed(2) + '</div>' + (userCurrency!=='USD'?'<div class="shipping-rate-converted">≈ $' + (s.rate||0).toFixed(2) + ' USD</div>':'') + '</div></div>';
+                });
+                html += '</div>';
+            }
+
+            // Reviews with images/videos
+            html += '<div class="section-block"><div class="section-title"><i class="fas fa-star"></i> Reviews (' + reviews.length + ')</div>';
+            if (reviews.length > 0) {
+                reviews.slice(0, 20).forEach(function(r) {
+                    html += '<div class="review-card"><div class="review-top"><span class="review-name">' + (r.userName||'Customer') + (r.verifiedPurchase ? '<span class="verified-purchase">✓ Verified Purchase</span>' : '') + '</span><span class="review-date">' + (r.createdAt?.toDate?r.createdAt.toDate().toLocaleDateString():'') + '</span></div><div class="review-stars">' + '★'.repeat(r.rating||5) + '☆'.repeat(5-(r.rating||5)) + '</div><p class="review-text">' + (r.comment||'') + '</p>';
+                    if (r.images && r.images.length) {
+                        html += '<div class="review-images">' + r.images.map(function(img) { return '<img src="' + img + '" onclick="window.open(\'' + img + '\')" loading="lazy">'; }).join('') + '</div>';
+                    }
+                    if (r.video) {
+                        html += '<div class="review-video"><video src="' + r.video + '" controls style="width:100%;max-width:250px;border-radius:8px;"></video></div>';
+                    }
+                    html += '</div>';
+                });
+            } else {
+                html += '<p class="desc-text">No reviews yet. Be the first to review!</p>';
+            }
+            
+            if (hasPurchased) {
+                html += '<button class="btn-review" onclick="openReviewModal()"><i class="fas fa-star"></i> Write a Review</button>';
+            }
+            html += '</div>';
+
+            document.getElementById('appRoot').innerHTML = html;
+
+            var bottomBar = document.createElement('div');
+            bottomBar.className = 'bottom-bar';
+            bottomBar.innerHTML = '<div class="qty-control"><button class="qty-btn" onclick="changeQty(-1)">−</button><span class="qty-val" id="qtyDisplay">1</span><button class="qty-btn" onclick="changeQty(1)">+</button></div><button class="btn-cart" onclick="addToCart()"><i class="fas fa-shopping-cart"></i> Add to Cart</button><button class="btn-buy" onclick="buyNow()"><i class="fas fa-bolt"></i> Buy Now</button>';
+            document.getElementById('appRoot').appendChild(bottomBar);
+        }
+
+        window.navigateGallery = function(dir) {
+            var totalSlides = (productData.images||[]).length + (productData.video ? 1 : 0);
+            if (totalSlides <= 1) return;
+            currentImage = (currentImage + dir + totalSlides) % totalSlides;
+            updateGallery();
+        };
+        window.goToImage = function(index) { currentImage = index; updateGallery(); };
+
+        function updateGallery() {
+            var slides = document.querySelectorAll('.gallery-slide');
+            var dots = document.querySelectorAll('.gallery-dot');
+            slides.forEach(function(s, i) { s.classList.toggle('active', i === currentImage); });
+            dots.forEach(function(d, i) { d.classList.toggle('active', i === currentImage); });
+        }
+
+        window.selectVariant = function(index, btn) {
+            selectedVariant = productData.variants[index];
+            document.querySelectorAll('.variant-chip').forEach(function(c) { c.classList.remove('selected'); });
+            if (btn) btn.classList.add('selected');
+        };
+        window.changeQty = function(delta) { quantity = Math.max(1, quantity + delta); document.getElementById('qtyDisplay').textContent = quantity; };
+
+        window.toggleWishlist = async function() {
+            var btn = document.getElementById('wishlistBtn');
+            if (isWishlisted) {
+                var allWishlist = await db.collection('wishlist').get();
+                for (var d of allWishlist.docs) { var w = d.data(); if (w.userId === currentUser.uid && w.productId === productId) { await d.ref.delete(); break; } }
+                isWishlisted = false; btn.classList.remove('liked'); showToast('Removed from wishlist');
+            } else {
+                await db.collection('wishlist').add({ userId: currentUser.uid, productId: productId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                isWishlisted = true; btn.classList.add('liked'); showToast('Added to wishlist ❤️', 'success');
+            }
+        };
+
+        window.shareProduct = function() {
+            var slug = productData?.slug || (productData?.name || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            var url = window.location.origin + '/product/' + slug;
+            var storedAff = localStorage.getItem('stoliy_affiliate');
+            if (storedAff) { try { var aff = JSON.parse(storedAff); if (Date.now() < aff.expiry) url += '?ref=' + aff.id; } catch(e) {} }
+            if (navigator.share) { navigator.share({ title: productData?.name, url: url }).catch(function(){}); }
+            else { navigator.clipboard.writeText(url).then(function() { showToast('Link copied! 📋', 'success'); }); }
+        };
+
+        window.addToCart = async function() {
+            if (!currentUser || !productData) return;
+            var btn = document.querySelector('.btn-cart'); btn.textContent = 'Adding...'; btn.disabled = true;
+            var allCart = await db.collection('cart').get();
+            var existing = allCart.docs.find(function(d) { var c = d.data(); return c.userId === currentUser.uid && c.productId === productId && c.variant === (selectedVariant?.name||null); });
+            if (existing) { await existing.ref.update({ quantity: firebase.firestore.FieldValue.increment(quantity) }); }
+            else { await db.collection('cart').add({ userId: currentUser.uid, productId: productId, storeId: productData.storeId, storeName: storeData?.name || '', quantity: quantity, variant: selectedVariant?.name || null, price: selectedVariant?.price || productData.price, name: productData.name, image: (productData.images&&productData.images[0])||'', createdAt: firebase.firestore.FieldValue.serverTimestamp() }); }
+            btn.textContent = 'Added! ✅'; showToast('Added to cart! 🛒', 'success');
+            setTimeout(function() { btn.textContent = 'Add to Cart'; btn.disabled = false; }, 1500);
+        };
+
+        window.buyNow = async function() { await window.addToCart(); window.location.href = 'cart.html'; };
+
+        // ============ REVIEW SYSTEM ============
+        window.setRating = function(rating) {
+            reviewRating = rating;
+            var stars = document.querySelectorAll('#starRating i');
+            stars.forEach(function(s, i) { s.classList.toggle('active', i < rating); });
+            document.getElementById('reviewRating').value = rating;
+        };
+
+        window.openReviewModal = function() {
+            document.getElementById('reviewModal').classList.add('show');
+            document.getElementById('reviewRating').value = 5;
+            document.querySelectorAll('#starRating i').forEach(function(s, i) { s.classList.toggle('active', i < 5); });
+        };
+
+        window.closeReviewModal = function() { document.getElementById('reviewModal').classList.remove('show'); };
+
+        window.submitReview = async function() {
+            var rating = parseInt(document.getElementById('reviewRating').value);
+            var comment = document.getElementById('reviewComment').value.trim();
+            if (!comment) { showToast('Please write a comment', 'warning'); return; }
+
+            var imageFiles = document.getElementById('reviewImages').files;
+            var videoFile = document.getElementById('reviewVideo').files[0];
+            var imageUrls = [];
+            var videoUrl = null;
+
+            // Upload images
+            for (var i = 0; i < imageFiles.length; i++) {
+                var fd = new FormData(); fd.append('file', imageFiles[i]); fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
+                try {
+                    var res = await fetch('https://api.cloudinary.com/v1_1/' + (CONFIG.cloudinaryCloudName||'serviconnect') + '/image/upload', { method: 'POST', body: fd });
+                    var data = await res.json();
+                    if (data.secure_url) imageUrls.push(data.secure_url);
+                } catch(e) {}
+            }
+
+            // Upload video
+            if (videoFile) {
+                var fd = new FormData(); fd.append('file', videoFile); fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
+                try {
+                    var res = await fetch('https://api.cloudinary.com/v1_1/' + (CONFIG.cloudinaryCloudName||'serviconnect') + '/video/upload', { method: 'POST', body: fd });
+                    var data = await res.json();
+                    if (data.secure_url) videoUrl = data.secure_url;
+                } catch(e) {}
+            }
+
+            // Check if user actually purchased
+            var allOrders = await db.collection('orders').get();
+            var verifiedPurchase = allOrders.docs.some(function(d) {
+                var o = d.data();
+                return o.userId === currentUser.uid && o.status === 'delivered' && o.items && o.items.some(function(i) { return i.productId === productId; });
+            });
+
+            await db.collection('reviews').add({
+                productId: productId,
+                storeId: productData.storeId,
+                userId: currentUser.uid,
+                userName: currentUser.displayName || 'Customer',
+                userPhoto: currentUser.photoURL || '',
+                rating: rating,
+                comment: comment,
+                images: imageUrls,
+                video: videoUrl,
+                verifiedPurchase: verifiedPurchase,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Update product rating
+            var allReviews = await db.collection('reviews').get();
+            var productReviews = allReviews.docs.map(function(d) { return d.data(); }).filter(function(r) { return r.productId === productId; });
+            var avgRating = productReviews.reduce(function(s, r) { return s + (r.rating||0); }, 0) / productReviews.length;
+            await db.collection('products').doc(productId).update({ rating: avgRating, totalReviews: productReviews.length });
+
+            closeReviewModal();
+            showToast('Review submitted! ✅', 'success');
+            setTimeout(function() { location.reload(); }, 1500);
+        };
+
+        document.getElementById('reviewModal').addEventListener('click', function(e) { if (e.target === this) closeReviewModal(); });
+
+        var touchStartX = 0;
+        document.addEventListener('DOMContentLoaded', function() {
+            var gallery = document.getElementById('gallery');
+            if (gallery) {
+                gallery.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, {passive: true});
+                gallery.addEventListener('touchend', function(e) { var diff = touchStartX - e.changedTouches[0].clientX; if (Math.abs(diff) > 40) window.navigateGallery(diff > 0 ? 1 : -1); });
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

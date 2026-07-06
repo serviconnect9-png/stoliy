@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Ticket Scanner - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        :root { --bg: #0B0B14; --card: #151521; --text: #FFFFFF; --text2: #A0A0B8; --text3: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, select { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, select:focus { outline: none !important; box-shadow: none !important; }
+        button { -webkit-tap-highlight-color: transparent; }
+        button:active { transform: scale(0.96); }
+
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        
+        .page-header { padding: 14px 16px; display: flex; align-items: center; gap: 10px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 15px; }
+        .page-title { font-size: 16px; font-weight: 700; flex: 1; }
+        .flash-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 14px; }
+        .flash-btn.active { color: var(--warning); background: rgba(244,180,0,0.1); border-color: rgba(244,180,0,0.3); }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; padding: 12px 14px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 6px; text-align: center; }
+        .stat-value { font-size: 20px; font-weight: 800; }
+        .stat-label { font-size: 8px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+        
+        .section { padding: 0 14px; margin-bottom: 14px; }
+        .section-title { font-size: 10px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        
+        select.event-select { width: 100%; padding: 13px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--card); color: #fff; font-size: 14px; font-family: var(--font); appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; cursor: pointer; }
+        select.event-select option { background: var(--card); color: #fff; }
+        
+        .scanner-area { margin: 0 14px; border-radius: var(--radius); overflow: hidden; background: #000; position: relative; min-height: 250px; display: flex; align-items: center; justify-content: center; }
+        #qrReader { width: 100%; }
+        #qrReader video { width: 100%; border-radius: var(--radius); }
+        .scanner-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .scanner-box { width: 220px; height: 220px; border: 3px solid var(--accent); border-radius: 16px; position: relative; box-shadow: 0 0 0 1000px rgba(0,0,0,0.4); }
+        .scanner-corners { position: absolute; inset: -3px; }
+        .scanner-corners::before, .scanner-corners::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: var(--success); border-style: solid; }
+        .scanner-corners::before { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+        .scanner-corners::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+        
+        .manual-section { margin: 0 14px; }
+        .manual-row { display: flex; gap: 8px; }
+        .manual-input { flex: 1; padding: 14px; border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--card); color: #fff; font-size: 15px; font-family: var(--font); text-align: center; letter-spacing: 2px; text-transform: uppercase; }
+        .manual-input::placeholder { color: var(--text3); letter-spacing: 1px; font-size: 13px; text-transform: none; }
+        .manual-input:focus { border-color: var(--accent); }
+        .btn-verify { padding: 14px 18px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; font-size: 14px; white-space: nowrap; }
+        .btn-verify:active { background: #5A2FD4; }
+        .btn-verify:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        
+        .result-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin: 0 14px 12px; display: none; animation: fadeIn 0.25s ease; }
+        .result-card.show { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .result-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .result-icon.valid { background: rgba(46,204,113,0.15); color: var(--success); }
+        .result-icon.invalid { background: rgba(255,77,79,0.15); color: var(--error); }
+        .result-status-text { font-weight: 700; font-size: 15px; }
+        .result-status-sub { font-size: 11px; color: var(--text3); }
+        .result-rows { margin-bottom: 12px; }
+        .result-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+        .result-row:last-child { border-bottom: none; }
+        .result-label { color: var(--text2); }
+        .result-value { font-weight: 600; text-align: right; }
+        .result-value.mono { font-family: monospace; font-size: 11px; }
+        
+        .btn-action { width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.15s; }
+        .btn-checkin { background: var(--success); color: #fff; }
+        .btn-checkin:active { background: #27AE60; }
+        .btn-reset { background: transparent; color: var(--text2); border: 1px solid var(--border); margin-top: 8px; }
+        
+        .history-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; }
+        .history-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+        .history-info { flex: 1; min-width: 0; }
+        .history-name { font-weight: 600; font-size: 12px; }
+        .history-meta { font-size: 9px; color: var(--text2); }
+        .history-time { font-size: 9px; color: var(--text3); text-align: right; flex-shrink: 0; }
+        
+        .empty-state { text-align: center; padding: 40px; color: var(--text2); }
+        .empty-state i { font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px; }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #0B0B14; padding: 12px 22px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; color: #fff; }
+        .toast.error { background: #FF4D4F; color: #fff; }
+        .toast.warning { background: #F4B400; color: #0B0B14; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-qrcode" style="color:var(--accent);margin-right:6px;"></i>Ticket Scanner</h2>
+            <button class="flash-btn" id="flashBtn" onclick="toggleFlash()"><i class="fas fa-bolt"></i></button>
+        </div>
+
+        <div class="stats-row" id="statsRow" style="display:none;">
+            <div class="stat-card"><div class="stat-value" id="statTotal" style="color:var(--accent);">0</div><div class="stat-label">Total</div></div>
+            <div class="stat-card"><div class="stat-value" id="statCheckedIn" style="color:var(--success);">0</div><div class="stat-label">Checked In</div></div>
+            <div class="stat-card"><div class="stat-value" id="statRemaining" style="color:var(--warning);">0</div><div class="stat-label">Remaining</div></div>
+            <div class="stat-card"><div class="stat-value" id="statRate" style="color:#3B82F6;">0%</div><div class="stat-label">Rate</div></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Select Event</div>
+            <select class="event-select" id="eventSelect" onchange="onEventChange()"><option value="">Choose an event...</option></select>
+        </div>
+
+        <div class="scanner-area" id="scannerArea" style="display:none;">
+            <div id="qrReader"></div>
+            <div class="scanner-overlay"><div class="scanner-box"><div class="scanner-corners"></div></div></div>
+        </div>
+
+        <div class="manual-section" id="manualSection" style="display:none;">
+            <div class="manual-row">
+                <input type="text" class="manual-input" id="ticketInput" placeholder="Enter Ticket ID" autocomplete="off" onkeypress="if(event.key==='Enter')verifyTicket()">
+                <button class="btn-verify" id="btnVerify" onclick="verifyTicket()">Verify</button>
+            </div>
+        </div>
+
+        <div class="result-card" id="resultCard"></div>
+
+        <div class="section" id="historySection" style="display:none;">
+            <div class="section-title">Check-in History</div>
+            <div id="historyList"><div class="empty-state"><i class="fas fa-clock"></i><p>No check-ins yet</p></div></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, storeId, selectedEventId, currentTicket, html5QrCode, scannerRunning = false, flashOn = false;
+        var allEvents = [], allTickets = [];
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d) { return d.data().ownerId === user.uid; });
+            if (!myStore) {
+                document.querySelector('.section').innerHTML = '<div class="empty-state"><i class="fas fa-store-slash"></i><h3>No Store Found</h3><p>Create a store to manage events</p></div>';
+                return;
+            }
+            storeId = myStore.id;
+            
+            var allEventsSnap = await db.collection('events').get();
+            allEvents = allEventsSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(e) { return e.storeId === storeId; });
+            
+            var allTicketsSnap = await db.collection('tickets').get();
+            allTickets = allTicketsSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+            
+            populateEvents();
+            
+            var params = new URLSearchParams(window.location.search);
+            var eventId = params.get('id');
+            if (eventId) {
+                document.getElementById('eventSelect').value = eventId;
+                onEventChange();
+            }
+        });
+
+        function populateEvents() {
+            var select = document.getElementById('eventSelect');
+            if (allEvents.length === 0) {
+                select.innerHTML = '<option value="">No events found</option>';
+                return;
+            }
+            select.innerHTML = '<option value="">Choose an event...</option>' + allEvents.map(function(e) {
+                return '<option value="' + e.id + '">' + (e.name || 'Event') + ' • ' + new Date(e.startDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</option>';
+            }).join('');
+        }
+
+        window.onEventChange = function() {
+            selectedEventId = document.getElementById('eventSelect').value;
+            stopScanner();
+            hideResult();
+            
+            if (!selectedEventId) {
+                document.getElementById('scannerArea').style.display = 'none';
+                document.getElementById('manualSection').style.display = 'none';
+                document.getElementById('statsRow').style.display = 'none';
+                document.getElementById('historySection').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('scannerArea').style.display = 'block';
+            document.getElementById('manualSection').style.display = 'block';
+            document.getElementById('statsRow').style.display = 'grid';
+            document.getElementById('historySection').style.display = 'block';
+            document.getElementById('ticketInput').value = '';
+            currentTicket = null;
+            
+            loadStats();
+            loadHistory();
+            startScanner();
+        };
+
+        function loadStats() {
+            var eventTickets = allTickets.filter(function(t) { return t.eventId === selectedEventId; });
+            var total = eventTickets.filter(function(t) { return t.status === 'active' || t.status === 'used'; }).length;
+            var checkedIn = eventTickets.filter(function(t) { return t.status === 'used'; }).length;
+            var remaining = eventTickets.filter(function(t) { return t.status === 'active'; }).length;
+            var rate = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
+            
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statCheckedIn').textContent = checkedIn;
+            document.getElementById('statRemaining').textContent = remaining;
+            document.getElementById('statRate').textContent = rate + '%';
+        }
+
+        function loadHistory() {
+            var history = allTickets
+                .filter(function(t) { return t.eventId === selectedEventId && t.status === 'used'; })
+                .sort(function(a, b) {
+                    var aTime = a.checkedInAt?.toDate ? a.checkedInAt.toDate().getTime() : 0;
+                    var bTime = b.checkedInAt?.toDate ? b.checkedInAt.toDate().getTime() : 0;
+                    return bTime - aTime;
+                });
+            
+            var container = document.getElementById('historyList');
+            if (history.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-ticket-alt"></i><p>No check-ins yet for this event</p></div>';
+                return;
+            }
+            
+            container.innerHTML = history.slice(0, 100).map(function(t) {
+                var time = t.checkedInAt?.toDate ? t.checkedInAt.toDate() : new Date();
+                return '<div class="history-item">' +
+                    '<div class="history-icon" style="background:rgba(46,204,113,0.1);color:var(--success);"><i class="fas fa-check-circle"></i></div>' +
+                    '<div class="history-info">' +
+                        '<div class="history-name">' + (t.customerName || 'Guest') + ' • ' + (t.ticketType || 'General') + '</div>' +
+                        '<div class="history-meta">' + t.ticketNumber + ' • by ' + (t.checkedInByName || 'Staff') + '</div>' +
+                    '</div>' +
+                    '<div class="history-time">' + time.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '<br>' + time.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ============ SCANNER ============
+        function startScanner() {
+            if (scannerRunning) return;
+            if (!selectedEventId) return;
+            
+            var readerEl = document.getElementById('qrReader');
+            readerEl.innerHTML = '';
+            
+            html5QrCode = new Html5Qrcode('qrReader');
+            
+            html5QrCode.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                function(decodedText) {
+                    console.log('📷 Scanned:', decodedText);
+                    handleScan(decodedText);
+                },
+                function() {}
+            ).then(function() {
+                scannerRunning = true;
+                console.log('✅ Scanner running');
+            }).catch(function(err) {
+                console.error('Scanner error:', err);
+                showToast('Camera access denied. Use manual entry.', 'warning');
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode && scannerRunning) {
+                html5QrCode.stop().then(function() {
+                    scannerRunning = false;
+                }).catch(function() {});
+            }
+        }
+
+        window.toggleFlash = function() {
+            if (!html5QrCode || !scannerRunning) return;
+            flashOn = !flashOn;
+            var btn = document.getElementById('flashBtn');
+            btn.classList.toggle('active', flashOn);
+            html5QrCode.applyVideoConstraints({ advanced: [{ torch: flashOn }] }).catch(function() {
+                showToast('Flash not available', 'warning');
+                flashOn = false;
+                btn.classList.remove('active');
+            });
+        };
+
+        function handleScan(decodedText) {
+            var ticketId = decodedText.trim().toUpperCase();
+            if (ticketId.includes('TKT-')) {
+                var match = ticketId.match(/TKT-[A-Z0-9]+/);
+                if (match) ticketId = match[0];
+            }
+            document.getElementById('ticketInput').value = ticketId;
+            verifyTicketById(ticketId);
+            
+            // Pause scanner briefly
+            stopScanner();
+            setTimeout(function() { if (selectedEventId) startScanner(); }, 3000);
+        }
+
+        // ============ MANUAL VERIFY ============
+        window.verifyTicket = function() {
+            var ticketId = document.getElementById('ticketInput').value.trim().toUpperCase();
+            if (!ticketId) { showToast('Enter ticket ID', 'warning'); return; }
+            if (!selectedEventId) { showToast('Select an event first', 'warning'); return; }
+            verifyTicketById(ticketId);
+        };
+
+        async function verifyTicketById(ticketId) {
+            var btn = document.getElementById('btnVerify');
+            btn.textContent = '...'; btn.disabled = true;
+            
+            var ticketDoc = await db.collection('tickets').doc(ticketId).get();
+            
+            if (!ticketDoc.exists) {
+                showResult('invalid', 'Ticket Not Found', [
+                    { label: 'ID', value: ticketId, mono: true },
+                    { label: 'Reason', value: 'This ticket does not exist' }
+                ]);
+                resetBtn(); return;
+            }
+            
+            currentTicket = { id: ticketDoc.id, ...ticketDoc.data() };
+            var t = currentTicket;
+            
+            // Wrong event
+            if (t.eventId !== selectedEventId) {
+                var wrongEvent = allEvents.find(function(e) { return e.id === t.eventId; });
+                showResult('invalid', 'Wrong Event', [
+                    { label: 'Guest', value: t.customerName || 'N/A' },
+                    { label: 'Ticket For', value: wrongEvent ? wrongEvent.name : 'Another event' },
+                    { label: 'Reason', value: 'This ticket is for a different event' }
+                ]);
+                currentTicket = null; resetBtn(); return;
+            }
+            
+            // Already used
+            if (t.status === 'used') {
+                var checkinTime = t.checkedInAt?.toDate ? t.checkedInAt.toDate().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : 'Unknown';
+                showResult('invalid', 'Already Used', [
+                    { label: 'Guest', value: t.customerName || 'N/A' },
+                    { label: 'Type', value: t.ticketType || 'General' },
+                    { label: 'Checked In', value: checkinTime },
+                    { label: 'By', value: t.checkedInByName || 'Staff' }
+                ]);
+                currentTicket = null; resetBtn(); return;
+            }
+            
+            // Refunded
+            if (t.status === 'refunded') {
+                showResult('invalid', 'Refunded', [
+                    { label: 'Guest', value: t.customerName || 'N/A' },
+                    { label: 'Reason', value: 'Ticket was refunded' }
+                ]);
+                currentTicket = null; resetBtn(); return;
+            }
+            
+            // Cancelled
+            if (t.status === 'cancelled') {
+                showResult('invalid', 'Cancelled', [
+                    { label: 'Guest', value: t.customerName || 'N/A' },
+                    { label: 'Reason', value: 'Ticket was cancelled' }
+                ]);
+                currentTicket = null; resetBtn(); return;
+            }
+            
+            // Event ended
+            var event = allEvents.find(function(e) { return e.id === t.eventId; });
+            if (event && event.endDate && new Date(event.endDate) < new Date()) {
+                showResult('invalid', 'Event Ended', [
+                    { label: 'Event', value: event.name || '' },
+                    { label: 'Ended', value: new Date(event.endDate).toLocaleDateString() }
+                ]);
+                currentTicket = null; resetBtn(); return;
+            }
+            
+            // VALID!
+            showResult('valid', 'Valid Ticket', [
+                { label: 'Guest', value: t.customerName || 'Guest' },
+                { label: 'Type', value: t.ticketType || 'General' },
+                { label: 'Ticket ID', value: t.ticketNumber, mono: true },
+                { label: 'Email', value: t.customerEmail || 'N/A' },
+                { label: 'Status', value: 'Ready for entry ✓', color: 'var(--success)' }
+            ], true);
+            
+            resetBtn();
+        }
+
+        function showResult(type, title, rows, showCheckin) {
+            var card = document.getElementById('resultCard');
+            var html = '<div class="result-header">' +
+                '<div class="result-icon ' + type + '"><i class="fas fa-' + (type === 'valid' ? 'check-circle' : 'times-circle') + '"></i></div>' +
+                '<div><div class="result-status-text" style="color:' + (type === 'valid' ? 'var(--success)' : 'var(--error)') + ';">' + title + '</div><div class="result-status-sub">' + (type === 'valid' ? 'Guest can enter' : 'Entry denied') + '</div></div>' +
+                '</div><div class="result-rows">';
+            
+            rows.forEach(function(r) {
+                html += '<div class="result-row"><span class="result-label">' + r.label + '</span><span class="result-value' + (r.mono ? ' mono' : '') + '" style="' + (r.color ? 'color:' + r.color : '') + '">' + r.value + '</span></div>';
+            });
+            
+            html += '</div>';
+            
+            if (showCheckin) {
+                html += '<button class="btn-action btn-checkin" onclick="checkInTicket()"><i class="fas fa-check-circle"></i> Check In Guest</button>';
+            }
+            
+            html += '<button class="btn-action btn-reset" onclick="hideResult()">Scan Next Ticket</button>';
+            
+            card.innerHTML = html;
+            card.classList.add('show');
+            card.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideResult() {
+            document.getElementById('resultCard').classList.remove('show');
+            document.getElementById('ticketInput').value = '';
+            document.getElementById('ticketInput').focus();
+            currentTicket = null;
+        }
+
+        function resetBtn() {
+            var btn = document.getElementById('btnVerify');
+            btn.textContent = 'Verify';
+            btn.disabled = false;
+        }
+
+        // ============ CHECK IN ============
+        window.checkInTicket = async function() {
+            if (!currentTicket) return;
+            var btn = document.querySelector('.btn-checkin');
+            btn.textContent = 'Checking in...'; btn.disabled = true;
+            
+            try {
+                await db.collection('tickets').doc(currentTicket.id).update({
+                    status: 'used',
+                    checkedInAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    checkedInBy: currentUser.uid,
+                    checkedInByName: currentUser.displayName || 'Staff'
+                });
+                
+                await db.collection('events').doc(currentTicket.eventId).update({
+                    checkins: firebase.firestore.FieldValue.increment(1)
+                });
+                
+                // Update local data
+                var ticketInAll = allTickets.find(function(t) { return t.id === currentTicket.id; });
+                if (ticketInAll) {
+                    ticketInAll.status = 'used';
+                    ticketInAll.checkedInAt = { toDate: function() { return new Date(); } };
+                    ticketInAll.checkedInByName = currentUser.displayName || 'Staff';
+                }
+                
+                await db.collection('activityLogs').add({
+                    storeId: storeId,
+                    userId: currentUser.uid,
+                    userName: currentUser.displayName || 'Staff',
+                    action: 'ticket_checkin',
+                    description: 'Checked in ' + (currentTicket.customerName || 'Guest') + ' - ' + (currentTicket.ticketType || 'Ticket'),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showToast('✅ Guest checked in!', 'success');
+                loadStats();
+                loadHistory();
+                hideResult();
+                
+                // Restart scanner
+                if (!scannerRunning && selectedEventId) {
+                    setTimeout(function() { startScanner(); }, 1500);
+                }
+            } catch(e) {
+                console.error('Check-in error:', e);
+                showToast('Check-in failed', 'error');
+                btn.textContent = 'Check In Guest';
+                btn.disabled = false;
+            }
+        };
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type || '');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); }, 10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 2000);
+        }
+
+        window.addEventListener('beforeunload', function() { stopScanner(); });
+    })();
+    </script>
+</body>
+</html>

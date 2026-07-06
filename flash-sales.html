@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Flash Sales - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .flash-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 12px 16px; }
+        .flash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .flash-badge { background: var(--error); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+        .flash-meta { font-size: 12px; color: var(--text2); }
+        .btn-add { padding: 10px 20px; background: var(--accent); color: #fff; border: none; border-radius: 25px; font-weight: 600; cursor: pointer; display: block; margin: 16px auto; }
+        .form-section { padding: 16px; display: none; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: var(--font); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-submit { width: 100%; padding: 14px; background: var(--error); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><h2 class="page-title">Flash Sales</h2></div>
+        <div id="flashList"><div style="text-align:center;padding:40px;">Loading...</div></div>
+        <button class="btn-add" onclick="showForm()"><i class="fas fa-bolt"></i> Create Flash Sale</button>
+        <div class="form-section" id="flashForm">
+            <div class="form-group"><label class="form-label">Select Product</label><select class="form-input" id="flashProduct"></select></div>
+            <div class="form-group"><label class="form-label">Sale Price ($)</label><input type="number" class="form-input" id="flashPrice" step="0.01"></div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Start</label><input type="datetime-local" class="form-input" id="flashStart"></div><div class="form-group"><label class="form-label">End</label><input type="datetime-local" class="form-input" id="flashEnd"></div></div>
+            <div class="form-group"><label class="form-label">Quantity Limit</label><input type="number" class="form-input" id="flashQty" placeholder="Leave empty for unlimited"></div>
+            <button class="btn-submit" onclick="createFlashSale()">Start Flash Sale</button>
+            <button style="width:100%;padding:12px;background:#F3F4F6;border:none;border-radius:12px;margin-top:6px;cursor:pointer;" onclick="document.getElementById('flashForm').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    const auth = firebase.auth(), db = firebase.firestore();
+    let currentUser = null, storeId = null;
+
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        currentUser = user;
+        const allStores = await db.collection('stores').get();
+        const myStore = allStores.docs.find(d => d.data().ownerId === user.uid);
+        if (!myStore) { window.location.href = 'wizard.html'; return; }
+        storeId = myStore.id;
+        loadFlashSales();
+        loadProductsForSelect();
+    });
+
+    async function loadFlashSales() {
+        const allFlash = await db.collection('flashSales').get();
+        const myFlash = allFlash.docs.map(d => ({ id: d.id, ...d.data() })).filter(f => f.storeId === storeId);
+        const container = document.getElementById('flashList');
+        if (myFlash.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2);">No flash sales yet</div>';
+            return;
+        }
+        container.innerHTML = myFlash.map(f => `
+            <div class="flash-card">
+                <div class="flash-header"><span style="font-weight:700;">${f.productName||'Product'}</span><span class="flash-badge">⚡ LIVE</span></div>
+                <div class="flash-meta">Sale: $${f.salePrice} | Qty: ${f.quantityLimit||'Unlimited'}</div>
+                <div class="flash-meta">${f.startDate?.toDate?.()?f.startDate.toDate().toLocaleString():''} - ${f.endDate?.toDate?.()?f.endDate.toDate().toLocaleString():''}</div>
+                <button style="margin-top:8px;background:var(--error);color:#fff;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:11px;" onclick="deleteFlash('${f.id}')">End Sale</button>
+            </div>
+        `).join('');
+    }
+
+    async function loadProductsForSelect() {
+        const allProducts = await db.collection('products').get();
+        const myProducts = allProducts.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.storeId === storeId);
+        document.getElementById('flashProduct').innerHTML = '<option value="">Select product</option>' + myProducts.map(p => `<option value="${p.id}">${p.name} - $${p.price}</option>`).join('');
+    }
+
+    function showForm() { document.getElementById('flashForm').style.display = 'block'; }
+
+    async function createFlashSale() {
+        const productId = document.getElementById('flashProduct').value;
+        const price = parseFloat(document.getElementById('flashPrice').value) || 0;
+        const start = document.getElementById('flashStart').value;
+        const end = document.getElementById('flashEnd').value;
+        const qty = document.getElementById('flashQty').value;
+
+        if (!productId || price <= 0 || !start || !end) { alert('Fill all required fields'); return; }
+
+        const productDoc = await db.collection('products').doc(productId).get();
+        await db.collection('flashSales').add({
+            storeId, productId, productName: productDoc.data()?.name || 'Product',
+            salePrice: price, startDate: new Date(start), endDate: new Date(end),
+            quantityLimit: qty ? parseInt(qty) : null, active: true,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('flashForm').style.display = 'none';
+        loadFlashSales();
+    }
+
+    async function deleteFlash(id) { await db.collection('flashSales').doc(id).delete(); loadFlashSales(); }
+
+    window.showForm = showForm;
+    window.createFlashSale = createFlashSale;
+    window.deleteFlash = deleteFlash;
+    </script>
+</body>
+</html>

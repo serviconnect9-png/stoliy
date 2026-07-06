@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Fulfillment - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0B0B14; --card: #151521; --text: #FFFFFF; --text2: #A0A0B8; --text3: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, select, textarea { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, select:focus, textarea:focus { outline: none !important; box-shadow: none !important; }
+        button:active { transform: scale(0.96); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        
+        .page-header { padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 15px; }
+        .page-title { font-size: 17px; font-weight: 700; flex: 1; }
+        .btn-settings { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 14px; }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; padding: 12px 14px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; }
+        .stat-value { font-size: 20px; font-weight: 800; }
+        .stat-label { font-size: 8px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+        
+        .section { padding: 0 14px; margin-bottom: 14px; }
+        .section-title { font-size: 10px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        
+        .order-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+        .order-card:hover { border-color: #3A3A55; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .order-number { font-weight: 700; font-size: 12px; color: var(--accent); font-family: monospace; }
+        .order-status { padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; }
+        .order-items { display: flex; gap: 6px; margin-bottom: 8px; overflow-x: auto; }
+        .order-items img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--bg); }
+        .order-customer { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+        .order-meta { font-size: 10px; color: var(--text3); }
+        .order-address { font-size: 10px; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; display: none; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; max-height: 85vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+        
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 13px 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: #fff; font-size: 14px; font-family: var(--font); }
+        .form-input:focus { border-color: var(--accent); }
+        select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; cursor: pointer; }
+        select.form-input option { background: var(--card); color: #fff; }
+        textarea.form-input { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .courier-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 6px; max-height: 200px; overflow-y: auto; }
+        .courier-card { padding: 10px; border: 2px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; text-align: center; transition: all 0.15s; font-size: 11px; }
+        .courier-card:hover { border-color: #3A3A55; }
+        .courier-card.selected { border-color: var(--accent); background: rgba(108,60,240,0.05); color: var(--accent); font-weight: 700; }
+        .courier-type-label { font-size: 9px; color: var(--text3); display: block; }
+        
+        .req-check { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; cursor: pointer; }
+        .req-check input { accent-color: var(--accent); width: 16px; height: 16px; }
+        
+        .btn-action { width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 8px; transition: all 0.15s; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-warning { background: var(--warning); color: #0B0B14; }
+        .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+        
+        .delivery-settings-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+        
+        .empty-state { text-align: center; padding: 60px; color: var(--text2); }
+        .empty-state i { font-size: 48px; opacity: 0.2; display: block; margin-bottom: 12px; }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #0B0B14; padding: 12px 22px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; color: #fff; }
+        .toast.error { background: #FF4D4F; color: #fff; }
+        .toast.warning { background: #F4B400; color: #0B0B14; }
+        
+        .loading-wrap { display: flex; justify-content: center; padding: 60px; }
+        .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-truck" style="color:var(--accent);margin-right:6px;"></i>Fulfillment</h2>
+            <button class="btn-settings" onclick="openDeliverySettings()"><i class="fas fa-cog"></i></button>
+        </div>
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-value" style="color:var(--warning);" id="statPending">0</div><div class="stat-label">To Process</div></div>
+            <div class="stat-card"><div class="stat-value" style="color:var(--accent);" id="statReady">0</div><div class="stat-label">Ready to Ship</div></div>
+            <div class="stat-card"><div class="stat-value" style="color:var(--success);" id="statShipped">0</div><div class="stat-label">Shipped Today</div></div>
+        </div>
+        <div class="section"><div class="section-title">Orders to Fulfill</div><div id="ordersList"><div class="loading-wrap"><div class="spinner"></div></div></div></div>
+    </div>
+
+    <div class="modal-overlay" id="fulfillModal">
+        <div class="modal-sheet" id="fulfillContent"></div>
+    </div>
+    
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-sheet" id="settingsContent"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, storeId, storeData, allOrders = [], countryList = [], deliverySettings = {};
+
+        // ============ COURIERS ============
+        var couriers = {
+            international: [
+                { name: 'DHL Express', type: 'International' },
+                { name: 'FedEx', type: 'International' },
+                { name: 'UPS', type: 'International' },
+                { name: 'TNT', type: 'International' },
+                { name: 'Aramex', type: 'International' },
+                { name: 'EMS', type: 'International' }
+            ],
+            nigeria: [
+                { name: 'GIG Logistics (GIGL)', type: 'Nigeria' },
+                { name: 'Kwik Delivery', type: 'Nigeria' },
+                { name: 'GUO Transport Logistics', type: 'Nigeria' },
+                { name: 'ABC Cargo Express', type: 'Nigeria' },
+                { name: 'NIPOST EMS', type: 'Nigeria' },
+                { name: 'Sendbox', type: 'Nigeria' },
+                { name: 'Topship', type: 'Nigeria' }
+            ],
+            seller: [
+                { name: 'In-house Delivery', type: 'Self-Managed' },
+                { name: 'Local Dispatch Rider', type: 'Self-Managed' },
+                { name: 'Store Pickup', type: 'Self-Managed' },
+                { name: 'Customer Pickup', type: 'Self-Managed' },
+                { name: 'Third-party Courier', type: 'Self-Managed' },
+                { name: 'Bus Terminal Delivery', type: 'Self-Managed' }
+            ]
+        };
+
+        var allCouriers = [].concat(couriers.international, couriers.nigeria, couriers.seller);
+
+        var deliveryMethods = [
+            'Local Pickup', 'Home Delivery', 'Standard Shipping', 'Express Shipping',
+            'Same-Day Delivery', 'Next-Day Delivery', 'Scheduled Delivery',
+            'Nationwide Courier', 'International Shipping'
+        ];
+
+        var deliveryRequirements = [
+            'Recipient Full Name', 'Valid Phone Number', 'Delivery Address',
+            'Landmark/Directions', 'City', 'State/Province', 'Postal/ZIP Code',
+            'Country', 'Preferred Delivery Date', 'Preferred Delivery Time',
+            'Recipient Must Be Present', 'Signature Required on Delivery',
+            'Age Verification', 'Payment Before Dispatch', 'Fragile Item Handling',
+            'Assembly/Installation Required', 'Contact Before Delivery',
+            'Leave at Door if Unavailable', 'Insurance Available',
+            'Gift Wrapping Available', 'Special Delivery Instructions'
+        ];
+
+        // ============ COUNTRIES ============
+        function loadCountries() {
+            if (typeof countries !== 'undefined' && Array.isArray(countries) && countries.length) countryList = countries;
+            else if (typeof window.countries !== 'undefined' && Array.isArray(window.countries)) countryList = window.countries;
+        }
+        loadCountries(); setTimeout(loadCountries,300); setTimeout(loadCountries,800);
+
+        function getCurrencySymbol() {
+            if (!countryList.length) return '$';
+            var c = countryList.find(function(x) { return x.code === (storeData?.country || 'US'); });
+            var syms = { USD:'$', NGN:'₦', GHS:'GH₵', KES:'KSh', ZAR:'R', EUR:'€', GBP:'£' };
+            return syms[c?.currency] || '$';
+        }
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type||'');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); }, 10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 2000);
+        }
+
+        // ============ AUTH ============
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d) { return d.data().ownerId === user.uid; });
+            if (!myStore) {
+                document.getElementById('ordersList').innerHTML = '<div class="empty-state"><i class="fas fa-store-slash"></i><h3>No Store Found</h3><p>Create a store to fulfill orders</p></div>';
+                return;
+            }
+            storeId = myStore.id;
+            storeData = myStore.data();
+            
+            // Load delivery settings
+            var settingsDoc = await db.collection('deliverySettings').doc(storeId).get();
+            deliverySettings = settingsDoc.exists ? settingsDoc.data() : {
+                deliveryMethod: 'Standard Shipping',
+                processingTime: '24 hours',
+                shippingFee: 0,
+                freeShippingOver: 0,
+                estimatedDelivery: '3-7 business days',
+                deliveryRadius: '',
+                supportedCountries: [],
+                cutOffTime: '',
+                deliveryDays: ['Mon','Tue','Wed','Thu','Fri'],
+                requirements: {},
+                specialInstructions: ''
+            };
+            
+            await loadOrders();
+        });
+
+        async function loadOrders() {
+            var allOrdersSnap = await db.collection('orders').get();
+            allOrders = allOrdersSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; })
+                .filter(function(o) { return o.storeId === storeId; })
+                .sort(function(a, b) { return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0); });
+            
+            var pending = allOrders.filter(function(o) { return ['paid','processing','confirmed','preparing','packed'].includes(o.status); }).length;
+            var ready = allOrders.filter(function(o) { return o.status === 'packed' || o.status === 'ready_to_ship'; }).length;
+            var shippedToday = allOrders.filter(function(o) {
+                return o.status === 'shipped' && o.shippedAt?.toDate && o.shippedAt.toDate().toDateString() === new Date().toDateString();
+            }).length;
+            
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statReady').textContent = ready;
+            document.getElementById('statShipped').textContent = shippedToday;
+            
+            renderOrderList();
+        }
+
+        function renderOrderList() {
+            var container = document.getElementById('ordersList');
+            var fulfillable = allOrders.filter(function(o) {
+                return ['paid','processing','confirmed','preparing','packed','ready_to_ship'].includes(o.status);
+            });
+            
+            if (fulfillable.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success);"></i><h3>All Caught Up!</h3><p>No orders waiting to be fulfilled</p></div>';
+                return;
+            }
+            
+            container.innerHTML = fulfillable.map(function(o) {
+                var items = o.items || [];
+                var customer = o.shippingAddress || {};
+                return '<div class="order-card" onclick="openFulfillModal(\'' + o.id + '\')">' +
+                    '<div class="order-header"><span class="order-number">#' + (o.orderNumber || o.id.substring(0,8).toUpperCase()) + '</span>' +
+                    '<span class="order-status" style="background:rgba(244,180,0,0.15);color:var(--warning);">' + (o.status||'Pending').replace(/_/g,' ') + '</span></div>' +
+                    '<div class="order-items">' + items.slice(0,6).map(function(i) { return '<img src="' + (i.image||'https://via.placeholder.com/40') + '" onerror="this.src=\'https://via.placeholder.com/40\'">'; }).join('') + '</div>' +
+                    '<div class="order-customer">' + (customer.name || 'Customer') + '</div>' +
+                    '<div class="order-address">' + (customer.address||'') + ', ' + (customer.city||'') + ' ' + (customer.country||'') + '</div>' +
+                    '<div class="order-meta">' + items.length + ' item(s) • ' + (o.trackingNumber ? '📦 ' + o.trackingNumber : 'No tracking') + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ============ FULFILLMENT MODAL ============
+        window.openFulfillModal = function(orderId) {
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (!order) return;
+            
+            var items = order.items || [];
+            var customer = order.shippingAddress || {};
+            var sym = getCurrencySymbol();
+            var content = document.getElementById('fulfillContent');
+            
+            var h = '<div class="modal-title">Fulfill Order #' + (order.orderNumber || orderId.substring(0,8).toUpperCase()) + '</div>';
+            
+            // Customer info
+            h += '<div style="margin-bottom:12px;"><span class="form-label">Customer</span><p style="font-size:12px;color:var(--text2);line-height:1.6;">' + (customer.name||'N/A') + '<br>' + (customer.address||'') + '<br>' + (customer.city||'') + ', ' + (customer.state||'') + '<br>' + (customer.country||'') + '<br>📞 ' + (customer.phone||'N/A') + '</p></div>';
+            
+            // Items
+            h += '<div style="margin-bottom:12px;"><span class="form-label">Items (' + items.length + ')</span>';
+            items.forEach(function(i) { h += '<div style="font-size:11px;padding:2px 0;display:flex;justify-content:space-between;"><span>' + (i.name||'Product') + ' × ' + (i.quantity||1) + '</span><span style="color:var(--success);">' + sym + ((i.price||0)*(i.quantity||1)).toFixed(2) + '</span></div>'; });
+            h += '</div>';
+            
+            // Delivery Method
+            h += '<div class="form-group"><label class="form-label">Delivery Method *</label><select class="form-input" id="deliveryMethod">' + 
+                deliveryMethods.map(function(m) { return '<option value="' + m + '"' + (order.deliveryMethod === m || deliverySettings.deliveryMethod === m ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></div>';
+            
+            // Courier Selection
+            h += '<div class="form-group"><label class="form-label">Courier Service *</label><div class="courier-grid">';
+            allCouriers.forEach(function(c) {
+                var isSelected = order.courierService === c.name || (!order.courierService && deliverySettings.defaultCourier === c.name);
+                h += '<div class="courier-card' + (isSelected ? ' selected' : '') + '" onclick="selectCourier(\'' + c.name + '\',this)"><span>' + c.name + '</span><span class="courier-type-label">' + c.type + '</span></div>';
+            });
+            h += '<div class="courier-card" id="customCourierCard" onclick="showCustomCourier()"><span>Other (Custom)</span><span class="courier-type-label">Specify below</span></div>';
+            h += '</div></div>';
+            h += '<div class="form-group" id="customCourierGroup" style="display:' + (order.courierService && !allCouriers.find(function(c){return c.name===order.courierService;}) ? 'block' : 'none') + ';"><input type="text" class="form-input" id="customCourier" placeholder="Enter courier name" value="' + (order.courierService && !allCouriers.find(function(c){return c.name===order.courierService;}) ? order.courierService : '') + '"></div>';
+            h += '<input type="hidden" id="selectedCourier" value="' + (order.courierService || '') + '">';
+            
+            // Tracking & Delivery
+            h += '<div class="form-group"><label class="form-label">Tracking Number *</label><input type="text" class="form-input" id="trackingNumber" value="' + (order.trackingNumber||'') + '" placeholder="Enter tracking number"></div>';
+            h += '<div class="form-row"><div class="form-group"><label class="form-label">Estimated Delivery</label><input type="text" class="form-input" id="estimatedDelivery" value="' + (order.estimatedDelivery||deliverySettings.estimatedDelivery||'') + '" placeholder="e.g. 3-5 days"></div><div class="form-group"><label class="form-label">Shipping Fee (' + sym + ')</label><input type="number" class="form-input" id="shippingFee" value="' + (order.shippingCostUSD||deliverySettings.shippingFee||'') + '" step="0.01" placeholder="0.00"></div></div>';
+            
+            // Delivery Requirements
+            h += '<div class="form-group"><label class="form-label">Delivery Requirements</label>';
+            deliveryRequirements.forEach(function(r) {
+                var key = r.toLowerCase().replace(/\s+/g,'_');
+                var checked = (order.deliveryRequirements||{})[key] || (deliverySettings.requirements||{})[key] || false;
+                h += '<label class="req-check"><input type="checkbox" ' + (checked ? 'checked' : '') + '> ' + r + '</label>';
+            });
+            h += '</div>';
+            
+            // Special Instructions
+            h += '<div class="form-group"><label class="form-label">Special Instructions</label><textarea class="form-input" id="specialInstructions" placeholder="Any special delivery notes...">' + (order.specialInstructions||deliverySettings.specialInstructions||'') + '</textarea></div>';
+            
+            // Actions
+            h += '<button class="btn-action btn-success" onclick="markAsShipped(\'' + orderId + '\')"><i class="fas fa-check-circle"></i> Mark as Shipped & Notify Customer</button>';
+            h += '<button class="btn-action btn-primary" onclick="saveFulfillment(\'' + orderId + '\')"><i class="fas fa-save"></i> Save Without Shipping</button>';
+            h += '<button class="btn-action btn-warning" onclick="markAsReady(\'' + orderId + '\')"><i class="fas fa-box"></i> Mark Ready to Ship</button>';
+            h += '<button class="btn-action btn-cancel" onclick="closeFulfillModal()">Cancel</button>';
+            
+            content.innerHTML = h;
+            document.getElementById('fulfillModal').classList.add('show');
+        };
+
+        window.selectCourier = function(name, el) {
+            document.querySelectorAll('.courier-card').forEach(function(c) { c.classList.remove('selected'); });
+            el.classList.add('selected');
+            document.getElementById('selectedCourier').value = name;
+            document.getElementById('customCourierGroup').style.display = 'none';
+        };
+
+        window.showCustomCourier = function() {
+            document.querySelectorAll('.courier-card').forEach(function(c) { c.classList.remove('selected'); });
+            document.getElementById('customCourierCard').classList.add('selected');
+            document.getElementById('selectedCourier').value = '';
+            document.getElementById('customCourierGroup').style.display = 'block';
+        };
+
+        window.saveFulfillment = async function(orderId) {
+            var courier = document.getElementById('selectedCourier').value || document.getElementById('customCourier').value.trim();
+            if (!courier) { showToast('Select a courier','error'); return; }
+            
+            var requirements = {};
+            document.querySelectorAll('.req-check input').forEach(function(cb) {
+                requirements[cb.parentElement.textContent.trim().toLowerCase().replace(/\s+/g,'_')] = cb.checked;
+            });
+            
+            await db.collection('orders').doc(orderId).update({
+                deliveryMethod: document.getElementById('deliveryMethod').value,
+                courierService: courier,
+                trackingNumber: document.getElementById('trackingNumber').value.trim(),
+                estimatedDelivery: document.getElementById('estimatedDelivery').value.trim(),
+                shippingCostUSD: parseFloat(document.getElementById('shippingFee').value) || 0,
+                deliveryRequirements: requirements,
+                specialInstructions: document.getElementById('specialInstructions').value.trim(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            closeFulfillModal();
+            await loadOrders();
+            showToast('Fulfillment saved!','success');
+        };
+
+        window.markAsReady = async function(orderId) {
+            await db.collection('orders').doc(orderId).update({
+                status: 'ready_to_ship',
+                timeline: { ready_to_ship: new Date().toISOString() },
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeFulfillModal();
+            await loadOrders();
+            showToast('Marked as ready!','success');
+        };
+
+        window.markAsShipped = async function(orderId) {
+            var courier = document.getElementById('selectedCourier').value || document.getElementById('customCourier').value.trim();
+            var tracking = document.getElementById('trackingNumber').value.trim();
+            
+            if (!courier) { showToast('Select a courier','error'); return; }
+            if (!tracking) { showToast('Enter tracking number','error'); return; }
+            
+            await saveFulfillment(orderId);
+            
+            await db.collection('orders').doc(orderId).update({
+                status: 'shipped',
+                shippedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                timeline: { shipped: new Date().toISOString() }
+            });
+            
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (order) {
+                await db.collection('notifications').add({
+                    userId: order.userId, type: 'order_shipped',
+                    message: '📦 Your order #' + (order.orderNumber||orderId.substring(0,8)) + ' has been shipped via ' + courier + '! Tracking: ' + tracking,
+                    link: 'orders.html', read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            
+            closeFulfillModal();
+            await loadOrders();
+            showToast('Order shipped & customer notified! ✅','success');
+        };
+
+        window.closeFulfillModal = function() { document.getElementById('fulfillModal').classList.remove('show'); };
+
+        // ============ DELIVERY SETTINGS ============
+        window.openDeliverySettings = function() {
+            var content = document.getElementById('settingsContent');
+            var sym = getCurrencySymbol();
+            var ds = deliverySettings;
+            
+            var h = '<div class="modal-title"><i class="fas fa-cog"></i> Delivery Settings</div>';
+            
+            h += '<div class="form-group"><label class="form-label">Default Delivery Method</label><select class="form-input" id="dsDeliveryMethod">' + deliveryMethods.map(function(m) { return '<option value="' + m + '"' + (ds.deliveryMethod===m?' selected':'') + '>' + m + '</option>'; }).join('') + '</select></div>';
+            h += '<div class="form-group"><label class="form-label">Processing Time</label><input type="text" class="form-input" id="dsProcessingTime" value="' + (ds.processingTime||'') + '" placeholder="e.g. 24 hours"></div>';
+            h += '<div class="form-row"><div class="form-group"><label class="form-label">Default Shipping Fee (' + sym + ')</label><input type="number" class="form-input" id="dsShippingFee" value="' + (ds.shippingFee||0) + '" step="0.01"></div><div class="form-group"><label class="form-label">Free Shipping Over (' + sym + ')</label><input type="number" class="form-input" id="dsFreeShippingOver" value="' + (ds.freeShippingOver||0) + '" step="0.01"></div></div>';
+            h += '<div class="form-group"><label class="form-label">Estimated Delivery</label><input type="text" class="form-input" id="dsEstimatedDelivery" value="' + (ds.estimatedDelivery||'') + '" placeholder="e.g. 3-7 business days"></div>';
+            h += '<div class="form-group"><label class="form-label">Delivery Radius (km)</label><input type="text" class="form-input" id="dsDeliveryRadius" value="' + (ds.deliveryRadius||'') + '" placeholder="e.g. 20"></div>';
+            h += '<div class="form-group"><label class="form-label">Order Cut-off Time</label><input type="time" class="form-input" id="dsCutOffTime" value="' + (ds.cutOffTime||'') + '"></div>';
+            
+            h += '<button class="btn-action btn-primary" onclick="saveDeliverySettings()"><i class="fas fa-save"></i> Save Settings</button>';
+            h += '<button class="btn-action btn-cancel" onclick="closeSettingsModal()">Cancel</button>';
+            
+            content.innerHTML = h;
+            document.getElementById('settingsModal').classList.add('show');
+        };
+
+        window.saveDeliverySettings = async function() {
+            var data = {
+                deliveryMethod: document.getElementById('dsDeliveryMethod').value,
+                processingTime: document.getElementById('dsProcessingTime').value.trim(),
+                shippingFee: parseFloat(document.getElementById('dsShippingFee').value) || 0,
+                freeShippingOver: parseFloat(document.getElementById('dsFreeShippingOver').value) || 0,
+                estimatedDelivery: document.getElementById('dsEstimatedDelivery').value.trim(),
+                deliveryRadius: document.getElementById('dsDeliveryRadius').value.trim(),
+                cutOffTime: document.getElementById('dsCutOffTime').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection('deliverySettings').doc(storeId).set(data, { merge: true });
+            deliverySettings = Object.assign(deliverySettings, data);
+            closeSettingsModal();
+            showToast('Settings saved!','success');
+        };
+
+        window.closeSettingsModal = function() { document.getElementById('settingsModal').classList.remove('show'); };
+
+        document.getElementById('fulfillModal').addEventListener('click', function(e) { if (e.target === this) closeFulfillModal(); });
+        document.getElementById('settingsModal').addEventListener('click', function(e) { if (e.target === this) closeSettingsModal(); });
+    })();
+    </script>
+</body>
+</html>

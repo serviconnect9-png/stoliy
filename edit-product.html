@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Edit Product - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .form-section { padding: 16px; }
+        .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; margin: 20px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #F3F4F6; }
+        .section-title:first-child { margin-top: 0; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 5px; display: block; }
+        .form-input { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: var(--font); background: #fff; color: var(--text); }
+        .form-input:focus { border-color: var(--accent); outline: none; }
+        textarea.form-input { resize: vertical; min-height: 80px; }
+        select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .toggle-switch { width: 46px; height: 26px; border-radius: 13px; background: #D1D5DB; cursor: pointer; position: relative; transition: background 0.3s; }
+        .toggle-switch.on { background: var(--success); }
+        .toggle-switch::after { content: ''; width: 22px; height: 22px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.3s; }
+        .toggle-switch.on::after { left: 22px; }
+        .btn-submit { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .btn-delete { width: 100%; padding: 14px; background: #fff; color: var(--error); border: 1px solid rgba(255,77,79,0.3); border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; transition: transform 0.3s ease; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><h2 class="page-title">Edit Product</h2></div>
+        <div class="form-section" id="editForm"><div style="text-align:center;padding:60px;">Loading product...</div></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    var auth = firebase.auth(), db = firebase.firestore();
+    var params = new URLSearchParams(window.location.search), productId = params.get('id');
+    var productData;
+
+    auth.onAuthStateChanged(async function(user) {
+        if (!user) { window.location.href = 'login.html'; return; }
+        if (!productId) return;
+        var doc = await db.collection('products').doc(productId).get();
+        if (!doc.exists) { document.getElementById('editForm').innerHTML = '<div style="text-align:center;padding:60px;">Product not found</div>'; return; }
+        productData = { id: doc.id, ...doc.data() };
+        renderForm();
+    });
+
+    function renderForm() {
+        var p = productData;
+        var cats = CONFIG.categories || [];
+        document.getElementById('editForm').innerHTML = `
+            <div class="section-title">Product Information</div>
+            <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="editName" value="${p.name || ''}"></div>
+            <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="editDesc">${p.description || ''}</textarea></div>
+            <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="editCategory">${cats.filter(c => c.name !== 'All').map(c => `<option value="${c.name}" ${p.category === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div>
+            <div class="section-title">Pricing</div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input" id="editPrice" value="${p.price || 0}" step="0.01"></div><div class="form-group"><label class="form-label">Compare-at Price</label><input type="number" class="form-input" id="editOrigPrice" value="${p.originalPrice || 0}" step="0.01"></div></div>
+            <div class="section-title">Inventory</div>
+            <div class="form-row"><div class="form-group"><label class="form-label">SKU</label><input type="text" class="form-input" id="editSKU" value="${p.sku || ''}"></div><div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-input" id="editQty" value="${p.stockQuantity || 0}"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Active / Published</span><div class="toggle-switch ${p.active !== false ? 'on' : ''}" id="activeToggle" onclick="this.classList.toggle('on')"></div></div>
+            <div class="section-title">Availability</div>
+            <select class="form-input" id="editAvailability">
+                <option value="available" ${p.availability === 'available' ? 'selected' : ''}>Available Now</option>
+                <option value="preorder" ${p.availability === 'preorder' ? 'selected' : ''}>Pre-Order</option>
+                <option value="coming_soon" ${p.availability === 'coming_soon' ? 'selected' : ''}>Coming Soon</option>
+            </select>
+            <button class="btn-submit" onclick="saveProduct()">Save Changes</button>
+            <button class="btn-delete" onclick="deleteProduct()"><i class="fas fa-trash"></i> Delete Product</button>
+        `;
+    }
+
+    function showToast(msg, type) {
+        var t = document.querySelector('.toast'); if(t) t.remove();
+        t = document.createElement('div'); t.className = 'toast '+(type||''); t.textContent = msg;
+        document.body.appendChild(t); setTimeout(function(){t.classList.add('show')},10);
+        setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},2000);
+    }
+
+    window.saveProduct = async function() {
+        var data = {
+            name: document.getElementById('editName').value.trim(),
+            description: document.getElementById('editDesc').value.trim(),
+            category: document.getElementById('editCategory').value,
+            price: parseFloat(document.getElementById('editPrice').value) || 0,
+            originalPrice: parseFloat(document.getElementById('editOrigPrice').value) || 0,
+            sku: document.getElementById('editSKU').value.trim(),
+            stockQuantity: parseInt(document.getElementById('editQty').value) || 0,
+            inStock: (parseInt(document.getElementById('editQty').value) || 0) > 0,
+            active: document.getElementById('activeToggle').classList.contains('on'),
+            availability: document.getElementById('editAvailability').value,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await db.collection('products').doc(productId).update(data);
+        showToast('Product updated!','success');
+        setTimeout(function() { history.back(); }, 1500);
+    };
+
+    window.deleteProduct = async function() {
+        if (!confirm('Delete this product permanently?')) return;
+        await db.collection('products').doc(productId).delete();
+        showToast('Product deleted','');
+        setTimeout(function() { window.location.href = 'manage-products.html'; }, 1000);
+    };
+    </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Edit Event - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, textarea, select { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, textarea:focus, select:focus { outline: none !important; box-shadow: none !important; }
+        button:active { transform: scale(0.96); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        
+        .page-header { padding: 14px 16px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .page-title { font-size: 17px; font-weight: 700; flex: 1; }
+        
+        .form-section { padding: 16px; }
+        .section-title { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #F3F4F6; }
+        .section-title:first-child { margin-top: 0; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; display: block; }
+        .form-sublabel { font-size: 10px; color: var(--text3); margin-top: 3px; }
+        .form-input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font); background: #fff; color: var(--text); transition: all 0.2s; }
+        .form-input:focus { border-color: var(--accent); }
+        textarea.form-input { resize: vertical; min-height: 80px; }
+        select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 44px; cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        .upload-zone { border: 2px dashed #D1D5DB; border-radius: var(--radius-sm); padding: 24px; text-align: center; cursor: pointer; background: #FAFAFA; transition: all 0.2s; }
+        .upload-zone:hover { border-color: var(--accent); }
+        .upload-zone img { max-width: 100%; max-height: 120px; border-radius: 10px; margin-top: 10px; }
+        
+        .ticket-type-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 10px; }
+        .ticket-type-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ticket-type-name { font-weight: 700; font-size: 14px; }
+        .btn-remove { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,77,79,0.1); color: var(--error); border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        .btn-add { width: 100%; padding: 14px; background: transparent; border: 2px dashed #D1D5DB; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 13px; color: var(--accent); }
+        
+        .btn-submit { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .btn-delete { width: 100%; padding: 14px; background: #fff; color: var(--error); border: 1px solid rgba(255,77,79,0.3); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; margin-top: 8px; }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+        .toast.error { background: #FF4D4F; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-edit" style="color:var(--accent);margin-right:6px;"></i>Edit Event</h2>
+        </div>
+        <div class="form-section" id="editForm">
+            <div style="text-align:center;padding:60px;color:var(--text3);">Loading event...</div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var params = new URLSearchParams(window.location.search), eventId = params.get('id');
+        var currentUser, storeId, eventData, bannerFile;
+        var BASE_URL = (typeof CONFIG !== 'undefined' && CONFIG.baseUrl) ? CONFIG.baseUrl : window.location.origin;
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type||''); t.textContent = msg;
+            document.body.appendChild(t); setTimeout(function(){ t.classList.add('show'); },10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); },300); },2500);
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            if (!eventId) { document.getElementById('editForm').innerHTML = '<div style="text-align:center;padding:60px;">No event specified</div>'; return; }
+            
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d) { return d.data().ownerId === user.uid; });
+            if (!myStore) { window.location.href = 'wizard.html'; return; }
+            storeId = myStore.id;
+            
+            var doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) { document.getElementById('editForm').innerHTML = '<div style="text-align:center;padding:60px;">Event not found</div>'; return; }
+            eventData = { id: doc.id, ...doc.data() };
+            renderForm();
+        });
+
+        function renderForm() {
+            var e = eventData;
+            var container = document.getElementById('editForm');
+            
+            var h = '';
+            h += '<div class="section-title">Event Details</div>';
+            h += '<div class="form-group"><label class="form-label">Event Name *</label><input type="text" class="form-input" id="eventName" value="' + (e.name || '') + '"></div>';
+            h += '<div class="form-group"><label class="form-label">Event Type</label><select class="form-input" id="eventType">';
+            ['Concert','Conference','Sports','Workshop','Festival','Seminar','Webinar','Networking','Church','Private'].forEach(function(t) {
+                h += '<option value="' + t + '"' + (e.eventType === t ? ' selected' : '') + '>' + t + '</option>';
+            });
+            h += '</select></div>';
+            h += '<div class="form-group"><label class="form-label">Organizer</label><input type="text" class="form-input" id="organizer" value="' + (e.organizer || '') + '"></div>';
+            h += '<div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="eventDesc">' + (e.description || '') + '</textarea></div>';
+            h += '<div class="form-group"><label class="form-label">Banner</label><div class="upload-zone" onclick="document.getElementById(\'bannerInput\').click()"><i class="fas fa-image"></i><span>Tap to change banner</span><img id="bannerPreview" style="' + (e.banner ? 'display:block;' : 'display:none;') + '" src="' + (e.banner || '') + '"><input type="file" id="bannerInput" accept="image/*" style="display:none;" onchange="previewBanner(this)"></div></div>';
+            
+            h += '<div class="section-title">Location</div>';
+            h += '<div class="form-group"><label class="form-label">Location Type</label><select class="form-input" id="locationType" onchange="toggleLocation()"><option value="physical"' + (e.locationType === 'physical' ? ' selected' : '') + '>Physical</option><option value="online"' + (e.locationType === 'online' ? ' selected' : '') + '>Online</option><option value="hybrid"' + (e.locationType === 'hybrid' ? ' selected' : '') + '>Hybrid</option></select></div>';
+            h += '<div id="physicalFields" style="' + (e.locationType === 'online' ? 'display:none;' : '') + '"><div class="form-group"><label class="form-label">Venue</label><input type="text" class="form-input" id="venue" value="' + (e.venue || '') + '"></div><div class="form-row"><div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" id="city" value="' + (e.city || '') + '"></div><div class="form-group"><label class="form-label">Country</label><input type="text" class="form-input" id="country" value="' + (e.country || '') + '"></div></div></div>';
+            h += '<div id="onlineFields" style="' + (e.locationType === 'physical' ? 'display:none;' : '') + '"><div class="form-group"><label class="form-label">Platform</label><input type="text" class="form-input" id="platform" value="' + (e.platform || '') + '"></div><div class="form-group"><label class="form-label">Meeting Link</label><input type="url" class="form-input" id="meetingLink" value="' + (e.meetingLink || '') + '"></div></div>';
+            
+            h += '<div class="section-title">Schedule</div>';
+            h += '<div class="form-row"><div class="form-group"><label class="form-label">Start Date</label><input type="datetime-local" class="form-input" id="startDate" value="' + (e.startDate || '') + '"></div><div class="form-group"><label class="form-label">End Date</label><input type="datetime-local" class="form-input" id="endDate" value="' + (e.endDate || '') + '"></div></div>';
+            
+            h += '<div class="section-title">Ticket Types</div><div id="ticketTypesContainer">';
+            if (e.ticketTypes && e.ticketTypes.length) {
+                e.ticketTypes.forEach(function(t, i) {
+                    h += '<div class="ticket-type-card"><div class="ticket-type-header"><span class="ticket-type-name">' + (t.name || 'Ticket') + '</span>' + (i > 0 ? '<button class="btn-remove" onclick="this.closest(\'.ticket-type-card\').remove()">✕</button>' : '') + '</div><div class="form-row"><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input ticket-name" value="' + (t.name || '') + '"></div><div class="form-group"><label class="form-label">Price ($)</label><input type="number" class="form-input ticket-price" value="' + (t.price || 0) + '" step="0.01"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-input ticket-qty" value="' + (t.quantity || 0) + '"></div><div class="form-group"><label class="form-label">Benefits</label><input type="text" class="form-input ticket-benefits" value="' + (t.benefits || '') + '"></div></div></div>';
+                });
+            }
+            h += '</div><button class="btn-add" onclick="addTicketType()"><i class="fas fa-plus"></i> Add Ticket Type</button>';
+            
+            h += '<div class="section-title">Settings</div>';
+            h += '<div class="form-row"><div class="form-group"><label class="form-label">Max Per Customer</label><input type="number" class="form-input" id="maxPerCustomer" value="' + (e.maxPerCustomer || 6) + '"></div><div class="form-group"><label class="form-label">Refund Days Before</label><input type="number" class="form-input" id="refundDays" value="' + (e.refundDays || 7) + '"></div></div>';
+            h += '<div class="form-group"><label class="form-label">Status</label><select class="form-input" id="eventStatus"><option value="published"' + (e.status === 'published' ? ' selected' : '') + '>Published</option><option value="draft"' + (e.status === 'draft' ? ' selected' : '') + '>Draft</option><option value="cancelled"' + (e.status === 'cancelled' ? ' selected' : '') + '>Cancelled</option></select></div>';
+            
+            h += '<button class="btn-submit" onclick="saveEvent()"><i class="fas fa-save"></i> Save Changes</button>';
+            h += '<button class="btn-delete" onclick="deleteEvent()"><i class="fas fa-trash"></i> Delete Event</button>';
+            
+            container.innerHTML = h;
+        }
+
+        window.toggleLocation = function() {
+            var type = document.getElementById('locationType').value;
+            document.getElementById('physicalFields').style.display = (type === 'physical' || type === 'hybrid') ? 'block' : 'none';
+            document.getElementById('onlineFields').style.display = (type === 'online' || type === 'hybrid') ? 'block' : 'none';
+        };
+
+        window.previewBanner = function(input) {
+            if (!input.files || !input.files[0]) return;
+            bannerFile = input.files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) { document.getElementById('bannerPreview').src = e.target.result; document.getElementById('bannerPreview').style.display = 'block'; };
+            reader.readAsDataURL(bannerFile);
+        };
+
+        window.addTicketType = function() {
+            var div = document.createElement('div');
+            div.className = 'ticket-type-card';
+            div.innerHTML = '<div class="ticket-type-header"><span class="ticket-type-name">New Ticket</span><button class="btn-remove" onclick="this.closest(\'.ticket-type-card\').remove()">✕</button></div><div class="form-row"><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input ticket-name"></div><div class="form-group"><label class="form-label">Price ($)</label><input type="number" class="form-input ticket-price" value="0" step="0.01"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-input ticket-qty" value="50"></div><div class="form-group"><label class="form-label">Benefits</label><input type="text" class="form-input ticket-benefits"></div></div>';
+            document.getElementById('ticketTypesContainer').appendChild(div);
+        };
+
+        async function uploadBanner() {
+            if (!bannerFile) return eventData.banner || null;
+            var fd = new FormData(); fd.append('file', bannerFile); fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
+            var res = await fetch('https://api.cloudinary.com/v1_1/' + (CONFIG.cloudinaryCloudName || 'serviconnect') + '/image/upload', { method: 'POST', body: fd });
+            var data = await res.json();
+            return data.secure_url || null;
+        }
+
+        window.saveEvent = async function() {
+            var btn = document.querySelector('.btn-submit');
+            btn.textContent = 'Saving...'; btn.disabled = true;
+            
+            var ticketTypes = [];
+            document.querySelectorAll('.ticket-type-card').forEach(function(card) {
+                var n = card.querySelector('.ticket-name')?.value?.trim();
+                if (n) ticketTypes.push({
+                    name: n,
+                    price: parseFloat(card.querySelector('.ticket-price')?.value) || 0,
+                    quantity: parseInt(card.querySelector('.ticket-qty')?.value) || 0,
+                    benefits: card.querySelector('.ticket-benefits')?.value?.trim() || ''
+                });
+            });
+            
+            var bannerUrl = await uploadBanner();
+            
+            await db.collection('events').doc(eventId).update({
+                name: document.getElementById('eventName').value.trim(),
+                eventType: document.getElementById('eventType').value,
+                organizer: document.getElementById('organizer').value.trim(),
+                description: document.getElementById('eventDesc').value.trim(),
+                banner: bannerUrl || eventData.banner || '',
+                locationType: document.getElementById('locationType').value,
+                venue: document.getElementById('venue')?.value?.trim() || '',
+                city: document.getElementById('city')?.value?.trim() || '',
+                country: document.getElementById('country')?.value?.trim() || '',
+                platform: document.getElementById('platform')?.value?.trim() || '',
+                meetingLink: document.getElementById('meetingLink')?.value?.trim() || '',
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                ticketTypes: ticketTypes,
+                maxPerCustomer: parseInt(document.getElementById('maxPerCustomer').value) || 6,
+                refundDays: parseInt(document.getElementById('refundDays').value) || 7,
+                status: document.getElementById('eventStatus').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showToast('Event updated!', 'success');
+            setTimeout(function() { history.back(); }, 1500);
+        };
+
+        window.deleteEvent = async function() {
+            if (!confirm('Delete this event permanently? This cannot be undone.')) return;
+            await db.collection('events').doc(eventId).delete();
+            showToast('Event deleted');
+            setTimeout(function() { window.location.href = 'events.html'; }, 1000);
+        };
+    })();
+    </script>
+</body>
+</html>

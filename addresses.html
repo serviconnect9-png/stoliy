@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Addresses - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 30px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .btn-add { padding: 8px 16px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .address-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 12px 16px; position: relative; }
+        .address-card.default { border-color: var(--accent); border-width: 2px; }
+        .default-badge { position: absolute; top: 12px; right: 12px; background: rgba(108,60,240,0.1); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; }
+        .address-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+        .address-phone { font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+        .address-detail { font-size: 13px; color: var(--text2); line-height: 1.6; }
+        .address-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-sm { padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; color: var(--text2); transition: all 0.2s; }
+        .btn-sm:hover { border-color: #D1D5DB; color: var(--text); }
+        .btn-sm.danger { color: var(--error); border-color: rgba(255,77,79,0.2); }
+        .btn-sm.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; display: block; }
+        .empty-state button { margin-top: 16px; padding: 12px 24px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet { background: #fff; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; max-height: 85vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 13px 15px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: var(--font); background: #fff; color: var(--text); transition: all 0.2s; }
+        .form-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(108,60,240,0.08); }
+        textarea.form-input { resize: vertical; min-height: 70px; }
+        select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; cursor: pointer; background-color: #fff; }
+        select.form-input option { background: #fff; color: var(--text); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-full { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; }
+        .btn-cancel { width: 100%; padding: 15px; background: #F3F4F6; color: var(--text); border: none; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 6px; }
+        .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 10px 0; cursor: pointer; font-size: 13px; color: var(--text2); }
+        .checkbox-row input { accent-color: var(--accent); width: 18px; height: 18px; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+        .toast.error { background: #FF4D4F; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-map-marker-alt" style="color:var(--accent);margin-right:6px;"></i>My Addresses</h2>
+            <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div id="addressesContainer"><div style="text-align:center;padding:40px;color:var(--text3);">Loading addresses...</div></div>
+    </div>
+
+    <div class="modal-overlay" id="addressModal">
+        <div class="modal-sheet">
+            <h3 style="text-align:center;font-size:18px;font-weight:700;margin-bottom:20px;" id="modalTitle">Add New Address</h3>
+            <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-input" id="addrName" placeholder="John Doe"></div>
+            <div class="form-group"><label class="form-label">Phone Number *</label><input type="tel" class="form-input" id="addrPhone" placeholder="+1234567890"></div>
+            <div class="form-group"><label class="form-label">Country *</label><select class="form-input" id="addrCountry"><option value="">Loading countries...</option></select></div>
+            <div class="form-group"><label class="form-label">State/Region *</label><input type="text" class="form-input" id="addrState" placeholder="Lagos, Accra, Nairobi..."></div>
+            <div class="form-group"><label class="form-label">City/Town *</label><input type="text" class="form-input" id="addrCity" placeholder="Ikeja, Osu, Westlands..."></div>
+            <div class="form-group"><label class="form-label">Street Address *</label><textarea class="form-input" id="addrStreet" placeholder="123 Main Street, Block 4"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Room/Apt Number</label><input type="text" class="form-input" id="addrRoom" placeholder="Apt 4B"></div>
+                <div class="form-group"><label class="form-label">Postal Code</label><input type="text" class="form-input" id="addrZip" placeholder="100001"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Nearest Bus Stop / Landmark</label><input type="text" class="form-input" id="addrLandmark" placeholder="Behind Central Mall, near GTBank"></div>
+            <label class="checkbox-row"><input type="checkbox" id="addrDefault"> Set as default shipping address</label>
+            <input type="hidden" id="editId">
+            <button class="btn-full" id="btnSave" onclick="saveAddress()">Save Address</button>
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser = null, addresses = [], allCountries = [];
+
+        // ============ LOAD COUNTRIES ============
+        function loadCountries() {
+            if (typeof countries !== 'undefined' && Array.isArray(countries) && countries.length) { allCountries = countries; return true; }
+            if (typeof window.countries !== 'undefined' && Array.isArray(window.countries) && window.countries.length) { allCountries = window.countries; return true; }
+            if (typeof COUNTRIES !== 'undefined' && Array.isArray(COUNTRIES) && COUNTRIES.length) { allCountries = COUNTRIES; return true; }
+            return false;
+        }
+        loadCountries();
+        setTimeout(loadCountries, 200); setTimeout(loadCountries, 600); setTimeout(loadCountries, 1200);
+
+        function populateCountryDropdown() {
+            var select = document.getElementById('addrCountry');
+            if (!select) return;
+            if (!allCountries.length) {
+                select.innerHTML = '<option value="">Loading countries...</option>';
+                return;
+            }
+            select.innerHTML = '<option value="">Select country</option>' + allCountries.map(function(c) {
+                var flag = c.flag || c.emoji || c.flagEmoji || '';
+                var name = c.name || c.country || c.countryName || '';
+                return '<option value="' + name + '">' + flag + ' ' + name + '</option>';
+            }).join('');
+        }
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast '+(type||'');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); },10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); },300); },2500);
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            populateCountryDropdown();
+            setTimeout(populateCountryDropdown, 500);
+            setTimeout(populateCountryDropdown, 1500);
+            await loadAddresses();
+        });
+
+        async function loadAddresses() {
+            var container = document.getElementById('addressesContainer');
+            var allAddresses = await db.collection('addresses').get();
+            addresses = allAddresses.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(a) { return a.userId === currentUser.uid; }).sort(function(a, b) { return (b.createdAt?.toDate?.()||0) - (a.createdAt?.toDate?.()||0); });
+
+            if (addresses.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-map-marker-alt"></i><h3>No addresses yet</h3><p>Add a shipping address for deliveries</p><button onclick="openAddModal()"><i class="fas fa-plus"></i> Add Address</button></div>';
+                return;
+            }
+
+            container.innerHTML = addresses.map(function(a) {
+                return '<div class="address-card ' + (a.isDefault ? 'default' : '') + '">' +
+                    (a.isDefault ? '<span class="default-badge"><i class="fas fa-star"></i> Default</span>' : '') +
+                    '<div class="address-name">' + (a.fullName || 'N/A') + '</div>' +
+                    '<div class="address-phone"><i class="fas fa-phone" style="margin-right:4px;"></i> ' + (a.phone || 'N/A') + '</div>' +
+                    '<div class="address-detail">' +
+                        (a.streetAddress || '') + (a.roomNumber ? ', ' + a.roomNumber : '') + '<br>' +
+                        (a.city || '') + ', ' + (a.state || '') + '<br>' +
+                        (a.country || '') + ' ' + (a.postalCode || '') + '<br>' +
+                        (a.landmark ? '<i class="fas fa-map-pin" style="margin-right:4px;color:var(--accent);"></i>Near: ' + a.landmark : '') +
+                    '</div>' +
+                    '<div class="address-actions">' +
+                        '<button class="btn-sm" onclick="openEditModal(\'' + a.id + '\')"><i class="fas fa-edit"></i> Edit</button>' +
+                        (!a.isDefault ? '<button class="btn-sm primary" onclick="setDefault(\'' + a.id + '\')"><i class="fas fa-star"></i> Set Default</button>' : '') +
+                        '<button class="btn-sm danger" onclick="deleteAddress(\'' + a.id + '\')"><i class="fas fa-trash"></i></button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        window.openAddModal = function() {
+            document.getElementById('modalTitle').textContent = 'Add New Address';
+            document.getElementById('editId').value = '';
+            ['addrName','addrPhone','addrState','addrCity','addrStreet','addrRoom','addrZip','addrLandmark'].forEach(function(id) { document.getElementById(id).value = ''; });
+            document.getElementById('addrCountry').value = '';
+            document.getElementById('addrDefault').checked = false;
+            populateCountryDropdown();
+            document.getElementById('addressModal').classList.add('show');
+        };
+
+        window.openEditModal = function(id) {
+            var a = addresses.find(function(x) { return x.id === id; });
+            if (!a) return;
+            document.getElementById('modalTitle').textContent = 'Edit Address';
+            document.getElementById('editId').value = id;
+            document.getElementById('addrName').value = a.fullName || '';
+            document.getElementById('addrPhone').value = a.phone || '';
+            document.getElementById('addrCountry').value = a.country || '';
+            document.getElementById('addrState').value = a.state || '';
+            document.getElementById('addrCity').value = a.city || '';
+            document.getElementById('addrStreet').value = a.streetAddress || '';
+            document.getElementById('addrRoom').value = a.roomNumber || '';
+            document.getElementById('addrZip').value = a.postalCode || '';
+            document.getElementById('addrLandmark').value = a.landmark || '';
+            document.getElementById('addrDefault').checked = a.isDefault || false;
+            populateCountryDropdown();
+            document.getElementById('addressModal').classList.add('show');
+        };
+
+        window.closeModal = function() { document.getElementById('addressModal').classList.remove('show'); };
+
+        window.saveAddress = async function() {
+            var id = document.getElementById('editId').value;
+            var data = {
+                userId: currentUser.uid,
+                fullName: document.getElementById('addrName').value.trim(),
+                phone: document.getElementById('addrPhone').value.trim(),
+                country: document.getElementById('addrCountry').value,
+                state: document.getElementById('addrState').value.trim(),
+                city: document.getElementById('addrCity').value.trim(),
+                streetAddress: document.getElementById('addrStreet').value.trim(),
+                roomNumber: document.getElementById('addrRoom').value.trim(),
+                postalCode: document.getElementById('addrZip').value.trim(),
+                landmark: document.getElementById('addrLandmark').value.trim(),
+                isDefault: document.getElementById('addrDefault').checked,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            if (!data.fullName || !data.phone || !data.country || !data.state || !data.city || !data.streetAddress) {
+                showToast('Please fill all required fields (*)','error'); return;
+            }
+            if (data.isDefault) {
+                for (var a of addresses) { if (a.isDefault && a.id !== id) await db.collection('addresses').doc(a.id).update({ isDefault: false }); }
+            }
+            if (id) { await db.collection('addresses').doc(id).update(data); }
+            else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('addresses').add(data); }
+            closeModal();
+            await loadAddresses();
+            showToast('Address saved!','success');
+        };
+
+        window.setDefault = async function(id) {
+            for (var a of addresses) { await db.collection('addresses').doc(a.id).update({ isDefault: a.id === id }); }
+            await loadAddresses();
+        };
+
+        window.deleteAddress = async function(id) {
+            if (!confirm('Delete this address?')) return;
+            await db.collection('addresses').doc(id).delete();
+            await loadAddresses();
+            showToast('Address deleted','');
+        };
+
+        document.getElementById('addressModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+    })();
+    </script>
+</body>
+</html>

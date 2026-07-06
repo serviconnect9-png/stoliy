@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Store Appearance - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, textarea, select { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, textarea:focus, select:focus { outline: none !important; box-shadow: none !important; }
+        button:active { transform: scale(0.97); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        
+        .form-section { padding: 16px; }
+        .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #F3F4F6; }
+        .section-title:first-child { margin-top: 0; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+        .form-sublabel { font-size: 10px; color: var(--text3); margin-top: 3px; }
+        .form-input { width: 100%; padding: 13px 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font); background: #fff; color: var(--text); transition: all 0.2s; }
+        .form-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(108,60,240,0.06); }
+        textarea.form-input { resize: vertical; min-height: 80px; }
+        select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .upload-zone { border: 2px dashed #D1D5DB; border-radius: var(--radius-sm); padding: 24px; text-align: center; cursor: pointer; background: #FAFAFA; transition: all 0.2s; position: relative; overflow: hidden; }
+        .upload-zone:hover { border-color: var(--accent); background: rgba(108,60,240,0.02); }
+        .upload-zone i { font-size: 28px; color: #D1D5DB; margin-bottom: 6px; display: block; }
+        .upload-zone span { font-size: 12px; color: var(--text2); }
+        .upload-zone img { max-width: 100%; max-height: 120px; border-radius: 8px; margin-top: 10px; }
+        .upload-zone .remove-btn { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; border: none; cursor: pointer; font-size: 10px; display: none; align-items: center; justify-content: center; z-index: 2; }
+        .upload-zone.has-image .remove-btn { display: flex; }
+        
+        .logo-upload { width: 100px; height: 100px; border-radius: 50%; border: 2px dashed #D1D5DB; margin: 0 auto; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #FAFAFA; position: relative; overflow: hidden; transition: all 0.2s; }
+        .logo-upload:hover { border-color: var(--accent); }
+        .logo-upload img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; position: absolute; inset: 0; }
+        .logo-upload .placeholder { text-align: center; color: #D1D5DB; z-index: 1; }
+        .logo-upload .placeholder i { font-size: 24px; display: block; margin-bottom: 2px; }
+        .logo-upload .placeholder span { font-size: 9px; }
+        
+        .color-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .color-dot { width: 44px; height: 44px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; position: relative; }
+        .color-dot:hover { transform: scale(1.1); }
+        .color-dot.selected { border-color: var(--text); box-shadow: 0 0 0 4px rgba(0,0,0,0.1); }
+        .color-dot.selected::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 16px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .color-input-wrap { display: flex; align-items: center; gap: 8px; }
+        .color-input-wrap input[type="color"] { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; padding: 0; }
+        .color-input-wrap span { font-size: 12px; color: var(--text2); }
+        
+        .font-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .font-chip { padding: 10px 16px; border: 2px solid var(--border); border-radius: 25px; cursor: pointer; font-size: 14px; transition: all 0.2s; background: #fff; }
+        .font-chip:hover { border-color: #D1D5DB; }
+        .font-chip.selected { border-color: var(--accent); background: rgba(108,60,240,0.05); color: var(--accent); font-weight: 700; }
+        
+        .social-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .social-icon-preview { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; flex-shrink: 0; }
+        .social-group input { flex: 1; }
+        
+        .btn-save { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .btn-save:active { transform: scale(0.97); }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-palette" style="color:var(--accent);margin-right:6px;"></i>Store Appearance</h2>
+        </div>
+        
+        <div class="form-section" id="appearanceForm">
+            <div style="text-align:center;padding:60px;color:var(--text3);">Loading settings...</div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, storeId, storeData;
+        var logoFile = null, bannerFile = null;
+
+        var themeColors = [
+            '#6C3CF0', '#3B82F6', '#2ECC71', '#F4B400', '#FF4D4F', '#EC4899',
+            '#1A1A2E', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444'
+        ];
+
+        var fontOptions = ['Inter', 'Roboto', 'Poppins', 'Open Sans', 'Montserrat', 'Lato', 'Playfair Display', 'Raleway'];
+
+        var socialPlatforms = [
+            { key: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', color: 'linear-gradient(135deg, #833AB4, #FD1D1D, #F77737)' },
+            { key: 'facebook', name: 'Facebook', icon: 'fab fa-facebook-f', color: '#1877F2' },
+            { key: 'twitter', name: 'X (Twitter)', icon: 'fab fa-x-twitter', color: '#000' },
+            { key: 'tiktok', name: 'TikTok', icon: 'fab fa-tiktok', color: '#000' },
+            { key: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', color: '#FF0000' },
+            { key: 'whatsapp', name: 'WhatsApp', icon: 'fab fa-whatsapp', color: '#25D366' },
+            { key: 'telegram', name: 'Telegram', icon: 'fab fa-telegram-plane', color: '#0088cc' },
+            { key: 'website', name: 'Website', icon: 'fas fa-globe', color: '#6C3CF0' }
+        ];
+
+        function showToast(msg) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast success'; t.textContent = msg;
+            document.body.appendChild(t); setTimeout(function(){ t.classList.add('show'); },10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); },300); },2500);
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d) { return d.data().ownerId === user.uid; });
+            if (!myStore) { window.location.href = 'wizard.html'; return; }
+            storeId = myStore.id;
+            storeData = myStore.data();
+            renderForm();
+        });
+
+        function renderForm() {
+            var s = storeData;
+            var container = document.getElementById('appearanceForm');
+            
+            var html = '';
+            
+            // STORE LOGO
+            html += '<div class="section-title">Store Logo</div>';
+            html += '<div class="logo-upload" onclick="document.getElementById(\'logoInput\').click()" id="logoUpload">';
+            if (s.logo) {
+                html += '<img src="' + s.logo + '" id="logoPreview">';
+                html += '<button class="remove-btn" onclick="event.stopPropagation();removeImage(\'logo\')" style="display:flex;">✕</button>';
+            } else {
+                html += '<div class="placeholder"><i class="fas fa-camera"></i><span>Logo</span></div>';
+            }
+            html += '<input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewImage(\'logo\',this)"></div>';
+            html += '<p class="form-sublabel" style="text-align:center;">Recommended: 500×500px</p>';
+            
+            // STORE BANNER
+            html += '<div class="section-title">Store Banner</div>';
+            html += '<div class="upload-zone' + (s.banner ? ' has-image' : '') + '" onclick="document.getElementById(\'bannerInput\').click()" id="bannerUpload">';
+            if (s.banner) {
+                html += '<img src="' + s.banner + '" id="bannerPreview">';
+            } else {
+                html += '<i class="fas fa-image"></i><span>Tap to upload banner</span>';
+            }
+            html += '<button class="remove-btn" onclick="event.stopPropagation();removeImage(\'banner\')">✕</button>';
+            html += '<input type="file" id="bannerInput" accept="image/*" style="display:none;" onchange="previewImage(\'banner\',this)"></div>';
+            html += '<p class="form-sublabel">Recommended: 1200×400px</p>';
+            
+            // THEME COLOR
+            html += '<div class="section-title">Theme Color</div>';
+            html += '<div class="color-row">';
+            themeColors.forEach(function(c) {
+                html += '<div class="color-dot' + (s.themeColor === c ? ' selected' : '') + '" style="background:' + c + ';" onclick="selectColor(\'' + c + '\')" title="' + c + '"></div>';
+            });
+            html += '</div>';
+            html += '<div class="color-input-wrap" style="margin-top:10px;"><input type="color" id="customColor" value="' + (s.themeColor || '#6C3CF0') + '" onchange="selectCustomColor(this.value)"><span>Custom color</span></div>';
+            
+            // FONT
+            html += '<div class="section-title">Store Font</div>';
+            html += '<div class="font-row">';
+            fontOptions.forEach(function(f) {
+                html += '<div class="font-chip' + (s.storeFont === f ? ' selected' : '') + '" onclick="selectFont(\'' + f + '\')" style="font-family:\'' + f + '\',sans-serif;">' + f + '</div>';
+            });
+            html += '</div>';
+            
+            // STORE DESCRIPTION
+            html += '<div class="section-title">Store Description</div>';
+            html += '<div class="form-group"><textarea class="form-input" id="storeDesc" placeholder="Describe your store...">' + (s.description || '') + '</textarea></div>';
+            
+            // CONTACT EMAIL
+            html += '<div class="section-title">Contact Information</div>';
+            html += '<div class="form-group"><label class="form-label">Business Email</label><input type="email" class="form-input" id="businessEmail" value="' + (s.businessEmail || s.ownerEmail || '') + '" placeholder="business@example.com"></div>';
+            html += '<div class="form-group"><label class="form-label">Support Phone</label><input type="tel" class="form-input" id="supportPhone" value="' + (s.supportPhone || s.phone || '') + '" placeholder="+1234567890"></div>';
+            
+            // SOCIAL MEDIA
+            html += '<div class="section-title">Social Media Links</div>';
+            socialPlatforms.forEach(function(platform) {
+                html += '<div class="social-group">';
+                html += '<div class="social-icon-preview" style="background:' + platform.color + ';"><i class="' + platform.icon + '"></i></div>';
+                html += '<input type="url" class="form-input" id="social_' + platform.key + '" value="' + (s[platform.key] || '') + '" placeholder="' + platform.name + ' URL">';
+                html += '</div>';
+            });
+            
+            // SHIPPING & POLICIES
+            html += '<div class="section-title">Store Policies</div>';
+            html += '<div class="form-group"><label class="form-label">Shipping Duration</label><input type="text" class="form-input" id="shippingDuration" value="' + (s.shippingDuration || '3-7 business days') + '" placeholder="e.g. 3-7 business days"></div>';
+            html += '<div class="form-group"><label class="form-label">Return Policy</label><textarea class="form-input" id="returnPolicy" placeholder="Describe your return policy...">' + (s.returnPolicy || '') + '</textarea></div>';
+            html += '<div class="form-group"><label class="form-label">Shipping Policy</label><textarea class="form-input" id="shippingPolicy" placeholder="Describe your shipping policy...">' + (s.shippingPolicy || '') + '</textarea></div>';
+            
+            // SAVE BUTTON
+            html += '<button class="btn-save" onclick="saveAppearance()"><i class="fas fa-save"></i> Save All Changes</button>';
+            
+            container.innerHTML = html;
+        }
+
+        // ============ IMAGE PREVIEW ============
+        window.previewImage = function(type, input) {
+            if (!input.files || !input.files[0]) return;
+            var file = input.files[0];
+            if (type === 'logo') logoFile = file; else bannerFile = file;
+            
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (type === 'logo') {
+                    var upload = document.getElementById('logoUpload');
+                    upload.innerHTML = '<img src="' + e.target.result + '" id="logoPreview"><button class="remove-btn" onclick="event.stopPropagation();removeImage(\'logo\')" style="display:flex;">✕</button><input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewImage(\'logo\',this)">';
+                } else {
+                    var upload = document.getElementById('bannerUpload');
+                    upload.classList.add('has-image');
+                    upload.innerHTML = '<img src="' + e.target.result + '" id="bannerPreview"><button class="remove-btn" onclick="event.stopPropagation();removeImage(\'banner\')">✕</button><input type="file" id="bannerInput" accept="image/*" style="display:none;" onchange="previewImage(\'banner\',this)">';
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.removeImage = function(type) {
+            if (type === 'logo') {
+                logoFile = null;
+                document.getElementById('logoUpload').innerHTML = '<div class="placeholder"><i class="fas fa-camera"></i><span>Logo</span></div><input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewImage(\'logo\',this)">';
+            } else {
+                bannerFile = null;
+                var upload = document.getElementById('bannerUpload');
+                upload.classList.remove('has-image');
+                upload.innerHTML = '<i class="fas fa-image"></i><span>Tap to upload banner</span><button class="remove-btn" onclick="event.stopPropagation();removeImage(\'banner\')">✕</button><input type="file" id="bannerInput" accept="image/*" style="display:none;" onchange="previewImage(\'banner\',this)">';
+            }
+        };
+
+        // ============ COLOR ============
+        window.selectColor = function(color) {
+            document.querySelectorAll('.color-dot').forEach(function(d) { d.classList.remove('selected'); });
+            event.target.classList.add('selected');
+            document.getElementById('customColor').value = color;
+        };
+
+        window.selectCustomColor = function(color) {
+            document.querySelectorAll('.color-dot').forEach(function(d) { d.classList.remove('selected'); });
+        };
+
+        // ============ FONT ============
+        window.selectFont = function(font) {
+            document.querySelectorAll('.font-chip').forEach(function(f) { f.classList.remove('selected'); });
+            event.target.classList.add('selected');
+        };
+
+        // ============ UPLOAD TO CLOUDINARY ============
+        async function uploadToCloudinary(file, folder) {
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
+            fd.append('folder', folder);
+            try {
+                var res = await fetch('https://api.cloudinary.com/v1_1/' + (CONFIG.cloudinaryCloudName || 'serviconnect') + '/image/upload', { method: 'POST', body: fd });
+                var data = await res.json();
+                return data.secure_url || null;
+            } catch(e) { return null; }
+        }
+
+        // ============ SAVE ============
+        window.saveAppearance = async function() {
+            var btn = document.querySelector('.btn-save');
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+            
+            try {
+                var updates = {
+                    description: document.getElementById('storeDesc').value.trim(),
+                    businessEmail: document.getElementById('businessEmail').value.trim(),
+                    supportPhone: document.getElementById('supportPhone').value.trim(),
+                    shippingDuration: document.getElementById('shippingDuration').value.trim(),
+                    returnPolicy: document.getElementById('returnPolicy').value.trim(),
+                    shippingPolicy: document.getElementById('shippingPolicy').value.trim(),
+                    storeFont: document.querySelector('.font-chip.selected')?.textContent || 'Inter',
+                    themeColor: document.getElementById('customColor').value,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                // Upload logo
+                if (logoFile) {
+                    var logoUrl = await uploadToCloudinary(logoFile, 'stores/' + storeId + '/logo');
+                    if (logoUrl) updates.logo = logoUrl;
+                }
+                
+                // Upload banner
+                if (bannerFile) {
+                    var bannerUrl = await uploadToCloudinary(bannerFile, 'stores/' + storeId + '/banner');
+                    if (bannerUrl) updates.banner = bannerUrl;
+                }
+                
+                // Social media links
+                socialPlatforms.forEach(function(p) {
+                    updates[p.key] = document.getElementById('social_' + p.key)?.value?.trim() || '';
+                });
+                
+                await db.collection('stores').doc(storeId).update(updates);
+                storeData = Object.assign(storeData, updates);
+                showToast('Appearance updated! ✅');
+            } catch(e) {
+                console.error('Save error:', e);
+                showToast('Failed to save. Try again.');
+            }
+            
+            btn.textContent = 'Save All Changes';
+            btn.disabled = false;
+        };
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Wishlist - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+        
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .wishlist-count { font-size: 13px; color: var(--text2); }
+        
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 16px; }
+        .product-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: all 0.2s; position: relative; }
+        .product-card:hover { border-color: #D1D5DB; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .product-card img { width: 100%; height: 150px; object-fit: cover; background: #E5E7EB; }
+        .product-card .body { padding: 10px 12px; }
+        .product-card .name { font-weight: 600; font-size: 12px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+        .product-card .price { font-weight: 700; font-size: 15px; color: var(--success); }
+        .product-card .original { font-size: 11px; color: var(--text3); text-decoration: line-through; margin-left: 4px; }
+        .product-card .stock { font-size: 10px; margin-top: 2px; }
+        .product-card .stock.in { color: var(--success); }
+        .product-card .stock.out { color: var(--error); }
+        .discount-tag { position: absolute; top: 8px; left: 8px; background: var(--error); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 1; }
+        .btn-remove-wish { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: #fff; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; z-index: 2; transition: all 0.2s; }
+        .btn-remove-wish:hover { background: var(--error); }
+        .btn-add-cart { width: 100%; margin-top: 8px; padding: 8px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+        .btn-add-cart:active { transform: scale(0.96); }
+        .btn-add-cart:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .empty-state { text-align: center; padding: 80px 20px; color: var(--text2); }
+        .empty-state i { font-size: 56px; opacity: 0.2; margin-bottom: 16px; display: block; }
+        .empty-state h3 { margin-bottom: 8px; }
+        .empty-state button { margin-top: 16px; padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: 25px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: #fff; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 0 22px; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--text3); border: none; background: none; font-family: var(--font); padding: 5px 10px; text-decoration: none; }
+        .nav-item.active { color: var(--error); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+        
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 12px 20px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+        .loading-wrap { display: flex; justify-content: center; padding: 80px 0; }
+        .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-heart" style="color:var(--error);margin-right:6px;"></i>My Wishlist</h2>
+            <span class="wishlist-count" id="wishlistCount">0 items</span>
+        </div>
+        <div id="wishlistContent"><div class="loading-wrap"><div class="spinner"></div></div></div>
+        
+        <nav class="bottom-nav">
+            <a class="nav-item" href="home.html"><i class="fas fa-home"></i><span>Home</span></a>
+            <a class="nav-item" href="search.html"><i class="fas fa-search"></i><span>Search</span></a>
+            <a class="nav-item" href="cart.html"><i class="fas fa-shopping-bag"></i><span>Cart</span></a>
+            <a class="nav-item" href="orders.html"><i class="fas fa-box"></i><span>Orders</span></a>
+            <a class="nav-item" href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a>
+        </nav>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser = null, wishlistItems = [];
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast '+(type||'');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); },10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); },300); },2000);
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            await loadWishlist();
+        });
+
+        async function loadWishlist() {
+            var container = document.getElementById('wishlistContent');
+            
+            // Get ALL wishlist items, filter by user
+            var allWishlist = await db.collection('wishlist').get();
+            wishlistItems = allWishlist.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(w) { return w.userId === currentUser.uid; });
+
+            document.getElementById('wishlistCount').textContent = wishlistItems.length + ' items';
+
+            if (wishlistItems.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-heart-broken"></i><h3>Your wishlist is empty</h3><p>Save items you love for later</p><button onclick="window.location.href=\'home.html\'">Browse Products</button></div>';
+                return;
+            }
+
+            // Get all products and filter by wishlist productIds
+            var allProducts = await db.collection('products').get();
+            var products = [];
+            
+            for (var w of wishlistItems) {
+                var pDoc = allProducts.docs.find(function(d) { return d.id === w.productId; });
+                if (pDoc) {
+                    products.push({ wishlistId: w.id, productId: w.productId, ...pDoc.data() });
+                }
+            }
+
+            if (products.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-heart-broken"></i><h3>No products found</h3><p>Some items may have been removed</p><button onclick="window.location.href=\'home.html\'">Browse Products</button></div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="products-grid">' + products.map(function(p) {
+                var price = p.price || 0;
+                var orig = p.originalPrice || 0;
+                var disc = orig > price ? Math.round((1 - price/orig)*100) : 0;
+                var inStock = p.inStock !== false;
+                var image = (p.images && p.images[0]) || 'https://via.placeholder.com/200';
+                
+                return '<div class="product-card" onclick="viewProduct(\'' + p.productId + '\')">' +
+                    '<img src="' + image + '" onerror="this.src=\'https://via.placeholder.com/200\'" loading="lazy">' +
+                    '<button class="btn-remove-wish" onclick="event.stopPropagation();removeFromWishlist(\'' + p.wishlistId + '\')"><i class="fas fa-times"></i></button>' +
+                    (disc > 0 ? '<span class="discount-tag">-' + disc + '%</span>' : '') +
+                    '<div class="body">' +
+                        '<div class="name">' + (p.name || 'Product') + '</div>' +
+                        '<span class="price">$' + price.toFixed(2) + '</span>' +
+                        (disc > 0 ? '<span class="original">$' + orig.toFixed(2) + '</span>' : '') +
+                        '<div class="stock ' + (inStock ? 'in' : 'out') + '"><i class="fas fa-circle" style="font-size:5px;"></i> ' + (inStock ? 'In Stock' : 'Out of Stock') + '</div>' +
+                        '<button class="btn-add-cart" onclick="event.stopPropagation();addToCart(\'' + p.productId + '\',\'' + (p.name||'Product').replace(/'/g,"\\'") + '\',' + price + ',\'' + image + '\',\'' + (p.storeId||'') + '\')" ' + (!inStock ? 'disabled' : '') + '><i class="fas fa-shopping-cart"></i> ' + (inStock ? 'Add to Cart' : 'Unavailable') + '</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('') + '</div>';
+        }
+
+        window.viewProduct = function(productId) {
+            window.location.href = 'products.html?id=' + productId;
+        };
+
+        window.removeFromWishlist = async function(wishlistId) {
+            await db.collection('wishlist').doc(wishlistId).delete();
+            showToast('Removed from wishlist', '');
+            await loadWishlist();
+        };
+
+        window.addToCart = async function(productId, name, price, image, storeId) {
+            if (!currentUser) return;
+            
+            // Check if already in cart
+            var allCart = await db.collection('cart').get();
+            var existing = allCart.docs.find(function(d) {
+                var c = d.data();
+                return c.userId === currentUser.uid && c.productId === productId;
+            });
+
+            if (existing) {
+                await existing.ref.update({ quantity: firebase.firestore.FieldValue.increment(1) });
+            } else {
+                await db.collection('cart').add({
+                    userId: currentUser.uid,
+                    productId: productId,
+                    storeId: storeId || '',
+                    name: name,
+                    price: price,
+                    image: image,
+                    quantity: 1,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
+            showToast('Added to cart! 🛒', 'success');
+        };
+    })();
+    </script>
+</body>
+</html>

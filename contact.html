@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Support - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0B0B14; --card: #151521; --text: #FFFFFF; --text2: #A0A0B8; --text3: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, textarea { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, textarea:focus { outline: none !important; box-shadow: none !important; }
+        button:active { transform: scale(0.96); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .chat-header { padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 15px; }
+        .support-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; flex-shrink: 0; }
+        .support-info { flex: 1; }
+        .support-name { font-weight: 700; font-size: 14px; }
+        .support-status { font-size: 10px; display: flex; align-items: center; gap: 4px; }
+        .support-status.online { color: var(--success); }
+        .support-status.offline { color: var(--text3); }
+        .support-status .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .support-status.typing { color: var(--warning); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        
+        .chat-messages { flex: 1; padding: 16px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 4px; }
+        .msg-date-divider { text-align: center; font-size: 10px; color: var(--text3); margin: 14px 0; }
+        .msg-date-divider span { background: var(--card); padding: 4px 14px; border-radius: 10px; }
+        .system-msg { text-align: center; font-size: 11px; color: var(--text3); padding: 8px; }
+        
+        .msg-bubble { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.5; word-wrap: break-word; }
+        .msg-sent { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+        .msg-received { align-self: flex-start; background: var(--card); color: var(--text); border-bottom-left-radius: 4px; }
+        .msg-bubble a { text-decoration: underline; }
+        .msg-sent a { color: #FFD54F; }
+        .msg-received a { color: #A78BFA; }
+        .msg-bubble img { max-width: 200px; max-height: 200px; border-radius: 10px; cursor: pointer; margin: 4px 0; }
+        .msg-time { font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: right; }
+        .msg-sender { font-size: 10px; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+        
+        .typing-indicator { align-self: flex-start; background: var(--card); padding: 12px 16px; border-radius: 16px; display: none; }
+        .typing-indicator.show { display: block; }
+        .typing-dots { display: flex; gap: 3px; }
+        .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); animation: bounce 1.4s infinite; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-8px)} }
+        
+        .offline-notice { background: rgba(244,180,0,0.1); border: 1px solid rgba(244,180,0,0.2); border-radius: var(--radius-sm); padding: 14px; margin: 8px 0; text-align: center; font-size: 12px; color: var(--warning); }
+        .offline-notice i { font-size: 24px; display: block; margin-bottom: 6px; }
+        
+        .chat-input-bar { padding: 10px 14px 22px; background: var(--card); border-top: 1px solid var(--border); display: flex; gap: 6px; align-items: flex-end; }
+        .btn-attach { width: 40px; height: 40px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border); color: var(--text2); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .chat-input-bar textarea { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 22px; background: var(--bg); color: #fff; font-size: 13px; font-family: var(--font); resize: none; min-height: 42px; max-height: 100px; }
+        .chat-input-bar textarea:focus { border-color: var(--accent); }
+        .btn-send { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        
+        .email-section { padding: 16px; text-align: center; }
+        .email-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: inline-block; }
+        .email-card .email { font-size: 16px; font-weight: 700; color: var(--accent); }
+        .email-card .note { font-size: 11px; color: var(--text3); margin-top: 4px; }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #0B0B14; padding: 12px 22px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appRoot">
+        <div class="loading-wrap" style="display:flex;justify-content:center;align-items:center;flex:1;"><div class="spinner" style="width:36px;height:36px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;"></div></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, supportChatId, agentOnline = false, agentTyping = false, messagesListener = null, typingListener = null;
+        var SUPPORT_EMAIL = 'support@stoily.com';
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            await initSupportChat();
+        });
+
+        async function initSupportChat() {
+            // Check if agent is online
+            var agentDoc = await db.collection('supportAgents').doc('status').get();
+            agentOnline = agentDoc.exists && agentDoc.data().online === true;
+            
+            // Find or create support chat for this user
+            var allChats = await db.collection('chats').get();
+            var existing = allChats.docs.find(function(d) {
+                var c = d.data();
+                return c.type === 'support' && c.participants && c.participants.includes(currentUser.uid) && c.status === 'active';
+            });
+            
+            if (existing) {
+                supportChatId = existing.id;
+            } else {
+                var ref = await db.collection('chats').add({
+                    type: 'support',
+                    participants: [currentUser.uid, 'support'],
+                    participantNames: { [currentUser.uid]: currentUser.displayName || 'Customer', 'support': 'Stoliy Support' },
+                    participantPhotos: { [currentUser.uid]: currentUser.photoURL || '' },
+                    lastMessage: '',
+                    unreadCount: { [currentUser.uid]: 0, 'support': 0 },
+                    status: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                supportChatId = ref.id;
+            }
+            
+            renderSupportChat();
+            
+            // Listen for messages
+            if (messagesListener) messagesListener();
+            messagesListener = db.collection('chats').doc(supportChatId).collection('messages')
+                .orderBy('timestamp', 'asc')
+                .onSnapshot(function(snap) {
+                    renderMessages(snap.docs.map(function(d) { return d.data(); }));
+                });
+            
+            // Listen for typing indicator
+            if (typingListener) typingListener();
+            typingListener = db.collection('chats').doc(supportChatId)
+                .onSnapshot(function(doc) {
+                    if (doc.exists) {
+                        var data = doc.data();
+                        agentTyping = data.agentTyping || false;
+                        updateTypingIndicator();
+                    }
+                });
+            
+            // Mark support chat as unread for agent if new message
+            if (!agentOnline) {
+                db.collection('chats').doc(supportChatId).update({ hasNewMessage: true });
+            }
+        }
+
+        function renderSupportChat() {
+            var root = document.getElementById('appRoot');
+            root.innerHTML = 
+                '<div class="chat-header">' +
+                    '<button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>' +
+                    '<div class="support-avatar"><i class="fas fa-headset"></i></div>' +
+                    '<div class="support-info">' +
+                        '<div class="support-name">Stoliy Support</div>' +
+                        '<div class="support-status ' + (agentOnline ? 'online' : 'offline') + '" id="statusIndicator">' +
+                            '<span class="dot"></span> ' + (agentOnline ? 'Online - We\'re here to help!' : 'Offline - We\'ll respond shortly') +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="chat-messages" id="chatMessages">' +
+                    (agentOnline ? 
+                        '<div class="system-msg">👋 Welcome to Stoliy Support! An agent will assist you shortly.</div>' :
+                        '<div class="offline-notice"><i class="fas fa-clock"></i><strong>Support is currently offline</strong><p style="margin-top:4px;">Leave a message and we\'ll get back to you as soon as possible.</p><div class="email-card" style="margin-top:12px;"><i class="fas fa-envelope"></i> <span class="email">' + SUPPORT_EMAIL + '</span><div class="note">For urgent matters, email us directly</div></div></div>'
+                    ) +
+                '</div>' +
+                '<div class="typing-indicator" id="typingIndicator"><div class="typing-dots"><span></span><span></span><span></span></div></div>' +
+                '<div class="chat-input-bar">' +
+                    '<button class="btn-attach" onclick="document.getElementById(\'supportImageInput\').click()"><i class="fas fa-image"></i></button>' +
+                    '<input type="file" id="supportImageInput" accept="image/*" style="display:none;" onchange="sendSupportImage(this)">' +
+                    '<textarea id="supportInput" placeholder="Type your message..." rows="1" onkeypress="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendSupportMessage();}" oninput="handleTyping()"></textarea>' +
+                    '<button class="btn-send" onclick="sendSupportMessage()"><i class="fas fa-paper-plane"></i></button>' +
+                '</div>';
+            
+            document.getElementById('supportInput').focus();
+        }
+
+        function renderMessages(messages) {
+            var container = document.getElementById('chatMessages');
+            if (!container) return;
+            
+            if (messages.length === 0) return;
+            
+            var html = '';
+            var lastDate = '';
+            
+            messages.forEach(function(m) {
+                var d = m.timestamp?.toDate ? m.timestamp.toDate() : new Date();
+                var ds = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                if (ds !== lastDate) {
+                    html += '<div class="msg-date-divider"><span>' + ds + '</span></div>';
+                    lastDate = ds;
+                }
+                
+                if (m.type === 'system') {
+                    html += '<div class="system-msg">' + (m.text || '') + '</div>';
+                    return;
+                }
+                
+                var sent = m.senderId === currentUser.uid;
+                var content = '';
+                
+                if (m.type === 'image') {
+                    content = '<img src="' + m.mediaUrl + '" onclick="window.open(\'' + m.mediaUrl + '\')" loading="lazy">';
+                    if (m.text) content += '<br>' + linkifyText(m.text);
+                } else {
+                    content = linkifyText(m.text || '');
+                }
+                
+                if (!sent) {
+                    html += '<div class="msg-sender">Stoliy Support</div>';
+                }
+                
+                html += '<div class="msg-bubble ' + (sent ? 'msg-sent' : 'msg-received') + '">' + content + '<div class="msg-time">' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + (sent ? ' ✓' : '') + '</div></div>';
+            });
+            
+            // Preserve offline notice if it exists
+            var existingOffline = container.querySelector('.offline-notice');
+            var existingSystem = container.querySelector('.system-msg');
+            
+            container.innerHTML = html;
+            
+            if (existingOffline && messages.length === 0) {
+                container.innerHTML = existingOffline.outerHTML;
+            }
+            if (existingSystem && messages.length === 0) {
+                container.innerHTML = existingSystem.outerHTML;
+            }
+            
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateTypingIndicator() {
+            var indicator = document.getElementById('typingIndicator');
+            var statusEl = document.getElementById('statusIndicator');
+            
+            if (indicator) {
+                indicator.classList.toggle('show', agentTyping);
+            }
+            if (statusEl) {
+                if (agentTyping) {
+                    statusEl.className = 'support-status typing';
+                    statusEl.innerHTML = '<span class="dot"></span> Agent is typing...';
+                } else if (agentOnline) {
+                    statusEl.className = 'support-status online';
+                    statusEl.innerHTML = '<span class="dot"></span> Online - We\'re here to help!';
+                } else {
+                    statusEl.className = 'support-status offline';
+                    statusEl.innerHTML = '<span class="dot"></span> Offline - We\'ll respond shortly';
+                }
+            }
+        }
+
+        function linkifyText(text) {
+            if (!text) return '';
+            text = text.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+            return text.replace(/\n/g, '<br>');
+        }
+
+        // ============ SEND MESSAGE ============
+        window.sendSupportMessage = async function() {
+            var input = document.getElementById('supportInput');
+            var text = input.value.trim();
+            if (!text || !supportChatId) return;
+            input.value = '';
+            
+            await db.collection('chats').doc(supportChatId).collection('messages').add({
+                senderId: currentUser.uid, text: text, type: 'text',
+                senderName: currentUser.displayName || 'Customer',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            await db.collection('chats').doc(supportChatId).update({
+                lastMessage: text.substring(0, 100),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                hasNewMessage: true,
+                customerTyping: false
+            });
+        };
+
+        // ============ TYPING INDICATOR ============
+        var typingTimeout;
+        window.handleTyping = function() {
+            clearTimeout(typingTimeout);
+            db.collection('chats').doc(supportChatId).update({ customerTyping: true });
+            typingTimeout = setTimeout(function() {
+                db.collection('chats').doc(supportChatId).update({ customerTyping: false });
+            }, 2000);
+        };
+
+        // ============ SEND IMAGE ============
+        window.sendSupportImage = async function(input) {
+            if (!input.files || !input.files[0] || !supportChatId) return;
+            var file = input.files[0];
+            if (!file.type.startsWith('image/')) { showToast('Only images supported'); return; }
+            
+            showToast('Uploading...');
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
+            
+            try {
+                var res = await fetch('https://api.cloudinary.com/v1_1/' + (CONFIG.cloudinaryCloudName || 'serviconnect') + '/image/upload', { method: 'POST', body: fd });
+                var data = await res.json();
+                if (data.secure_url) {
+                    await db.collection('chats').doc(supportChatId).collection('messages').add({
+                        senderId: currentUser.uid, type: 'image', mediaUrl: data.secure_url, text: '',
+                        senderName: currentUser.displayName || 'Customer',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('chats').doc(supportChatId).update({
+                        lastMessage: '📷 Image', updatedAt: firebase.firestore.FieldValue.serverTimestamp(), hasNewMessage: true
+                    });
+                    showToast('Sent!', 'success');
+                }
+            } catch(e) { showToast('Upload failed'); }
+            input.value = '';
+        };
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type||'');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); }, 10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 2000);
+        }
+
+        window.addEventListener('beforeunload', function() {
+            if (messagesListener) messagesListener();
+            if (typingListener) typingListener();
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Event - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0B0B14; --card: #151521; --text: #FFFFFF; --text2: #A0A0B8; --text3: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 16px; --radius-sm: 12px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button { font-family: var(--font); outline: none !important; -webkit-tap-highlight-color: transparent; }
+        button:active { transform: scale(0.97); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 100px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 15px; }
+        .page-title { font-size: 15px; font-weight: 600; color: var(--text2); flex: 1; }
+        
+        .event-banner { width: 100%; height: 200px; object-fit: cover; background: linear-gradient(135deg,#6C3CF0,#4A1FB8); display: flex; align-items: center; justify-content: center; }
+        .event-banner-placeholder { font-size: 52px; color: rgba(255,255,255,0.2); }
+        .event-info { padding: 20px 16px; }
+        .event-name { font-size: 22px; font-weight: 800; margin-bottom: 4px; line-height: 1.3; }
+        .event-organizer { font-size: 13px; color: var(--accent); margin-bottom: 2px; }
+        .event-type-badge { display: inline-block; background: rgba(108,60,240,0.15); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; margin-bottom: 12px; }
+        .event-meta { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .event-meta i { width: 16px; text-align: center; color: var(--accent); }
+        .event-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-top: 12px; }
+        
+        .countdown-bar { background: var(--accent); color: #fff; padding: 14px 16px; text-align: center; font-weight: 700; font-size: 14px; margin: 0 16px; border-radius: var(--radius-sm); }
+        
+        .tickets-section { padding: 0 16px; }
+        .section-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+        .ticket-card { background: var(--card); border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
+        .ticket-card:hover { border-color: #3A3A55; }
+        .ticket-card.selected { border-color: var(--accent); background: rgba(108,60,240,0.05); }
+        .ticket-card.sold-out { opacity: 0.5; pointer-events: none; }
+        .ticket-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .ticket-name { font-weight: 700; font-size: 15px; }
+        .ticket-price { font-weight: 800; font-size: 18px; }
+        .ticket-price.free { color: var(--success); }
+        .ticket-benefits { font-size: 11px; color: var(--text2); margin-top: 4px; }
+        .ticket-remaining { font-size: 11px; color: var(--error); margin-top: 6px; }
+        
+        .qty-selector { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--card); border-radius: var(--radius-sm); margin: 12px 16px; }
+        .qty-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .qty-val { font-weight: 700; font-size: 16px; min-width: 24px; text-align: center; }
+        
+        .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--card); border-top: 1px solid var(--border); padding: 12px 16px 24px; z-index: 100; display: flex; gap: 10px; align-items: center; }
+        .bottom-info { flex: 1; }
+        .bottom-label { font-size: 10px; color: var(--text3); }
+        .bottom-value { font-weight: 700; font-size: 15px; }
+        .btn-buy { padding: 16px 28px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 15px; cursor: pointer; }
+        .btn-buy.free { background: var(--success); }
+        .btn-buy:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .confirmation-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .confirmation-modal.show { display: flex; }
+        .confirm-card { background: var(--card); border-radius: var(--radius); padding: 24px; max-width: 350px; width: 100%; text-align: center; border: 1px solid var(--border); }
+        .confirm-icon { font-size: 48px; margin-bottom: 12px; }
+        .confirm-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+        .confirm-detail { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+        .btn-confirm { width: 100%; padding: 14px; background: var(--success); color: #fff; border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; margin-top: 16px; }
+        .btn-cancel { width: 100%; padding: 14px; background: transparent; color: var(--text2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; margin-top: 8px; }
+        
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #0B0B14; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; color: #fff; }
+        .toast.error { background: #FF4D4F; color: #fff; }
+        
+        .loading-wrap { display: flex; justify-content: center; padding: 80px 0; }
+        .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <span class="page-title">Event Details</span>
+            <button class="btn-back" onclick="shareEvent()"><i class="fas fa-share-alt"></i></button>
+        </div>
+        <div id="eventContent"><div class="loading-wrap"><div class="spinner"></div></div></div>
+        <div class="bottom-bar" id="bottomBar" style="display:none;">
+            <div class="bottom-info"><div class="bottom-label">Selected</div><div class="bottom-value" id="bottomSelected">Select a ticket</div></div>
+            <button class="btn-buy" id="btnBuy" onclick="initiatePurchase()" disabled>Buy Ticket</button>
+        </div>
+    </div>
+
+    <div class="confirmation-modal" id="confirmModal">
+        <div class="confirm-card">
+            <div class="confirm-icon" id="confirmIcon">🎫</div>
+            <div class="confirm-title" id="confirmTitle">Confirm Purchase</div>
+            <div class="confirm-detail" id="confirmEvent"></div>
+            <div class="confirm-detail" id="confirmTicket"></div>
+            <div class="confirm-detail" id="confirmTotal" style="font-weight:800;font-size:16px;margin-top:8px;"></div>
+            <button class="btn-confirm" id="btnConfirm" onclick="completePurchase()">Confirm & Get Ticket</button>
+            <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://checkout.flutterwave.com/v3.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var params = new URLSearchParams(window.location.search), eventId = params.get('id');
+        var currentUser, eventData, selectedTicketIndex = -1, quantity = 1;
+        var BASE_URL = (typeof CONFIG !== 'undefined' && CONFIG.baseUrl) ? CONFIG.baseUrl : window.location.origin;
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type||''); t.textContent = msg;
+            document.body.appendChild(t); setTimeout(function(){ t.classList.add('show'); },10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); },300); },3000);
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            if (!eventId) { document.getElementById('eventContent').innerHTML = '<div style="text-align:center;padding:80px;"><i class="fas fa-calendar-times" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;color:var(--text3);"></i><h3>No event specified</h3></div>'; return; }
+            
+            var doc = await db.collection('events').doc(eventId).get();
+            if (!doc.exists) { document.getElementById('eventContent').innerHTML = '<div style="text-align:center;padding:80px;"><h3>Event not found</h3></div>'; return; }
+            eventData = { id: doc.id, ...doc.data() };
+            renderEvent();
+        });
+
+        function renderEvent() {
+            var e = eventData;
+            var now = new Date(), start = new Date(e.startDate), end = new Date(e.endDate);
+            var timeLeft = start - now;
+            var isPast = end < now;
+            var eventUrl = BASE_URL + '/event-detail.html?id=' + e.id;
+            
+            var h = '';
+            if (e.banner) {
+                h += '<img src="' + e.banner + '" class="event-banner" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';"><div class="event-banner" style="display:none;"><div class="event-banner-placeholder"><i class="fas fa-calendar-alt"></i></div></div>';
+            } else {
+                h += '<div class="event-banner"><div class="event-banner-placeholder"><i class="fas fa-calendar-alt"></i></div></div>';
+            }
+            
+            if (timeLeft > 0 && !isPast) {
+                var days = Math.floor(timeLeft/86400000), hours = Math.floor((timeLeft%86400000)/3600000), mins = Math.floor((timeLeft%3600000)/60000);
+                h += '<div class="countdown-bar"><i class="fas fa-clock"></i> ' + (days>0?days+'d ':'') + hours + 'h ' + mins + 'm until event</div>';
+            } else if (isPast) {
+                h += '<div class="countdown-bar" style="background:var(--text3);">Event has ended</div>';
+            }
+            
+            h += '<div class="event-info">';
+            h += '<h1 class="event-name">' + (e.name || 'Event') + '</h1>';
+            h += '<div class="event-organizer">by ' + (e.organizer || 'Host') + '</div>';
+            h += '<span class="event-type-badge">' + (e.eventType || 'Event') + '</span>';
+            h += '<div class="event-meta"><i class="fas fa-calendar"></i> ' + start.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) + '</div>';
+            h += '<div class="event-meta"><i class="fas fa-clock"></i> ' + start.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + ' - ' + end.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '</div>';
+            if (e.locationType === 'online' || e.locationType === 'hybrid') h += '<div class="event-meta"><i class="fas fa-video"></i> ' + (e.platform||'Online Event') + '</div>';
+            if (e.locationType === 'physical' || e.locationType === 'hybrid') h += '<div class="event-meta"><i class="fas fa-map-marker-alt"></i> ' + (e.venue||'') + (e.city?', '+e.city:'') + (e.country?', '+e.country:'') + '</div>';
+            if (e.description) h += '<p class="event-desc">' + e.description.replace(/\n/g,'<br>') + '</p>';
+            h += '</div>';
+            
+            if (e.ticketTypes && e.ticketTypes.length && !isPast) {
+                h += '<div class="tickets-section"><div class="section-title">Select Ticket</div>';
+                e.ticketTypes.forEach(function(t, i) {
+                    var remaining = (t.quantity||0)-(t.sold||0);
+                    h += '<div class="ticket-card' + (i===selectedTicketIndex?' selected':'') + (remaining<=0?' sold-out':'') + '" onclick="selectTicket(' + i + ',this)">';
+                    h += '<div class="ticket-top"><span class="ticket-name">' + t.name + '</span><span class="ticket-price' + (t.price===0?' free':'') + '">' + (t.price===0?'FREE':'$'+t.price.toFixed(2)) + '</span></div>';
+                    if (t.benefits) h += '<div class="ticket-benefits"><i class="fas fa-check-circle"></i> ' + t.benefits + '</div>';
+                    if (remaining<=10 && remaining>0) h += '<div class="ticket-remaining">Only ' + remaining + ' left!</div>';
+                    if (remaining<=0) h += '<div class="ticket-remaining">Sold Out</div>';
+                    h += '</div>';
+                });
+                h += '</div>';
+            }
+            
+            document.getElementById('eventContent').innerHTML = h;
+            if (selectedTicketIndex >= 0) updateBottomBar();
+        }
+
+        window.selectTicket = function(index, el) {
+            selectedTicketIndex = index; quantity = 1;
+            document.querySelectorAll('.ticket-card').forEach(function(c) { c.classList.remove('selected'); });
+            el.classList.add('selected');
+            updateBottomBar();
+        };
+
+        function updateBottomBar() {
+            var bar = document.getElementById('bottomBar');
+            var btn = document.getElementById('btnBuy');
+            var t = eventData.ticketTypes[selectedTicketIndex];
+            if (!t) return;
+            bar.style.display = 'flex';
+            document.getElementById('bottomSelected').textContent = t.name + ' × ' + quantity;
+            var total = t.price * quantity;
+            btn.textContent = total === 0 ? 'Get Free Ticket' : 'Pay $' + total.toFixed(2);
+            btn.className = 'btn-buy' + (total === 0 ? ' free' : '');
+            btn.disabled = false;
+        }
+
+        window.initiatePurchase = function() {
+            var t = eventData.ticketTypes[selectedTicketIndex];
+            if (!t) return;
+            var total = t.price * quantity;
+            var remaining = (t.quantity||0)-(t.sold||0);
+            if (remaining <= 0) { showToast('Sorry, sold out','error'); return; }
+            if (quantity > remaining) { showToast('Only ' + remaining + ' left','error'); return; }
+            
+            document.getElementById('confirmEvent').textContent = eventData.name;
+            document.getElementById('confirmTicket').textContent = t.name + ' × ' + quantity;
+            
+            if (total === 0) {
+                document.getElementById('confirmIcon').textContent = '🎫';
+                document.getElementById('confirmTitle').textContent = 'Get Free Ticket';
+                document.getElementById('confirmTotal').textContent = 'FREE';
+                document.getElementById('btnConfirm').textContent = 'Claim Free Ticket';
+            } else {
+                document.getElementById('confirmIcon').textContent = '💳';
+                document.getElementById('confirmTitle').textContent = 'Confirm Purchase';
+                document.getElementById('confirmTotal').textContent = 'Total: $' + total.toFixed(2);
+                document.getElementById('btnConfirm').textContent = 'Pay $' + total.toFixed(2);
+            }
+            document.getElementById('confirmModal').classList.add('show');
+        };
+
+        window.closeConfirm = function() { document.getElementById('confirmModal').classList.remove('show'); };
+
+        window.completePurchase = async function() {
+            var t = eventData.ticketTypes[selectedTicketIndex];
+            if (!t) return;
+            var total = t.price * quantity;
+            var btn = document.getElementById('btnConfirm');
+            btn.textContent = 'Processing...'; btn.disabled = true;
+            
+            if (total === 0) {
+                await createTickets(null);
+            } else {
+                if (typeof FlutterwaveCheckout === 'undefined') {
+                    showToast('Loading payment...','error');
+                    btn.textContent = 'Pay $' + total.toFixed(2); btn.disabled = false;
+                    return;
+                }
+                var txRef = 'EVT-' + Date.now() + '-' + Math.random().toString(36).substr(2,6).toUpperCase();
+                FlutterwaveCheckout({
+                    public_key: CONFIG.flutterwaveKey, tx_ref: txRef, amount: total, currency: 'USD',
+                    payment_options: 'card,banktransfer,ussd',
+                    customer: { email: currentUser.email, name: currentUser.displayName || 'Customer' },
+                    customizations: { title: 'STOLIY Events', description: t.name + ' - ' + eventData.name, logo: 'app-icon.png' },
+                    callback: async function(r) {
+                        if (r.status === 'successful' || r.status === 'completed') {
+                            await createTickets(r.transaction_id || txRef);
+                        } else { showToast('Payment failed','error'); btn.textContent = 'Pay $' + total.toFixed(2); btn.disabled = false; }
+                    },
+                    onclose: function() { if (btn.disabled && btn.textContent === 'Processing...') { btn.textContent = 'Pay $' + total.toFixed(2); btn.disabled = false; } }
+                });
+            }
+        };
+
+        async function createTickets(paymentRef) {
+            var t = eventData.ticketTypes[selectedTicketIndex];
+            var total = t.price * quantity;
+            try {
+                for (var i = 0; i < quantity; i++) {
+                    var ticketId = 'TKT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,4).toUpperCase();
+                    await db.collection('tickets').doc(ticketId).set({
+                        ticketId: ticketId, ticketNumber: ticketId, eventId: eventData.id,
+                        userId: currentUser.uid, customerName: currentUser.displayName || 'Customer',
+                        customerEmail: currentUser.email, ticketType: t.name, price: t.price,
+                        status: 'active', qrToken: btoa(ticketId + '-' + currentUser.uid + '-' + Date.now()),
+                        paymentRef: paymentRef || 'FREE', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                var updatedTypes = eventData.ticketTypes.map(function(tt) { return tt.name === t.name ? {...tt, sold: (tt.sold||0)+quantity} : tt; });
+                await db.collection('events').doc(eventData.id).update({ ticketsSold: firebase.firestore.FieldValue.increment(quantity), revenue: firebase.firestore.FieldValue.increment(total), ticketTypes: updatedTypes });
+                eventData.ticketTypes = updatedTypes;
+                
+                await db.collection('notifications').add({
+                    userId: currentUser.uid, type: 'ticket_purchased',
+                    message: 'Your ' + t.name + ' ticket for "' + eventData.name + '" is confirmed!',
+                    link: 'my-tickets.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                document.getElementById('confirmModal').classList.remove('show');
+                showToast('✅ ' + quantity + ' ticket(s) confirmed! View in My Tickets','success');
+                setTimeout(function() { window.location.href = 'my-tickets.html'; }, 2000);
+            } catch(e) { console.error('Ticket error:', e); showToast('Failed to create ticket','error'); }
+        }
+
+        window.shareEvent = function() {
+            var url = BASE_URL + '/event-detail.html?id=' + eventId;
+            if (navigator.share) { navigator.share({ title: eventData?.name, url: url }).catch(function(){}); }
+            else { navigator.clipboard.writeText(url).then(function() { showToast('Event link copied!','success'); }); }
+        };
+
+        document.getElementById('confirmModal').addEventListener('click', function(e) { if (e.target === this) closeConfirm(); });
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Stoliy - Your Marketplace</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="apple-touch-icon" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0B0B14 0%, #1A1025 30%, #0F0820 60%, #0B0B14 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        
+        .splash-screen.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .splash-content {
+            text-align: center;
+            animation: splashPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .splash-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 28px;
+            margin: 0 auto 24px;
+            box-shadow: 0 16px 48px rgba(108, 60, 240, 0.4);
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        
+        .splash-title {
+            font-size: 42px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -1px;
+            margin-bottom: 4px;
+        }
+        
+        .splash-title span {
+            background: linear-gradient(135deg, #6C3CF0, #A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .splash-subtitle {
+            font-size: 15px;
+            color: #A0A0B8;
+            font-weight: 400;
+        }
+        
+        .splash-loader {
+            margin-top: 32px;
+        }
+        
+        .splash-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(108, 60, 240, 0.2);
+            border-top: 3px solid #6C3CF0;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        
+        /* Onboarding Slides */
+        .onboarding-container {
+            position: fixed;
+            inset: 0;
+            background: #0B0B14;
+            z-index: 9998;
+            display: none;
+        }
+        
+        .onboarding-container.show {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .onboarding-slides {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .onboarding-slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 32px;
+            text-align: center;
+            opacity: 0;
+            transform: translateX(40px);
+            transition: all 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .onboarding-slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+        
+        .onboarding-slide.exit-left {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+        
+        .onboarding-icon {
+            width: 140px;
+            height: 140px;
+            border-radius: 36px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+        }
+        
+        .onboarding-icon.slide-1 {
+            background: linear-gradient(135deg, rgba(108, 60, 240, 0.2), rgba(108, 60, 240, 0.05));
+            border: 1px solid rgba(108, 60, 240, 0.3);
+        }
+        
+        .onboarding-icon.slide-2 {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(46, 204, 113, 0.05));
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+        
+        .onboarding-icon.slide-3 {
+            background: linear-gradient(135deg, rgba(244, 180, 0, 0.2), rgba(244, 180, 0, 0.05));
+            border: 1px solid rgba(244, 180, 0, 0.3);
+        }
+        
+        .onboarding-icon img {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+        }
+        
+        .onboarding-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .onboarding-desc {
+            font-size: 15px;
+            color: #A0A0B8;
+            line-height: 1.6;
+            max-width: 340px;
+        }
+        
+        .onboarding-bottom {
+            padding: 24px 32px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .onboarding-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .onboarding-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2A2A40;
+            transition: all 0.3s ease;
+        }
+        
+        .onboarding-dot.active {
+            background: #6C3CF0;
+            width: 28px;
+            border-radius: 4px;
+        }
+        
+        .onboarding-dot.done {
+            background: #2ECC71;
+        }
+        
+        .onboarding-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn-onboarding {
+            flex: 1;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-onboarding.primary {
+            background: linear-gradient(135deg, #6C3CF0, #5A2FD4);
+            color: white;
+            box-shadow: 0 4px 16px rgba(108, 60, 240, 0.3);
+        }
+        
+        .btn-onboarding.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(108, 60, 240, 0.4);
+        }
+        
+        .btn-onboarding.secondary {
+            background: transparent;
+            color: #A0A0B8;
+            border: 1px solid #2A2A40;
+        }
+        
+        .btn-onboarding.secondary:hover {
+            border-color: #3A3A55;
+            color: white;
+        }
+        
+        .btn-onboarding:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-content">
+            <img src="app-icon.png" alt="Stoliy" class="splash-logo" onerror="this.style.display='none'">
+            <h1 class="splash-title"><span>STOLIY</span></h1>
+            <p class="splash-subtitle">Your Premium Marketplace</p>
+            <div class="splash-loader">
+                <div class="splash-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Slides -->
+    <div class="onboarding-container" id="onboardingContainer">
+        <div class="onboarding-slides">
+            <!-- Slide 1 -->
+            <div class="onboarding-slide active" id="slide1">
+                <div class="onboarding-icon slide-1">
+                    <img src="app-icon.png" alt="Stoliy" onerror="this.innerHTML='🛍️'">
+                </div>
+                <h2 class="onboarding-title">Welcome to Stoliy</h2>
+                <p class="onboarding-desc">
+                    The marketplace where you can buy and sell anything. From fashion to electronics, find it all here.
+                </p>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="onboarding-slide" id="slide2">
+                <div class="onboarding-icon slide-2">
+                    <span>🏪</span>
+                </div>
+                <h2 class="onboarding-title">Create Your Store</h2>
+                <p class="onboarding-desc">
+                    Set up your own store in minutes. Start selling to thousands of customers across multiple countries.
+                </p>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="onboarding-slide" id="slide3">
+                <div class="onboarding-icon slide-3">
+                    <span>💳</span>
+                </div>
+                <h2 class="onboarding-title">Secure Payments</h2>
+                <p class="onboarding-desc">
+                    Buy and sell with confidence. Multiple payment options with buyer protection and fast withdrawals.
+                </p>
+            </div>
+        </div>
+
+        <div class="onboarding-bottom">
+            <div class="onboarding-dots">
+                <div class="onboarding-dot active" data-slide="0"></div>
+                <div class="onboarding-dot" data-slide="1"></div>
+                <div class="onboarding-dot" data-slide="2"></div>
+            </div>
+            <div class="onboarding-buttons">
+                <button class="btn-onboarding secondary" id="btnSkip" onclick="skipOnboarding()">Skip</button>
+                <button class="btn-onboarding primary" id="btnNext" onclick="nextSlide()">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- Stoliy Core -->
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+
+    <script>
+    (function() {
+        console.log('🚀 Stoliy - Initializing...');
+
+        // Initialize Firebase
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(CONFIG.firebaseConfig);
+            }
+        } catch(e) {
+            console.error('Firebase init error:', e);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentSlide = 0;
+        const totalSlides = 3;
+
+        // Show splash for 2.5 seconds then check auth
+        setTimeout(async () => {
+            document.getElementById('splashScreen').classList.add('hide');
+            
+            // Check if user is logged in
+            auth.onAuthStateChanged(async (user) => {
+                if (user && user.emailVerified) {
+                    // Get user data
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    const userData = userDoc.exists ? userDoc.data() : {};
+                    
+                    sessionStorage.setItem('userData', JSON.stringify(userData));
+                    sessionStorage.setItem('userId', userData.userId || '');
+                    
+                    if (userData.onboardingCompleted) {
+                        // Go straight to home
+                        window.location.href = 'home.html';
+                    } else {
+                        // Show onboarding for new users
+                        showOnboarding();
+                    }
+                } else {
+                    // Not logged in - show onboarding then redirect to register
+                    showOnboarding();
+                }
+            });
+        }, 2500);
+
+        function showOnboarding() {
+            document.getElementById('onboardingContainer').classList.add('show');
+            currentSlide = 0;
+            updateSlide();
+        }
+
+        function updateSlide() {
+            // Update slides
+            document.querySelectorAll('.onboarding-slide').forEach((slide, i) => {
+                slide.classList.remove('active', 'exit-left');
+                if (i === currentSlide) {
+                    slide.classList.add('active');
+                } else if (i < currentSlide) {
+                    slide.classList.add('exit-left');
+                }
+            });
+
+            // Update dots
+            document.querySelectorAll('.onboarding-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'done');
+                if (i === currentSlide) dot.classList.add('active');
+                if (i < currentSlide) dot.classList.add('done');
+            });
+
+            // Update button
+            const btnNext = document.getElementById('btnNext');
+            if (currentSlide === totalSlides - 1) {
+                btnNext.textContent = 'Get Started';
+                btnNext.onclick = finishOnboarding;
+            } else {
+                btnNext.textContent = 'Next';
+                btnNext.onclick = nextSlide;
+            }
+        }
+
+        window.nextSlide = function() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            } else {
+                finishOnboarding();
+            }
+        };
+
+        window.skipOnboarding = function() {
+            finishOnboarding();
+        };
+
+        function finishOnboarding() {
+            const user = auth.currentUser;
+            
+            if (user && user.emailVerified) {
+                // Mark onboarding as completed
+                db.collection('users').doc(user.uid).update({
+                    onboardingCompleted: true
+                }).catch(() => {});
+                
+                // Check if user has a store
+                db.collection('stores').where('ownerId', '==', user.uid).limit(1).get()
+                    .then(snap => {
+                        if (snap.empty) {
+                            window.location.href = 'wizard.html';
+                        } else {
+                            window.location.href = 'home.html';
+                        }
+                    })
+                    .catch(() => {
+                        window.location.href = 'wizard.html';
+                    });
+            } else {
+                // Not logged in - go to register
+                window.location.href = 'register.html';
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft' && currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        });
+
+        // Touch swipe
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+        document.addEventListener('touchend', (e) => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) nextSlide();
+                else if (currentSlide > 0) { currentSlide--; updateSlide(); }
+            }
+        });
+
+        console.log('✅ Index page ready');
+    })();
+    </script>
+</body>
+</html>

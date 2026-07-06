@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Discount Codes - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .discount-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 12px 16px; }
+        .discount-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .discount-code { font-size: 18px; font-weight: 800; color: var(--accent); font-family: monospace; }
+        .discount-value { font-weight: 700; color: var(--success); }
+        .discount-meta { font-size: 12px; color: var(--text2); }
+        .btn-add { padding: 10px 20px; background: var(--accent); color: #fff; border: none; border-radius: 25px; font-weight: 600; cursor: pointer; display: block; margin: 16px auto; }
+        .form-section { padding: 16px; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: var(--font); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-submit { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><h2 class="page-title">Discount Codes</h2></div>
+        <div id="discountsList"><div style="text-align:center;padding:40px;">Loading...</div></div>
+        <button class="btn-add" onclick="showForm()"><i class="fas fa-plus"></i> Create Discount Code</button>
+        <div class="form-section" id="discountForm" style="display:none;">
+            <div class="form-group"><label class="form-label">Code</label><input type="text" class="form-input" id="discCode" placeholder="WELCOME10"></div>
+            <div class="form-group"><label class="form-label">Type</label><select class="form-input" id="discType"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed Amount ($)</option></select></div>
+            <div class="form-group"><label class="form-label">Value</label><input type="number" class="form-input" id="discValue" placeholder="10"></div>
+            <div class="form-row"><div class="form-group"><label class="form-label">Start Date</label><input type="date" class="form-input" id="discStart"></div><div class="form-group"><label class="form-label">End Date</label><input type="date" class="form-input" id="discEnd"></div></div>
+            <div class="form-group"><label class="form-label">Usage Limit</label><input type="number" class="form-input" id="discLimit" placeholder="100" value="100"></div>
+            <div class="form-group"><label class="form-label">Minimum Purchase ($)</label><input type="number" class="form-input" id="discMin" placeholder="0" value="0"></div>
+            <button class="btn-submit" onclick="createDiscount()">Create Discount</button>
+            <button style="width:100%;padding:12px;background:#F3F4F6;border:none;border-radius:12px;margin-top:6px;cursor:pointer;" onclick="document.getElementById('discountForm').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    const auth = firebase.auth(), db = firebase.firestore();
+    let currentUser = null, storeId = null;
+
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        currentUser = user;
+        const allStores = await db.collection('stores').get();
+        const myStore = allStores.docs.find(d => d.data().ownerId === user.uid);
+        if (!myStore) { window.location.href = 'wizard.html'; return; }
+        storeId = myStore.id;
+        loadDiscounts();
+    });
+
+    async function loadDiscounts() {
+        const allDiscounts = await db.collection('discountCodes').get();
+        const myDiscounts = allDiscounts.docs.map(d => ({ id: d.id, ...d.data() })).filter(d => d.storeId === storeId);
+        const container = document.getElementById('discountsList');
+        if (myDiscounts.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2);">No discount codes yet</div>';
+            return;
+        }
+        container.innerHTML = myDiscounts.map(d => `
+            <div class="discount-card">
+                <div class="discount-header"><span class="discount-code">${d.code}</span><span class="discount-value">${d.type==='percentage'?d.value+'%':'$'+d.value} OFF</span></div>
+                <div class="discount-meta">Uses: ${d.currentUses||0}/${d.maxUses||'∞'} • Min: $${d.minimumPurchase||0}</div>
+                <div class="discount-meta">Valid: ${d.validFrom?.toDate?.()?d.validFrom.toDate().toLocaleDateString():'Now'} - ${d.validUntil?.toDate?.()?d.validUntil.toDate().toLocaleDateString():'N/A'}</div>
+                <button style="margin-top:8px;background:var(--error);color:#fff;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:11px;" onclick="deleteDiscount('${d.id}')">Delete</button>
+            </div>
+        `).join('');
+    }
+
+    function showForm() { document.getElementById('discountForm').style.display = 'block'; }
+
+    async function createDiscount() {
+        const code = document.getElementById('discCode').value.trim().toUpperCase();
+        const type = document.getElementById('discType').value;
+        const value = parseFloat(document.getElementById('discValue').value) || 0;
+        const start = document.getElementById('discStart').value;
+        const end = document.getElementById('discEnd').value;
+        const limit = parseInt(document.getElementById('discLimit').value) || 100;
+        const min = parseFloat(document.getElementById('discMin').value) || 0;
+
+        if (!code || value <= 0) { alert('Fill all required fields'); return; }
+
+        await db.collection('discountCodes').add({
+            storeId, code, type, value, active: true, currentUses: 0, maxUses: limit,
+            minimumPurchase: min, validFrom: start ? new Date(start) : null,
+            validUntil: end ? new Date(end) : null,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('discountForm').style.display = 'none';
+        loadDiscounts();
+    }
+
+    async function deleteDiscount(id) { if (confirm('Delete?')) { await db.collection('discountCodes').doc(id).delete(); loadDiscounts(); } }
+
+    window.showForm = showForm;
+    window.createDiscount = createDiscount;
+    window.deleteDiscount = deleteDiscount;
+    </script>
+</body>
+</html>

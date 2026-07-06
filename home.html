@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Stoliy - Marketplace</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="apple-touch-icon" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg-primary: #0B0B14;
+            --bg-card: #151521;
+            --bg-input: #222236;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A0A0B8;
+            --text-muted: #6B7280;
+            --accent: #6C3CF0;
+            --accent-hover: #7B52F5;
+            --success: #2ECC71;
+            --warning: #F4B400;
+            --error: #FF4D4F;
+            --border: #2A2A40;
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --transition: all 0.2s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg-primary); color: var(--text-primary); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        button, a, input, select, textarea { font-family: var(--font); outline: none !important; }
+        button:focus, a:focus, input:focus, select:focus, textarea:focus { outline: none !important; box-shadow: none !important; }
+
+        .app-container { max-width: 480px; margin: 0 auto; background: var(--bg-primary); min-height: 100vh; position: relative; }
+
+        /* Top Bar */
+        .top-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-primary); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #1A1A2E; }
+        .top-bar-logo { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; }
+        .top-bar-search { flex: 1; display: flex; align-items: center; gap: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; cursor: pointer; transition: var(--transition); min-width: 0; }
+        .top-bar-search:hover { border-color: #3A3A55; }
+        .top-bar-search i { color: var(--text-muted); font-size: 15px; flex-shrink: 0; }
+        .top-bar-search span { color: var(--text-muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .top-bar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .icon-btn { width: 38px; height: 38px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); transition: var(--transition); position: relative; }
+        .icon-btn:hover { border-color: #3A3A55; color: var(--text-primary); }
+        .icon-btn:active { background: #1A1A2E; transform: scale(0.95); }
+        .icon-btn .badge { position: absolute; top: -5px; right: -5px; background: var(--error); color: white; font-size: 10px; padding: 3px 7px; border-radius: 10px; min-width: 20px; text-align: center; font-weight: 700; display: none; line-height: 1; }
+
+        /* Main Scroll */
+        .main-scroll { padding-bottom: 80px; overflow-y: auto; max-height: calc(100vh - 57px - 70px); }
+        .main-scroll::-webkit-scrollbar { width: 3px; }
+        .main-scroll::-webkit-scrollbar-track { background: transparent; }
+        .main-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* Banner Carousel */
+        .banner-section { padding: 14px 16px; }
+        .banner-carousel { position: relative; border-radius: var(--radius-lg); overflow: hidden; height: 170px; background: var(--bg-card); }
+        .banner-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease; cursor: pointer; }
+        .banner-slide.active { opacity: 1; }
+        .banner-slide img { width: 100%; height: 100%; object-fit: cover; }
+        .banner-dots { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 3; }
+        .banner-dot { width: 8px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.4); transition: all 0.3s ease; cursor: pointer; border: none; padding: 0; }
+        .banner-dot.active { background: white; width: 24px; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
+
+        /* Filter/Sort Bar */
+        .filter-bar { display: flex; gap: 8px; padding: 8px 16px 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .filter-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 500; transition: var(--transition); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+        .filter-chip i { font-size: 11px; }
+        .filter-chip:hover, .filter-chip.active { border-color: var(--accent); color: #fff; background: rgba(108,60,240,0.12); }
+
+        /* Ad Overlay */
+        .ad-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); }
+        .ad-overlay.show { display: flex; }
+        .ad-container { position: relative; max-width: 400px; width: 100%; background: var(--bg-card); border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: adPopIn 0.4s ease; }
+        @keyframes adPopIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .ad-image { width: 100%; height: 300px; object-fit: cover; cursor: pointer; }
+        .ad-close-btn { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); z-index: 2; }
+        .ad-close-btn:hover { background: rgba(255,77,79,0.8); border-color: var(--error); }
+        .ad-sponsor-tag { position: absolute; bottom: 16px; left: 16px; background: rgba(0,0,0,0.7); color: white; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; z-index: 2; }
+
+        /* Sections */
+        .section { padding: 0 16px; margin-bottom: 24px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .section-title { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+        .section-title i { color: var(--accent); font-size: 16px; }
+        .section-link { font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; cursor: pointer; transition: color 0.2s; }
+        .section-link:hover { color: var(--accent-hover); }
+
+        /* Categories */
+        .categories-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .category-card { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.2s ease; padding: 4px; }
+        .category-card:active { transform: scale(0.94); }
+        .category-icon-wrapper { width: 58px; height: 58px; border-radius: var(--radius-lg); background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--accent); transition: var(--transition); }
+        .category-card:hover .category-icon-wrapper { border-color: var(--accent); background: #1C1C30; box-shadow: 0 0 20px rgba(108, 60, 240, 0.15); }
+        .category-name { font-size: 11px; color: var(--text-secondary); text-align: center; font-weight: 500; line-height: 1.3; }
+
+        /* Enhanced Store Cards */
+        .stores-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+        .stores-scroll::-webkit-scrollbar { display: none; }
+        .store-card-h { flex-shrink: 0; width: 170px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; scroll-snap-align: start; transition: var(--transition); }
+        .store-card-h:hover { border-color: #3A3A55; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .store-card-h:active { transform: scale(0.97); }
+        .store-card-banner { width: 100%; height: 75px; object-fit: cover; background: var(--bg-input); }
+        .store-card-body { padding: 10px 12px 14px; text-align: center; position: relative; }
+        .store-card-logo { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; margin: -32px auto 8px; border: 3px solid var(--bg-card); position: relative; z-index: 1; background: var(--bg-input); }
+        .store-card-name { font-weight: 600; font-size: 13px; color: #fff; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .store-card-name .verified-icon { color: var(--accent); font-size: 10px; margin-left: 2px; }
+        .store-card-desc { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; min-height: 28px; }
+        .store-card-stats { display: flex; justify-content: center; gap: 10px; font-size: 10px; color: var(--text-muted); margin-bottom: 10px; flex-wrap: wrap; }
+        .store-card-stats span { display: flex; align-items: center; gap: 3px; }
+        .store-card-stats i { font-size: 9px; }
+        .btn-follow-sm { width: 100%; padding: 7px; border-radius: 8px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; font-size: 11px; font-weight: 600; transition: var(--transition); }
+        .btn-follow-sm:hover { background: var(--accent); color: #fff; }
+        .btn-follow-sm.following { background: var(--accent); color: #fff; }
+        .btn-follow-sm i { margin-right: 3px; }
+
+        /* Product Cards */
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .product-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: var(--transition); }
+        .product-card:hover { border-color: #3A3A55; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .product-card:active { transform: scale(0.97); }
+        .product-image-wrapper { position: relative; width: 100%; height: 160px; overflow: hidden; background: var(--bg-input); }
+        .product-card-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+        .product-card:hover .product-card-image { transform: scale(1.05); }
+        .product-card-body { padding: 12px 14px; }
+        .product-card-name { font-weight: 600; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+        .product-card-price-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .product-card-price { font-weight: 700; font-size: 16px; color: var(--success); }
+        .product-card-original { font-size: 12px; color: var(--text-muted); text-decoration: line-through; }
+        .discount-tag { position: absolute; top: 8px; left: 8px; background: var(--error); color: white; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; z-index: 2; box-shadow: 0 2px 8px rgba(255,77,79,0.3); }
+        .stock-badge { font-size: 10px; font-weight: 500; color: var(--success); }
+        .stock-badge.out { color: var(--error); }
+
+        /* Event Cards */
+        .event-card-h { flex-shrink: 0; width: 200px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; scroll-snap-align: start; transition: var(--transition); }
+        .event-card-h:hover { border-color: #3A3A55; transform: translateY(-2px); }
+        .event-banner { width: 100%; height: 90px; object-fit: cover; background: linear-gradient(135deg,#6C3CF0,#4A1FB8); }
+        .event-card-body { padding: 12px; }
+        .event-card-name { font-weight: 600; font-size: 13px; color: #fff; margin-bottom: 4px; }
+        .event-card-date { font-size: 10px; color: var(--accent); }
+        .event-card-venue { font-size: 10px; color: var(--text-muted); }
+
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: rgba(11, 11, 20, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: flex-end; padding: 6px 0 22px; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; color: var(--text-muted); text-decoration: none; padding: 6px 14px; transition: var(--transition); position: relative; border: none; background: none; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 21px; transition: transform 0.2s ease; }
+        .nav-item.active i { transform: scale(1.1); }
+        .nav-item span { font-size: 10px; font-weight: 600; letter-spacing: -0.2px; }
+        .nav-item .nav-badge { position: absolute; top: -2px; right: 6px; background: var(--error); color: white; font-size: 10px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+        .empty-state { text-align: center; padding: 32px 20px; color: var(--text-muted); }
+        .empty-state i { font-size: 40px; margin-bottom: 10px; opacity: 0.4; }
+        .empty-state p { font-size: 13px; line-height: 1.5; }
+
+        @media (max-width: 380px) {
+            .categories-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+            .category-icon-wrapper { width: 50px; height: 50px; font-size: 19px; }
+            .category-name { font-size: 10px; }
+            .banner-carousel { height: 140px; }
+            .product-image-wrapper { height: 130px; }
+            .ad-image { height: 220px; }
+            .store-card-h { width: 150px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <img src="app-icon.png" alt="Stoliy" class="top-bar-logo" onerror="this.style.display='none'">
+            <div class="top-bar-search" onclick="goToSearch()">
+                <i class="fas fa-search"></i>
+                <span>Search products, stores, events...</span>
+            </div>
+            <div class="top-bar-actions">
+                <button class="icon-btn" onclick="goToChat()" aria-label="Messages"><i class="fas fa-comment-dots"></i><span class="badge" id="msgBadge">0</span></button>
+                <button class="icon-btn" onclick="goToNotifications()" aria-label="Notifications"><i class="fas fa-bell"></i><span class="badge" id="notifBadge">0</span></button>
+            </div>
+        </div>
+
+        <!-- Main Scroll -->
+        <div class="main-scroll" id="mainScroll">
+            <!-- Banner Carousel -->
+            <div class="banner-section">
+                <div class="banner-carousel" id="bannerCarousel">
+                    <div class="banner-slide active" data-index="0" onclick="goToSearch()">
+                        <img src="welcome-icon.png" alt="Marketplace" onerror="this.parentElement.style.background='linear-gradient(135deg, #6C3CF0, #4A1FB8)'; this.style.display='none';">
+                    </div>
+                    <div class="banner-slide" data-index="1" onclick="goToFlashSale()">
+                        <img src="flashsale-icon.png" alt="Flash Sale" onerror="this.parentElement.style.background='linear-gradient(135deg, #FF4D4F, #C62828)'; this.style.display='none';">
+                    </div>
+                    <div class="banner-slide" data-index="2" onclick="goToStoreWizard()">
+                        <img src="createstore-icon.png" alt="Create Store" onerror="this.parentElement.style.background='linear-gradient(135deg, #2ECC71, #1B8C4E)'; this.style.display='none';">
+                    </div>
+                    <div class="banner-dots">
+                        <button class="banner-dot active" data-index="0" onclick="goToBanner(0)" aria-label="Slide 1"></button>
+                        <button class="banner-dot" data-index="1" onclick="goToBanner(1)" aria-label="Slide 2"></button>
+                        <button class="banner-dot" data-index="2" onclick="goToBanner(2)" aria-label="Slide 3"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories (NOW INCLUDES TICKETS) -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-th-large"></i> Categories</h3>
+                    <span class="section-link" onclick="goToSearch()">See All</span>
+                </div>
+                <div class="categories-grid" id="categoriesContainer"></div>
+            </div>
+
+            <!-- Filter/Sort Bar -->
+            <div class="filter-bar" id="filterBar">
+                <button class="filter-chip active" onclick="applyStoreFilter('all', this)"><i class="fas fa-globe"></i> All</button>
+                <button class="filter-chip" onclick="applyStoreFilter('verified', this)"><i class="fas fa-check-circle"></i> Verified</button>
+                <button class="filter-chip" onclick="applyStoreFilter('trending', this)"><i class="fas fa-fire"></i> Trending</button>
+                <button class="filter-chip" onclick="applyStoreFilter('newest', this)"><i class="fas fa-certificate"></i> Newest</button>
+                <button class="filter-chip" onclick="applyStoreFilter('toprated', this)"><i class="fas fa-trophy"></i> Top Rated</button>
+            </div>
+
+            <!-- Filtered Stores Display -->
+            <div class="section" id="filteredStoresSection">
+                <div class="section-header">
+                    <h3 class="section-title" id="filteredStoresTitle"><i class="fas fa-store"></i> All Stores</h3>
+                </div>
+                <div class="stores-scroll" id="filteredStores"></div>
+            </div>
+
+            <!-- Upcoming Events Section (NEW) -->
+            <div class="section" id="eventsSection">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</h3>
+                    <span class="section-link" onclick="window.location.href='search.html?category=Tickets+%26+Events'">See All</span>
+                </div>
+                <div class="stores-scroll" id="upcomingEvents"></div>
+            </div>
+
+            <!-- Featured Stores -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-star"></i> Featured Stores</h3>
+                    <span class="section-link" onclick="goToSearch()">See All</span>
+                </div>
+                <div class="stores-scroll" id="featuredStores"></div>
+            </div>
+
+            <!-- Sponsored Products -->
+            <div class="section" id="sponsoredSection">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-ad"></i> Sponsored Products</h3>
+                </div>
+                <div class="products-grid" id="sponsoredProducts"></div>
+            </div>
+
+            <!-- Trending Stores -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-fire"></i> Trending Stores</h3>
+                    <span class="section-link" onclick="goToSearch()">See All</span>
+                </div>
+                <div class="stores-scroll" id="trendingStores"></div>
+            </div>
+
+            <!-- Recommended Stores -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-hand-sparkles"></i> Recommended</h3>
+                </div>
+                <div class="stores-scroll" id="recommendedStores"></div>
+            </div>
+
+            <!-- New Stores -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-certificate"></i> New Stores</h3>
+                </div>
+                <div class="stores-scroll" id="newStores"></div>
+            </div>
+
+            <!-- Top Rated Stores -->
+            <div class="section">
+                <div class="section-header">
+                    <h3 class="section-title"><i class="fas fa-trophy"></i> Top Rated</h3>
+                </div>
+                <div class="stores-scroll" id="topRatedStores"></div>
+            </div>
+        </div>
+
+        <!-- Ad Overlay -->
+        <div class="ad-overlay" id="adOverlay">
+            <div class="ad-container">
+                <button class="ad-close-btn" onclick="closeAd()"><i class="fas fa-times"></i></button>
+                <img src="banner-icon.png" alt="Advertisement" class="ad-image" id="adImage" onclick="clickAd()" onerror="this.src='https://via.placeholder.com/400x300/151521/6C3CF0?text=Your+Ad+Here'">
+                <div class="ad-sponsor-tag"><i class="fas fa-ad"></i> Sponsored</div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="navigateTo('home')" aria-label="Home"><i class="fas fa-home"></i><span>Home</span></button>
+            <button class="nav-item" onclick="navigateTo('search')" aria-label="Search"><i class="fas fa-search"></i><span>Search</span></button>
+            <button class="nav-item" onclick="navigateTo('cart')" aria-label="Cart"><i class="fas fa-shopping-bag"></i><span>Cart</span><span class="nav-badge" id="cartBadge" style="display:none;">0</span></button>
+            <button class="nav-item" onclick="navigateTo('orders')" aria-label="Orders"><i class="fas fa-box-open"></i><span>Orders</span></button>
+            <button class="nav-item" onclick="navigateTo('profile')" aria-label="Profile"><i class="fas fa-user-circle"></i><span>Profile</span></button>
+        </nav>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+    <script src="utils.js"></script>
+
+    <script>
+    (function() {
+        'use strict';
+        console.log('🏠 STOLIY Home - Loading...');
+
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null, userData = null, allStoresCache = [], bannerInterval, currentBanner = 0, adData = null;
+
+        // ==================== AUTH ====================
+        auth.onAuthStateChanged(async (user) => {
+            if (!user || !user.emailVerified) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            try {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists) { userData = doc.data(); sessionStorage.setItem('userData', JSON.stringify(userData)); }
+            } catch(e) {}
+            loadAllContent();
+            
+            // ========== NOTIFICATION BADGE (NO INDEX QUERY) ==========
+            updateNotifBadge();
+            setInterval(updateNotifBadge, 15000);
+        });
+
+        // ==================== NOTIFICATION BADGE ====================
+        async function updateNotifBadge() {
+            if (!currentUser) return;
+            try {
+                var allNotifs = await db.collection('notifications').get();
+                var unread = allNotifs.docs.map(function(d){return d.data();}).filter(function(n){return n.userId === currentUser.uid && !n.read;}).length;
+                var badge = document.getElementById('notifBadge');
+                if (badge) {
+                    badge.textContent = unread > 99 ? '99+' : unread;
+                    badge.style.display = unread > 0 ? 'flex' : 'none';
+                }
+            } catch(e) {}
+        }
+
+        // ==================== BANNER ====================
+        function startBanner() { if (bannerInterval) clearInterval(bannerInterval); bannerInterval = setInterval(() => { currentBanner = (currentBanner + 1) % 3; updateBanner(); }, 4000); }
+        function updateBanner() { document.querySelectorAll('.banner-slide').forEach((s, i) => s.classList.toggle('active', i === currentBanner)); document.querySelectorAll('.banner-dot').forEach((d, i) => d.classList.toggle('active', i === currentBanner)); }
+        function goToBanner(i) { currentBanner = i; updateBanner(); if (bannerInterval) { clearInterval(bannerInterval); startBanner(); } }
+        function goToFlashSale() { window.location.href = 'flashsale.html'; }
+        function goToStoreWizard() { window.location.href = 'wizard.html'; }
+
+        // ==================== AD ====================
+        async function loadAd() {
+            try {
+                const snap = await db.collection('ads').where('active', '==', true).orderBy('createdAt', 'desc').limit(1).get();
+                if (!snap.empty) { adData = { id: snap.docs[0].id, ...snap.docs[0].data() }; if (adData.image) document.getElementById('adImage').src = adData.image; setTimeout(showAd, 3000); }
+            } catch(e) { console.log('Ad load:', e.message); }
+        }
+        function showAd() { const o = document.getElementById('adOverlay'); if (o && adData) o.classList.add('show'); }
+        function closeAd() { document.getElementById('adOverlay')?.classList.remove('show'); }
+        function clickAd() { if (adData?.link) window.open(adData.link, '_blank'); closeAd(); }
+
+        // ==================== LOAD ALL ====================
+        async function loadAllContent() {
+            startBanner();
+            loadCategories();
+            await cacheAllStores();
+            applyStoreFilter('all', document.querySelector('.filter-chip.active') || document.querySelector('.filter-chip'));
+            await Promise.all([loadUpcomingEvents(), loadFeaturedStores(), loadSponsoredProducts(), loadTrendingStores(), loadRecommendedStores(), loadNewStores(), loadTopRatedStores(), updateBadges()]);
+            loadAd();
+        }
+
+        // ==================== CATEGORIES (NOW WITH TICKETS) ====================
+        function loadCategories() {
+            const c = document.getElementById('categoriesContainer');
+            if (!c) return;
+            // Add Tickets & Events to categories if not present
+            var cats = (CONFIG.categories || []).filter(x => x.name !== 'All');
+            var hasTickets = cats.some(function(cat){ return cat.name === 'Tickets & Events'; });
+            if (!hasTickets) {
+                cats.push({ name: 'Tickets & Events', icon: 'fa-solid fa-ticket-alt' });
+            }
+            c.innerHTML = cats.slice(0, 8).map(cat => `<div class="category-card" onclick="searchCategory('${cat.name.replace(/'/g,"\\'")}')"><div class="category-icon-wrapper"><i class="${cat.icon || 'fas fa-tag'}"></i></div><span class="category-name">${cat.name}</span></div>`).join('');
+        }
+
+        // ==================== CACHE ALL STORES ====================
+        async function cacheAllStores() {
+            try {
+                const snap = await db.collection('stores').get();
+                allStoresCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.active !== false);
+            } catch(e) { allStoresCache = []; }
+        }
+
+        // ==================== UPCOMING EVENTS ====================
+        async function loadUpcomingEvents() {
+            var container = document.getElementById('upcomingEvents');
+            var section = document.getElementById('eventsSection');
+            if (!container) return;
+            try {
+                var allEvents = await db.collection('events').get();
+                var now = new Date();
+                var upcoming = allEvents.docs.map(function(d){return{id:d.id,...d.data()};}).filter(function(e){return e.status==='published'&&new Date(e.startDate)>=now;}).sort(function(a,b){return new Date(a.startDate)-new Date(b.startDate);}).slice(0,10);
+                if (upcoming.length === 0) { section.style.display = 'none'; return; }
+                section.style.display = 'block';
+                container.innerHTML = upcoming.map(function(e){
+                    var startDate = new Date(e.startDate);
+                    return '<div class="event-card-h" onclick="window.location.href=\'event-detail.html?id='+e.id+'\'">'+
+                        (e.banner?'<img src="'+e.banner+'" class="event-banner" onerror="this.style.background=\'linear-gradient(135deg,#6C3CF0,#4A1FB8)\'">':'<div class="event-banner"></div>')+
+                        '<div class="event-card-body"><div class="event-card-name">'+e.name+'</div><div class="event-card-date"><i class="fas fa-calendar"></i> '+startDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div><div class="event-card-venue"><i class="fas fa-map-marker-alt"></i> '+(e.venue||e.platform||'Online')+'</div></div></div>';
+                }).join('');
+            } catch(e) { section.style.display = 'none'; }
+        }
+
+        // ==================== FILTER/SORT ====================
+        function applyStoreFilter(filter, btn) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            let filtered = [...allStoresCache];
+            const titleEl = document.getElementById('filteredStoresTitle');
+            switch(filter) {
+                case 'verified': filtered = filtered.filter(s => s.verified); titleEl.innerHTML = '<i class="fas fa-check-circle"></i> Verified Stores'; break;
+                case 'trending': filtered.sort((a,b) => (b.followers||0) - (a.followers||0)); titleEl.innerHTML = '<i class="fas fa-fire"></i> Trending Stores'; break;
+                case 'newest': filtered.sort((a,b) => ((b.createdAt?.toDate?.())||0) - ((a.createdAt?.toDate?.())||0)); titleEl.innerHTML = '<i class="fas fa-certificate"></i> Newest Stores'; break;
+                case 'toprated': filtered.sort((a,b) => (b.rating||0) - (a.rating||0)); titleEl.innerHTML = '<i class="fas fa-trophy"></i> Top Rated Stores'; break;
+                default: titleEl.innerHTML = '<i class="fas fa-store"></i> All Stores';
+            }
+            const container = document.getElementById('filteredStores');
+            filtered = filtered.slice(0, 20);
+            container.innerHTML = filtered.length ? filtered.map(s => renderStoreCard(s)).join('') : '<div class="empty-state"><i class="fas fa-store-slash"></i><p>No stores found</p></div>';
+        }
+
+        // ==================== STORE CARD ====================
+        function renderStoreCard(store) {
+            const banner = store.banner || '';
+            const logo = store.logo || 'https://via.placeholder.com/52';
+            const name = (store.name || 'Store').substring(0, 20);
+            const desc = (store.description || '').substring(0, 55) || 'Welcome to my store!';
+            const followers = store.followers || 0;
+            const products = store.totalProducts || 0;
+            const reviews = store.totalReviews || 0;
+            const rating = store.rating || 0;
+            const verified = store.verified || false;
+            const isFollowing = (userData?.following || []).includes(store.id);
+            return `
+                <div class="store-card-h" onclick="viewStore('${store.id}')">
+                    ${banner ? `<img src="${banner}" class="store-card-banner" onerror="this.style.display='none'" loading="lazy">` : '<div class="store-card-banner" style="background:linear-gradient(135deg,#6C3CF0,#4A1FB8);"></div>'}
+                    <div class="store-card-body">
+                        <img src="${logo}" class="store-card-logo" onerror="this.src='https://via.placeholder.com/52'" loading="lazy">
+                        <div class="store-card-name">${name} ${verified ? '<i class="fas fa-check-circle verified-icon"></i>' : ''}</div>
+                        <div class="store-card-desc">${desc}</div>
+                        <div class="store-card-stats">
+                            <span><i class="fas fa-users"></i> ${followers}</span>
+                            <span><i class="fas fa-box"></i> ${products}</span>
+                            <span><i class="fas fa-star" style="color:#F4B400;"></i> ${rating.toFixed(1)}</span>
+                            <span><i class="fas fa-comment"></i> ${reviews}</span>
+                        </div>
+                        <button class="btn-follow-sm ${isFollowing?'following':''}" onclick="event.stopPropagation();toggleFollow('${store.id}',this)">
+                            ${isFollowing ? '<i class="fas fa-check"></i> Following' : '<i class="fas fa-plus"></i> Follow'}
+                        </button>
+                    </div>
+                </div>`;
+        }
+
+        // ==================== FOLLOW ====================
+        async function toggleFollow(storeId, btn) {
+            if (!currentUser) return;
+            const isF = (userData?.following || []).includes(storeId);
+            try {
+                if (isF) {
+                    await db.collection('users').doc(currentUser.uid).update({ following: firebase.firestore.FieldValue.arrayRemove(storeId) });
+                    await db.collection('stores').doc(storeId).update({ followers: firebase.firestore.FieldValue.increment(-1) });
+                    if (userData) userData.following = (userData.following||[]).filter(f => f !== storeId);
+                    btn.innerHTML = '<i class="fas fa-plus"></i> Follow'; btn.classList.remove('following');
+                } else {
+                    await db.collection('users').doc(currentUser.uid).update({ following: firebase.firestore.FieldValue.arrayUnion(storeId) });
+                    await db.collection('stores').doc(storeId).update({ followers: firebase.firestore.FieldValue.increment(1) });
+                    if (userData) userData.following = [...(userData.following||[]), storeId];
+                    btn.innerHTML = '<i class="fas fa-check"></i> Following'; btn.classList.add('following');
+                    
+                    // Send notification to store owner
+                    var storeDoc = await db.collection('stores').doc(storeId).get();
+                    if (storeDoc.exists) {
+                        await db.collection('notifications').add({
+                            userId: storeDoc.data().ownerId,
+                            type: 'store_follow',
+                            message: (currentUser.displayName || 'Someone') + ' started following your store!',
+                            link: 'followers.html',
+                            read: false,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }
+                sessionStorage.setItem('userData', JSON.stringify(userData));
+                cacheAllStores();
+            } catch(e) { console.error('Follow err:', e); }
+        }
+
+        // ==================== SECTION LOADERS ====================
+        async function loadFeaturedStores() { loadStoreSection('featuredStores', s => s.sponsored, 10); }
+        async function loadTrendingStores() { loadStoreSection('trendingStores', null, 10, (a,b) => (b.followers||0)-(a.followers||0)); }
+        async function loadRecommendedStores() { loadStoreSection('recommendedStores', null, 10, (a,b) => (b.rating||0)-(a.rating||0)); }
+        async function loadNewStores() { loadStoreSection('newStores', null, 10, (a,b) => ((b.createdAt?.toDate?.())||0)-((a.createdAt?.toDate?.())||0)); }
+        async function loadTopRatedStores() { loadStoreSection('topRatedStores', null, 10, (a,b) => (b.rating||0)-(a.rating||0)); }
+
+        function loadStoreSection(containerId, filterFn, limit, sortFn) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            let stores = filterFn ? allStoresCache.filter(filterFn) : [...allStoresCache];
+            if (sortFn) stores.sort(sortFn);
+            stores = stores.slice(0, limit);
+            container.innerHTML = stores.length ? stores.map(s => renderStoreCard(s)).join('') : '<div class="empty-state"><i class="fas fa-inbox"></i><p>Stores loading...</p></div>';
+        }
+
+        async function loadSponsoredProducts() {
+            const container = document.getElementById('sponsoredProducts');
+            const section = document.getElementById('sponsoredSection');
+            if (!container) return;
+            try {
+                const snap = await db.collection('products').where('sponsored', '==', true).limit(6).get();
+                if (snap.empty) { section.style.display = 'none'; return; }
+                section.style.display = 'block';
+                container.innerHTML = snap.docs.map(d => {
+                    const p = d.data(); const price = p.price||0; const orig = p.originalPrice||0; const disc = orig>price?Math.round((1-price/orig)*100):0;
+                    return `<div class="product-card" onclick="viewProduct('${d.id}')"><div class="product-image-wrapper"><img src="${(p.images&&p.images[0])||'https://via.placeholder.com/200'}" class="product-card-image" onerror="this.src='https://via.placeholder.com/200'" loading="lazy">${disc>0?`<span class="discount-tag">-${disc}%</span>`:''}</div><div class="product-card-body"><div class="product-card-name">${p.name||'Product'}</div><div class="product-card-price-row"><span class="product-card-price">${formatPrice(price)}</span>${disc>0?`<span class="product-card-original">${formatPrice(orig)}</span>`:''}</div><span class="stock-badge ${p.inStock!==false?'':'out'}"><i class="fas fa-circle" style="font-size:6px;"></i> ${p.inStock!==false?'In Stock':'Out of Stock'}</span></div></div>`;
+                }).join('');
+            } catch(e) { section.style.display = 'none'; }
+        }
+
+        // ==================== HELPERS ====================
+        function formatPrice(amount) { const syms={USD:'$',NGN:'₦',GHS:'GH₵',KES:'KSh',ZAR:'R',EUR:'€',GBP:'£'}; return (syms[userData?.currency]||'$')+Number(amount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+        async function updateBadges() { if(!currentUser)return; try{const s=await db.collection('cart').where('userId','==',currentUser.uid).get();const b=document.getElementById('cartBadge');if(b&&s.size>0){b.textContent=s.size;b.style.display='flex';}}catch(e){} }
+
+        function navigateTo(p) { const pages={home:'home.html',search:'search.html',cart:'cart.html',orders:'orders.html',profile:'profile.html'}; if(pages[p]) window.location.href=pages[p]; }
+        function viewStore(id) { window.location.href=`store.html?id=${id}`; }
+        function viewProduct(id) { window.location.href=`products.html?id=${id}`; }
+        function goToSearch() { window.location.href='search.html'; }
+        function searchCategory(cat) { window.location.href=`search.html?category=${encodeURIComponent(cat)}`; }
+        function goToChat() { window.location.href='chat.html'; }
+        function goToNotifications() { window.location.href='notifications.html'; }
+
+        window.navigateTo=navigateTo; window.viewStore=viewStore; window.viewProduct=viewProduct;
+        window.goToSearch=goToSearch; window.searchCategory=searchCategory; window.goToChat=goToChat;
+        window.goToNotifications=goToNotifications; window.goToBanner=goToBanner;
+        window.goToFlashSale=goToFlashSale; window.goToStoreWizard=goToStoreWizard;
+        window.closeAd=closeAd; window.clickAd=clickAd; window.applyStoreFilter=applyStoreFilter;
+        window.toggleFollow=toggleFollow;
+
+        // Swipe
+        let tx=0; document.getElementById('bannerCarousel')?.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+        document.getElementById('bannerCarousel')?.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>40){currentBanner=d>0?(currentBanner+1)%3:(currentBanner+2)%3;updateBanner();if(bannerInterval){clearInterval(bannerInterval);startBanner();}}});
+
+        console.log('✅ Home ready');
+    })();
+    </script>
+</body>
+</html>

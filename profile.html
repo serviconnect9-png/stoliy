@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Profile - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="apple-touch-icon" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF;
+            --accent: #6C3CF0; --success: #2ECC71; --warning: #F4B400; --error: #FF4D4F; --border: #E5E7EB;
+            --radius: 14px; --font: 'Inter', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, a { font-family: var(--font); outline: none; cursor: pointer; text-decoration: none; color: inherit; }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+        
+        .profile-header { background: linear-gradient(135deg, #6C3CF0, #4A1FB8); padding: 32px 20px 40px; text-align: center; color: #fff; position: relative; }
+        .profile-avatar-wrap { position: relative; width: 80px; height: 80px; margin: 0 auto 12px; }
+        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.3); cursor: pointer; }
+        .avatar-edit-btn { position: absolute; bottom: 0; right: 0; width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--accent); border: none; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .profile-name { font-size: 20px; font-weight: 700; }
+        .profile-id { font-size: 11px; opacity: 0.9; margin: 4px 0 10px; font-family: monospace; letter-spacing: 0.5px; background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 12px; display: inline-block; }
+        .profile-country { font-size: 11px; opacity: 0.9; margin-bottom: 6px; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; margin: 2px 3px; }
+        .badge-seller { background: rgba(46,204,113,0.2); color: #2ECC71; }
+        .badge-verified { background: rgba(255,255,255,0.2); color: #fff; }
+        .badge-affiliate { background: rgba(244,180,0,0.25); color: #F4B400; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 16px; margin-top: -20px; position: relative; z-index: 2; }
+        .stat-card { background: var(--card); border-radius: var(--radius); padding: 16px 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid var(--border); cursor: pointer; }
+        .stat-value { font-size: 20px; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+        .menu-section { padding: 0 16px; margin-bottom: 16px; }
+        .menu-section-title { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-left: 4px; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 15px 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; cursor: pointer; transition: all 0.2s; }
+        .menu-item:active { transform: scale(0.98); }
+        .menu-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .menu-content { flex: 1; }
+        .menu-title { font-weight: 600; font-size: 14px; }
+        .menu-subtitle { font-size: 11px; color: var(--text2); margin-top: 1px; }
+        .menu-arrow { color: var(--text3); font-size: 13px; }
+        .menu-badge { background: var(--accent); color: #fff; font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+
+        .ids-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin: 12px 16px; }
+        .ids-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F3F4F6; font-size: 11px; }
+        .ids-row:last-child { border-bottom: none; }
+        .ids-label { color: var(--text2); }
+        .ids-value { font-family: monospace; font-weight: 600; font-size: 10px; color: var(--accent); cursor: pointer; }
+
+        .mini-wallet { background: linear-gradient(135deg, #1A1A2E, #2D2D44); border-radius: var(--radius); padding: 16px; margin: 0 16px 12px; color: #fff; }
+        .mini-wallet .wallet-balance { font-size: 24px; font-weight: 800; }
+        .mini-wallet .wallet-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+        .mini-wallet-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-wallet-action { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-size: 10px; font-weight: 600; text-align: center; }
+
+        .affiliate-card { background: linear-gradient(135deg, #F4B400, #E67E22); border-radius: var(--radius); padding: 16px; margin: 12px 16px; color: #fff; }
+        .affiliate-card .aff-title { font-size: 16px; font-weight: 800; }
+        .affiliate-card .aff-price { font-size: 28px; font-weight: 800; }
+        .affiliate-card .aff-desc { font-size: 11px; opacity: 0.9; margin: 4px 0 10px; }
+        .btn-join-affiliate { width: 100%; padding: 12px; background: #fff; color: #E67E22; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
+        .btn-join-affiliate:active { transform: scale(0.97); }
+        .affiliate-status-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin: 12px 16px; display: flex; align-items: center; gap: 10px; }
+        .affiliate-status-card .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .affiliate-status-card .status-dot.active { background: var(--success); }
+        .affiliate-status-card .status-dot.expired { background: var(--error); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998; display: none; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet { background: #fff; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; max-height: 75vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-option { padding: 14px 16px; cursor: pointer; border-bottom: 1px solid #F3F4F6; display: flex; justify-content: space-between; align-items: center; }
+        .modal-option:active { background: #FAFAFA; }
+        .modal-option.selected { background: #F0EDFF; color: var(--accent); font-weight: 600; }
+
+        .follower-item { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid #F3F4F6; cursor: pointer; }
+        .follower-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #E5E7EB; }
+        .follower-name { font-weight: 600; font-size: 14px; }
+        .follower-meta { font-size: 11px; color: var(--text2); }
+
+        .chat-bot-btn { position: fixed; bottom: 90px; right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 20px; z-index: 500; box-shadow: 0 4px 20px rgba(108,60,240,0.4); display: flex; align-items: center; justify-content: center; }
+        .chat-bot-panel { position: fixed; bottom: 90px; right: 16px; width: 340px; max-height: 480px; background: #fff; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); z-index: 501; display: none; flex-direction: column; overflow: hidden; }
+        .chat-bot-panel.open { display: flex; }
+        .chat-bot-header { background: var(--accent); color: #fff; padding: 12px 14px; display: flex; align-items: center; gap: 8px; }
+        .chat-bot-header span { font-weight: 700; font-size: 13px; }
+        .chat-bot-close { margin-left: auto; background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+        .chat-bot-messages { flex: 1; padding: 12px; overflow-y: auto; max-height: 300px; min-height: 180px; }
+        .bot-msg { display: flex; gap: 6px; margin-bottom: 10px; align-items: flex-start; }
+        .bot-msg-avatar { width: 26px; height: 26px; border-radius: 50%; background: rgba(108,60,240,0.1); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--accent); flex-shrink: 0; }
+        .bot-msg-bubble { background: #F3F4F6; padding: 8px 12px; border-radius: 12px 12px 12px 4px; font-size: 11px; line-height: 1.5; color: var(--text); max-width: 85%; }
+        .user-msg { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+        .user-msg-bubble { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 4px 12px; font-size: 11px; max-width: 80%; }
+        .chat-bot-input { padding: 8px 12px; border-top: 1px solid var(--border); display: flex; gap: 6px; }
+        .chat-bot-input input { flex: 1; padding: 8px 12px; border: 2px solid var(--border); border-radius: 18px; font-size: 12px; font-family: var(--font); outline: none; }
+        .chat-bot-input button { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; border: none; cursor: pointer; font-size: 12px; }
+
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+        .toast.warning { background: #F4B400; color: #1A1A2E; }
+        .toast.error { background: #FF4D4F; color: #fff; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: #fff; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 0 22px; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--text3); border: none; background: none; font-family: var(--font); padding: 5px 10px; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appRoot"></div>
+
+    <button class="chat-bot-btn" onclick="toggleChatBot()"><i class="fas fa-robot"></i></button>
+    <div class="chat-bot-panel" id="chatBotPanel">
+        <div class="chat-bot-header"><i class="fas fa-robot"></i><span>Stoliy Assistant</span><button class="chat-bot-close" onclick="toggleChatBot()">✕</button></div>
+        <div class="chat-bot-messages" id="chatBotMessages"><div class="bot-msg"><div class="bot-msg-avatar"><i class="fas fa-robot"></i></div><div class="bot-msg-bubble">Hello! 👋 I'm the Stoliy Assistant. Ask me anything about shopping, stores, orders, payments, wallet, dropshipping, affiliates, events, or anything else!</div></div></div>
+        <div class="chat-bot-input"><input type="text" id="chatBotInput" placeholder="Ask me anything..." onkeypress="if(event.key==='Enter')sendBotMessage()"><button onclick="sendBotMessage()"><i class="fas fa-paper-plane"></i></button></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser = null, userData = null, walletData = null, dropshipData = null, affiliateData = null;
+        
+        var allCountries = [];
+        function loadCountriesNow() {
+            if (typeof countries !== 'undefined' && Array.isArray(countries) && countries.length > 0) allCountries = countries;
+            else if (typeof window.countries !== 'undefined' && Array.isArray(window.countries) && window.countries.length > 0) allCountries = window.countries;
+            else if (typeof COUNTRIES !== 'undefined' && Array.isArray(COUNTRIES) && COUNTRIES.length > 0) allCountries = COUNTRIES;
+            return allCountries.length;
+        }
+        loadCountriesNow(); setTimeout(loadCountriesNow, 200); setTimeout(loadCountriesNow, 600);
+
+        function getCurrenciesFromCountries() {
+            var seen = {}, result = [];
+            allCountries.forEach(function(c) {
+                if (c.currency && !seen[c.currency]) {
+                    seen[c.currency] = true;
+                    var syms = { USD:'$', NGN:'₦', GHS:'GH₵', KES:'KSh', ZAR:'R', EUR:'€', GBP:'£', INR:'₹', CAD:'C$', AUD:'A$', XAF:'FCFA', XOF:'CFA' };
+                    result.push({ code: c.currency, symbol: syms[c.currency] || c.currency });
+                }
+            });
+            if (!result.find(function(r){return r.code==='USD';})) result.unshift({code:'USD',symbol:'$'});
+            return result;
+        }
+
+        function getCurrencySymbol(code) {
+            var s = { USD:'$', NGN:'₦', GHS:'GH₵', KES:'KSh', ZAR:'R', EUR:'€', GBP:'£', INR:'₹' };
+            return s[code] || code;
+        }
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type || '');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); }, 10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 3000);
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user || !user.emailVerified) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            
+            var userDoc = await db.collection('users').doc(user.uid).get();
+            userData = userDoc.exists ? userDoc.data() : {
+                userId: 'USR-' + Date.now().toString(36).toUpperCase(),
+                email: user.email, name: user.displayName || '', photoURL: user.photoURL || '',
+                phone: '', country: '', currency: 'USD', isSeller: false, following: [], emailVerified: true,
+                walletConnected: false, dropshipConnected: false, isAffiliate: false
+            };
+            if (!userDoc.exists) await db.collection('users').doc(user.uid).set(userData);
+
+            // Fetch wallet
+            if (userData.walletConnected || userData.walletId) {
+                try { var wDoc = await db.collection('wallets').doc(user.uid).get(); if (wDoc.exists) walletData = wDoc.data(); } catch(e) {}
+            }
+            // Fetch dropship
+            if (userData.dropshipConnected || userData.dropshipId) {
+                try { var dDoc = await db.collection('dropshippers').doc(user.uid).get(); if (dDoc.exists) dropshipData = dDoc.data(); } catch(e) {}
+            }
+            // Fetch affiliate subscription
+            var affDoc = await db.collection('affiliateSubscriptions').doc(user.uid).get();
+            affiliateData = affDoc.exists ? affDoc.data() : null;
+            if (affiliateData && affiliateData.expiryDate && affiliateData.expiryDate.toDate() < new Date()) {
+                affiliateData = null;
+                await db.collection('users').doc(user.uid).update({ isAffiliate: false });
+                userData.isAffiliate = false;
+            }
+
+            sessionStorage.setItem('userData', JSON.stringify(userData));
+            renderProfile();
+            loadStats();
+            loadStoreInfo();
+        });
+
+        function renderProfile() {
+            var root = document.getElementById('appRoot');
+            var country = allCountries.find(function(c) { return c.code === userData.country; });
+            var countryDisplay = country ? (country.flag || country.emoji || '') + ' ' + (country.name || country.country || '') : (userData.country || 'Tap to set country');
+            var currencySymbol = getCurrencySymbol(userData.currency || 'USD');
+            var isAffiliateActive = affiliateData && affiliateData.status === 'active' && affiliateData.expiryDate && affiliateData.expiryDate.toDate() > new Date();
+            var walletBalance = walletData ? (walletData.balance || 0) : 0;
+
+            root.innerHTML = 
+                '<div class="profile-header">' +
+                    '<div class="profile-avatar-wrap"><img src="' + (userData.photoURL || currentUser.photoURL || 'https://via.placeholder.com/80') + '" class="profile-avatar" id="profileAvatar" onerror="this.src=\'https://via.placeholder.com/80\'" onclick="changeAvatar()"><button class="avatar-edit-btn" onclick="changeAvatar()"><i class="fas fa-camera"></i></button></div>' +
+                    '<div class="profile-name">' + (userData.name || currentUser.displayName || 'User') + '</div>' +
+                    '<div class="profile-id">' + (userData.userId || 'USR-XXXXXX') + '</div>' +
+                    (country ? '<div class="profile-country">' + (country.flag || country.emoji || '') + ' ' + (country.name || '') + ' • ' + (country.currency || 'USD') + '</div>' : '') +
+                    '<div>' +
+                        (userData.isSeller ? '<span class="badge badge-seller">🏪 Seller</span>' : '') +
+                        (isAffiliateActive ? '<span class="badge badge-affiliate">🔗 Affiliate</span>' : '') +
+                        (userData.emailVerified ? '<span class="badge badge-verified">✓ Verified</span>' : '') +
+                    '</div>' +
+                '</div>' +
+
+                '<div class="stats-row">' +
+                    '<div class="stat-card" onclick="window.location.href=\'orders.html\'"><div class="stat-value" id="statOrders">-</div><div class="stat-label">Orders</div></div>' +
+                    '<div class="stat-card" onclick="window.location.href=\'wishlist.html\'"><div class="stat-value" id="statWishlist">-</div><div class="stat-label">Wishlist</div></div>' +
+                    '<div class="stat-card" onclick="showFollowing()"><div class="stat-value" id="statFollowing">-</div><div class="stat-label">Following</div></div>' +
+                    '<div class="stat-card" onclick="showFollowersList()"><div class="stat-value" id="statFollowers">-</div><div class="stat-label">Followers</div></div>' +
+                '</div>' +
+
+                // Mini Wallet Section (scroll down quick access)
+                '<div class="mini-wallet">' +
+                    '<div class="wallet-label">Stoliy Wallet</div>' +
+                    '<div class="wallet-balance">' + (walletData ? '$' + walletBalance.toFixed(2) : '$0.00') + '</div>' +
+                    '<div class="mini-wallet-actions">' +
+                        '<button class="btn-wallet-action" onclick="window.location.href=\'wallet.html\'"><i class="fas fa-plus"></i> Top Up</button>' +
+                        '<button class="btn-wallet-action" onclick="window.location.href=\'wallet.html\'"><i class="fas fa-history"></i> History</button>' +
+                        '<button class="btn-wallet-action" onclick="window.location.href=\'wallet.html\'"><i class="fas fa-arrow-up"></i> Withdraw</button>' +
+                    '</div>' +
+                '</div>' +
+
+                // Affiliate Section
+                (!isAffiliateActive ? 
+                '<div class="affiliate-card">' +
+                    '<div class="aff-title">🔗 Join Affiliate Program</div>' +
+                    '<div class="aff-price">$2<span style="font-size:14px;">/month</span></div>' +
+                    '<div class="aff-desc">Earn commissions sharing products • Access affiliate dashboard • Track earnings • Withdraw via Wallet</div>' +
+                    '<button class="btn-join-affiliate" onclick="joinAffiliate()"><i class="fas fa-rocket"></i> Join Now - $2/month</button>' +
+                '</div>' :
+                '<div class="affiliate-status-card">' +
+                    '<div class="status-dot active"></div>' +
+                    '<div style="flex:1;"><div style="font-weight:700;">Affiliate Active</div><div style="font-size:10px;color:var(--text2);">Expires: ' + (affiliateData.expiryDate?.toDate?.() ? affiliateData.expiryDate.toDate().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'N/A') + '</div></div>' +
+                    '<button class="btn-join-affiliate" style="width:auto;padding:8px 16px;font-size:11px;background:var(--accent);color:#fff;" onclick="window.location.href=\'affiliates.html\'"><i class="fas fa-chart-line"></i> Dashboard</button>' +
+                '</div>') +
+
+                '<div class="ids-section">' +
+                    '<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">My IDs</div>' +
+                    '<div class="ids-row"><span class="ids-label">User ID</span><span class="ids-value" onclick="copyID(\'' + (userData.userId || '') + '\')">' + (userData.userId || 'USR-XXXXXX') + ' <i class="fas fa-copy"></i></span></div>' +
+                    '<div class="ids-row"><span class="ids-label">Wallet ID</span><span class="ids-value" onclick="copyID(\'' + (walletData ? walletData.walletId || '' : '') + '\')">' + (walletData ? (walletData.walletId || 'N/A') : 'Not connected') + (walletData ? ' <i class="fas fa-copy"></i>' : '') + '</span></div>' +
+                    '<div class="ids-row"><span class="ids-label">Dropship ID</span><span class="ids-value" onclick="copyID(\'' + (dropshipData ? dropshipData.dropshipId || '' : '') + '\')">' + (dropshipData ? (dropshipData.dropshipId || 'N/A') : 'Not connected') + (dropshipData ? ' <i class="fas fa-copy"></i>' : '') + '</span></div>' +
+                    (isAffiliateActive ? '<div class="ids-row"><span class="ids-label">Affiliate ID</span><span class="ids-value" onclick="copyID(\'' + (currentUser.uid || '') + '\')">' + (currentUser.uid || '') + ' <i class="fas fa-copy"></i></span></div>' : '') +
+                '</div>' +
+
+                '<div class="menu-section"><div class="menu-section-title">My Store</div><div id="storeContainer">' + (!userData.isSeller ? 
+                    '<div class="menu-item" onclick="window.location.href=\'wizard.html\'"><div class="menu-icon" style="background:rgba(46,204,113,0.1);color:#2ECC71;"><i class="fas fa-plus-circle"></i></div><div class="menu-content"><div class="menu-title">Become a Seller</div><div class="menu-subtitle">Create your store and start selling</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' : 
+                    '<div style="text-align:center;padding:12px;color:var(--text3);">Loading store...</div>'
+                ) + '</div></div>' +
+
+                '<div class="menu-section"><div class="menu-section-title">Account</div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'orders.html\'"><div class="menu-icon" style="background:rgba(244,180,0,0.1);color:#F4B400;"><i class="fas fa-box"></i></div><div class="menu-content"><div class="menu-title">My Orders</div><div class="menu-subtitle">Track your purchases</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'wishlist.html\'"><div class="menu-icon" style="background:rgba(255,77,79,0.1);color:#FF4D4F;"><i class="fas fa-heart"></i></div><div class="menu-content"><div class="menu-title">Wishlist</div><div class="menu-subtitle">Saved items</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'my-tickets.html\'"><div class="menu-icon" style="background:rgba(108,60,240,0.1);color:#6C3CF0;"><i class="fas fa-ticket-alt"></i></div><div class="menu-content"><div class="menu-title">My Tickets</div><div class="menu-subtitle">Event tickets</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'addresses.html\'"><div class="menu-icon" style="background:rgba(46,204,113,0.1);color:#2ECC71;"><i class="fas fa-map-marker-alt"></i></div><div class="menu-content"><div class="menu-title">Addresses</div><div class="menu-subtitle">Shipping addresses</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    (isAffiliateActive ? '<div class="menu-item" onclick="window.location.href=\'affiliates.html\'"><div class="menu-icon" style="background:rgba(244,180,0,0.1);color:#F4B400;"><i class="fas fa-users"></i></div><div class="menu-content"><div class="menu-title">Affiliate Dashboard</div><div class="menu-subtitle">Track earnings & links</div></div><span class="menu-badge">PRO</span><i class="fas fa-chevron-right menu-arrow"></i></div>' : '') +
+                '</div>' +
+
+                '<div class="menu-section"><div class="menu-section-title">Wallet & Dropship</div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'wallet.html\'"><div class="menu-icon" style="background:rgba(108,60,240,0.1);color:#6C3CF0;"><i class="fas fa-wallet"></i></div><div class="menu-content"><div class="menu-title">Stoliy Wallet</div><div class="menu-subtitle">' + (walletData ? 'Balance: $' + ((walletData.balance || 0).toFixed(2)) : 'Connect your wallet') + '</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'dropship.html\'"><div class="menu-icon" style="background:rgba(46,204,113,0.1);color:#2ECC71;"><i class="fas fa-parachute-box"></i></div><div class="menu-content"><div class="menu-title">Dropship</div><div class="menu-subtitle">' + (dropshipData ? 'Connected' : 'Connect dropshipping') + '</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                '</div>' +
+
+                '<div class="menu-section"><div class="menu-section-title">Settings</div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'edit-profile.html\'"><div class="menu-icon" style="background:rgba(59,130,246,0.1);color:#3B82F6;"><i class="fas fa-user-edit"></i></div><div class="menu-content"><div class="menu-title">Edit Profile</div><div class="menu-subtitle">Name, username, password, phone</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="showCountryPicker()"><div class="menu-icon" style="background:rgba(46,204,113,0.1);color:#2ECC71;"><i class="fas fa-globe"></i></div><div class="menu-content"><div class="menu-title">Country</div><div class="menu-subtitle" id="countryDisplay">' + countryDisplay + '</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="showCurrencyPicker()"><div class="menu-icon" style="background:rgba(244,180,0,0.1);color:#F4B400;"><i class="fas fa-coins"></i></div><div class="menu-content"><div class="menu-title">Currency</div><div class="menu-subtitle" id="currencyDisplay">' + currencySymbol + ' ' + (userData.currency || 'USD') + '</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'notifications.html\'"><div class="menu-icon" style="background:rgba(108,60,240,0.1);color:#6C3CF0;"><i class="fas fa-bell"></i></div><div class="menu-content"><div class="menu-title">Notifications</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                '</div>' +
+
+                '<div class="menu-section"><div class="menu-section-title">Support</div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'contact.html\'"><div class="menu-icon" style="background:rgba(108,60,240,0.1);color:#6C3CF0;"><i class="fas fa-headset"></i></div><div class="menu-content"><div class="menu-title">Customer Support</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'about.html\'"><div class="menu-icon" style="background:rgba(46,204,113,0.1);color:#2ECC71;"><i class="fas fa-info-circle"></i></div><div class="menu-content"><div class="menu-title">About Stoliy</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                '</div>' +
+
+                '<div class="menu-section"><div class="menu-item" onclick="handleLogout()" style="color:#FF4D4F;"><div class="menu-icon" style="background:rgba(255,77,79,0.1);color:#FF4D4F;"><i class="fas fa-sign-out-alt"></i></div><div class="menu-content"><div class="menu-title">Logout</div></div><i class="fas fa-chevron-right menu-arrow"></i></div></div>' +
+                '<div style="text-align:center;padding:16px;color:var(--text3);font-size:11px;">Stoliy v1.0 • Powered by Rev</div>';
+        }
+
+        // ============ JOIN AFFILIATE ============
+        window.joinAffiliate = function() {
+            if (!walletData) { showToast('Connect your wallet first to join the affiliate program', 'warning'); return; }
+            var balance = walletData.balance || 0;
+            if (balance < 2) { showToast('Insufficient funds! Please top up your wallet. Scroll down for quick wallet access.', 'error'); return; }
+            
+            if (confirm('Join the Affiliate Program for $2/month? This will be deducted from your wallet balance.')) {
+                processAffiliatePayment();
+            }
+        };
+
+        async function processAffiliatePayment() {
+            var balance = walletData.balance || 0;
+            if (balance < 2) { showToast('Insufficient funds! Need $2.00', 'error'); return; }
+
+            var newBalance = balance - 2;
+            var expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+            await db.collection('wallets').doc(currentUser.uid).update({
+                balance: newBalance,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            await db.collection('affiliateSubscriptions').doc(currentUser.uid).set({
+                userId: currentUser.uid,
+                status: 'active',
+                amount: 2,
+                currency: 'USD',
+                startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                expiryDate: expiryDate,
+                autoRenew: true,
+                paymentMethod: 'wallet'
+            });
+
+            await db.collection('users').doc(currentUser.uid).update({ isAffiliate: true });
+
+            await db.collection('walletTransactions').add({
+                userId: currentUser.uid,
+                type: 'debit',
+                amount: 2,
+                description: 'Affiliate Program Subscription - Monthly',
+                balanceAfter: newBalance,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Update local data
+            walletData.balance = newBalance;
+            userData.isAffiliate = true;
+            affiliateData = { status: 'active', expiryDate: { toDate: function() { return expiryDate; } } };
+
+            await db.collection('notifications').add({
+                userId: currentUser.uid,
+                type: 'affiliate_activated',
+                message: '🎉 Welcome to the Affiliate Program! Start sharing links and earning commissions.',
+                link: 'affiliates.html',
+                read: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            showToast('Affiliate program activated! 🎉', 'success');
+            renderProfile();
+            loadStoreInfo();
+        };
+
+        // ============ RENEW AFFILIATE ============
+        window.renewAffiliate = function() {
+            if (!walletData) { showToast('Connect your wallet first', 'warning'); return; }
+            var balance = walletData.balance || 0;
+            if (balance < 2) { showToast('Insufficient funds! Please top up your wallet. Scroll down for quick wallet access.', 'error'); return; }
+            processAffiliatePayment();
+        };
+
+        async function loadStats() {
+            if (!currentUser) return;
+            var allOrders = await db.collection('orders').get();
+            var myOrders = allOrders.docs.filter(function(d) { return d.data().userId === currentUser.uid; });
+            var allWishlist = await db.collection('wishlist').get();
+            var myWishlist = allWishlist.docs.filter(function(d) { return d.data().userId === currentUser.uid; });
+            document.getElementById('statOrders').textContent = myOrders.length;
+            document.getElementById('statWishlist').textContent = myWishlist.length;
+            document.getElementById('statFollowing').textContent = (userData.following || []).length;
+            if (userData.isSeller) {
+                var allStores = await db.collection('stores').get();
+                var myStore = allStores.docs.find(function(d) { return d.data().ownerId === currentUser.uid; });
+                if (myStore) {
+                    var allUsers = await db.collection('users').get();
+                    var followers = allUsers.docs.map(function(d) { return d.data(); }).filter(function(u) { return (u.following || []).includes(myStore.id); });
+                    document.getElementById('statFollowers').textContent = followers.length;
+                }
+            }
+        }
+
+        async function loadStoreInfo() {
+            if (!userData.isSeller) return;
+            var container = document.getElementById('storeContainer'); if (!container) return;
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d) { return d.data().ownerId === currentUser.uid; });
+            if (myStore) {
+                var s = myStore.data();
+                container.innerHTML = 
+                    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;">' +
+                        '<div style="width:100%;height:80px;background:linear-gradient(135deg,#6C3CF0,#4A1FB8);' + (s.banner ? 'background-image:url(' + s.banner + ');background-size:cover;' : '') + '"></div>' +
+                        '<div style="padding:14px;text-align:center;margin-top:-30px;">' +
+                            '<img src="' + (s.logo || 'https://via.placeholder.com/56') + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid #fff;margin-bottom:8px;background:#fff;" onerror="this.src=\'https://via.placeholder.com/56\'">' +
+                            '<div style="font-weight:700;">' + s.name + (s.verified ? '<i class="fas fa-check-circle" style="color:#6C3CF0;"></i>' : '') + '</div>' +
+                            '<div style="font-size:11px;color:#2ECC71;">● Active • ' + (s.followers || 0) + ' followers</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'store-dashboard.html\'"><div class="menu-icon" style="background:rgba(108,60,240,0.1);color:#6C3CF0;"><i class="fas fa-tachometer-alt"></i></div><div class="menu-content"><div class="menu-title">Seller Dashboard</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>' +
+                    '<div class="menu-item" onclick="window.location.href=\'store.html?id=' + myStore.id + '\'"><div class="menu-icon" style="background:rgba(46,204,113,0.1);color:#2ECC71;"><i class="fas fa-eye"></i></div><div class="menu-content"><div class="menu-title">View My Store</div></div><i class="fas fa-chevron-right menu-arrow"></i></div>';
+            }
+        }
+
+        window.copyID = function(id) { if (!id || id === 'Not connected') return; navigator.clipboard.writeText(id).then(function() { showToast('Copied!', 'success'); }); };
+        window.changeAvatar = function() {
+            var input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+            input.onchange = async function(e) {
+                var file = e.target.files[0]; if (!file) return;
+                var fd = new FormData(); fd.append('file', file); fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
+                try {
+                    var res = await fetch('https://api.cloudinary.com/v1_1/' + (CONFIG.cloudinaryCloudName || 'serviconnect') + '/image/upload', { method: 'POST', body: fd });
+                    var data = await res.json();
+                    if (data.secure_url) {
+                        await currentUser.updateProfile({ photoURL: data.secure_url });
+                        await db.collection('users').doc(currentUser.uid).update({ photoURL: data.secure_url });
+                        userData.photoURL = data.secure_url; document.getElementById('profileAvatar').src = data.secure_url;
+                        showToast('Photo updated!', 'success');
+                    }
+                } catch(err) { showToast('Upload failed', 'error'); }
+            }; input.click();
+        };
+
+        window.showCountryPicker = function() {
+            if (userData.country) { showToast('Country cannot be changed after registration', 'warning'); return; }
+            if (!allCountries.length) { loadCountriesNow(); showToast('Loading countries...', 'warning'); return; }
+            var overlay = document.createElement('div'); overlay.className = 'modal-overlay show';
+            overlay.innerHTML = '<div class="modal-sheet"><h3 style="text-align:center;">Select Country</h3><input type="text" placeholder="Search..." style="width:100%;padding:12px;border:2px solid #E5E7EB;border-radius:12px;margin:12px 0;" oninput="window._filterCountries(this.value)"><div id="countryListContainer" style="max-height:50vh;overflow-y:auto;">' + allCountries.map(function(c) { return '<div class="modal-option" onclick="window._setCountry(\'' + c.code + '\')"><span>' + (c.flag||'') + ' ' + (c.name||'') + '</span><span style="color:var(--text3);">' + (c.code||'') + ' • ' + (c.currency||'') + '</span></div>'; }).join('') + '</div><button style="width:100%;padding:14px;background:#F3F4F6;border:none;border-radius:12px;cursor:pointer;margin-top:12px;" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button></div>';
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+        };
+        window._filterCountries = function(query) {
+            var list = document.getElementById('countryListContainer'); if (!list) return;
+            list.innerHTML = allCountries.filter(function(c) { return (c.name||'').toLowerCase().includes(query.toLowerCase()) || (c.code||'').toLowerCase().includes(query.toLowerCase()); }).map(function(c) { return '<div class="modal-option" onclick="window._setCountry(\'' + c.code + '\')"><span>' + (c.flag||'') + ' ' + (c.name||'') + '</span><span style="color:var(--text3);">' + (c.code||'') + ' • ' + (c.currency||'') + '</span></div>'; }).join('');
+        };
+        window._setCountry = async function(code) {
+            var country = allCountries.find(function(c) { return c.code === code; });
+            var currency = country && country.currency ? country.currency : 'USD';
+            userData.country = code; userData.currency = currency;
+            await db.collection('users').doc(currentUser.uid).update({ country: code, currency: currency });
+            sessionStorage.setItem('userData', JSON.stringify(userData));
+            document.querySelector('.modal-overlay')?.remove(); renderProfile(); loadStoreInfo();
+            showToast('Country set!', 'success');
+        };
+        window.showCurrencyPicker = function() {
+            var currencies = getCurrenciesFromCountries();
+            var overlay = document.createElement('div'); overlay.className = 'modal-overlay show';
+            overlay.innerHTML = '<div class="modal-sheet"><h3 style="text-align:center;">Select Currency</h3>' + currencies.map(function(c) { return '<div class="modal-option' + (userData.currency === c.code ? ' selected' : '') + '" onclick="window._setCurrency(\'' + c.code + '\')"><span>' + c.symbol + ' ' + c.code + '</span>' + (userData.currency === c.code ? '<i class="fas fa-check-circle" style="color:#6C3CF0;"></i>' : '') + '</div>'; }).join('') + '<button style="width:100%;padding:14px;background:#F3F4F6;border:none;border-radius:12px;cursor:pointer;margin-top:12px;" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button></div>';
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+        };
+        window._setCurrency = async function(code) {
+            userData.currency = code;
+            await db.collection('users').doc(currentUser.uid).update({ currency: code });
+            sessionStorage.setItem('userData', JSON.stringify(userData));
+            document.querySelector('.modal-overlay')?.remove(); renderProfile(); loadStoreInfo();
+            showToast('Currency: ' + code, 'success');
+        };
+        window.showFollowing = async function() {
+            var following = userData.following || [];
+            var overlay = document.createElement('div'); overlay.className = 'modal-overlay show';
+            overlay.innerHTML = '<div class="modal-sheet"><div style="display:flex;justify-content:space-between;margin-bottom:16px;"><h3>Following (' + following.length + ')</h3><button style="background:none;border:none;font-size:24px;" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div><div id="followingList">Loading...</div></div>';
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+            var listEl = document.getElementById('followingList');
+            if (!following.length) { listEl.innerHTML = '<div style="text-align:center;padding:40px;">Not following anyone</div>'; return; }
+            var allStores = await db.collection('stores').get(); var html = '';
+            for (var i = 0; i < following.length; i++) {
+                var storeDoc = allStores.docs.find(function(d) { return d.id === following[i]; });
+                if (storeDoc) { var s = storeDoc.data(); html += '<div class="follower-item" onclick="window.location.href=\'store.html?id=' + following[i] + '\'"><img src="' + (s.logo||'https://via.placeholder.com/40') + '" class="follower-avatar"><div style="flex:1;"><div class="follower-name">' + (s.name||'Store') + '</div><div class="follower-meta">' + (s.followers||0) + ' followers</div></div></div>'; }
+            }
+            listEl.innerHTML = html || '<div style="text-align:center;">No stores found</div>';
+        };
+        window.showFollowersList = async function() {
+            if (!userData.isSeller) { showToast('Only sellers have followers', 'warning'); return; }
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d) { return d.data().ownerId === currentUser.uid; });
+            if (!myStore) { showToast('Store not found', 'warning'); return; }
+            var allUsers = await db.collection('users').get();
+            var followers = allUsers.docs.map(function(d) { return d.data(); }).filter(function(u) { return (u.following || []).includes(myStore.id); });
+            var overlay = document.createElement('div'); overlay.className = 'modal-overlay show';
+            overlay.innerHTML = '<div class="modal-sheet"><div style="display:flex;justify-content:space-between;"><h3>Followers (' + followers.length + ')</h3><button style="background:none;border:none;font-size:24px;" onclick="this.closest(\'.modal-overlay\').remove()">&times;</button></div>' + (followers.length === 0 ? '<div style="text-align:center;padding:40px;">No followers</div>' : followers.map(function(f) { return '<div class="follower-item"><img src="' + (f.photoURL||'https://via.placeholder.com/40') + '" class="follower-avatar"><div><div class="follower-name">' + (f.name||'User') + '</div><div class="follower-meta">' + (f.email||'') + '</div></div></div>'; }).join('')) + '</div>';
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+        };
+        window.handleLogout = function() { if (confirm('Logout?')) { auth.signOut().then(function() { sessionStorage.clear(); window.location.href = 'login.html'; }); } };
+
+        // Chat Bot (same as original)
+        var botKB = [
+            { pattern: /hi|hello|hey/i, reply: 'Hello! 👋 Welcome to Stoliy.' },
+            { pattern: /affiliate|join affiliate/i, reply: 'Join the Affiliate Program for $2/month! Find it on your Profile page. Earn commissions sharing products!' },
+            { pattern: /wallet balance|top up/i, reply: 'Check your wallet balance in the mini-wallet section on Profile. Top up via the Wallet page.' }
+        ];
+        window.toggleChatBot = function() { document.getElementById('chatBotPanel').classList.toggle('open'); };
+        window.sendBotMessage = function() {
+            var input = document.getElementById('chatBotInput'); var msg = input.value.trim(); if (!msg) return;
+            var messages = document.getElementById('chatBotMessages');
+            messages.innerHTML += '<div class="user-msg"><div class="user-msg-bubble">' + msg.replace(/</g,'&lt;') + '</div></div>'; input.value = '';
+            var reply = 'Try asking about affiliate program, wallet, or stores.';
+            for (var i = 0; i < botKB.length; i++) { if (botKB[i].pattern.test(msg)) { reply = botKB[i].reply; break; } }
+            setTimeout(function() { messages.innerHTML += '<div class="bot-msg"><div class="bot-msg-avatar"><i class="fas fa-robot"></i></div><div class="bot-msg-bubble">' + reply + '</div></div>'; messages.scrollTop = messages.scrollHeight; }, 500);
+        };
+    })();
+    </script>
+</body>
+</html>

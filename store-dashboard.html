@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Store Dashboard - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; --transition: all 0.2s ease; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; }
+        
+        .page-header { padding: 14px 16px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 34px; height: 34px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text); }
+        .page-title { font-size: 17px; font-weight: 700; flex: 1; }
+        
+        .store-preview-card { margin: 12px 16px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: #fff; cursor: pointer; transition: var(--transition); }
+        .store-preview-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        .store-preview-banner { width: 100%; height: 100px; object-fit: cover; background: linear-gradient(135deg, #6C3CF0, #4A1FB8); display: block; }
+        .store-preview-body { padding: 14px; text-align: center; margin-top: -35px; position: relative; }
+        .store-preview-logo { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #fff; }
+        .store-preview-name { font-weight: 700; font-size: 16px; margin-top: 6px; }
+        .store-preview-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+        .store-preview-link { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; background: var(--accent); color: #fff; font-weight: 600; font-size: 13px; margin-top: 8px; border-radius: 0 0 var(--radius) var(--radius); }
+        
+        .order-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; padding: 0 16px 14px; }
+        .order-stat { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 6px; text-align: center; cursor: pointer; transition: var(--transition); }
+        .order-stat:hover { transform: translateY(-1px); }
+        .order-stat .num { font-size: 18px; font-weight: 800; }
+        .order-stat .lbl { font-size: 9px; color: var(--text2); margin-top: 2px; }
+        
+        .menu-section { padding: 0 16px; margin-bottom: 14px; }
+        .menu-title { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+        .menu-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 10px; text-align: center; cursor: pointer; transition: var(--transition); text-decoration: none; color: var(--text); display: block; }
+        .menu-card:hover { border-color: #D1D5DB; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .menu-card:active { transform: scale(0.96); }
+        .menu-card i { font-size: 22px; color: var(--accent); margin-bottom: 8px; display: block; }
+        .menu-card span { font-size: 10px; font-weight: 600; line-height: 1.3; display: block; }
+        .badge-count { display: inline-block; background: var(--error); color: #fff; font-size: 9px; min-width: 18px; height: 18px; border-radius: 9px; line-height: 18px; margin-top: 4px; }
+        
+        .affiliate-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; padding: 0 16px 12px; }
+        .aff-stat { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 8px; text-align: center; }
+        .aff-stat .val { font-size: 18px; font-weight: 800; }
+        .aff-stat .lbl { font-size: 8px; color: var(--text2); text-transform: uppercase; margin-top: 2px; }
+        
+        .wallet-banner { background: linear-gradient(135deg, #1A1A2E, #2D2D44); border-radius: var(--radius); padding: 16px; margin: 0 16px 14px; color: #fff; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .wallet-banner:active { transform: scale(0.98); }
+        .wallet-banner .wallet-icon { font-size: 28px; }
+        .wallet-banner .wallet-text { flex: 1; }
+        .wallet-banner .wallet-text h4 { font-size: 13px; }
+        .wallet-banner .wallet-text p { font-size: 10px; opacity: 0.7; }
+        
+        .request-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: #fff; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; }
+        .request-item img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .request-info { flex: 1; }
+        .request-name { font-weight: 600; font-size: 12px; }
+        .request-product { font-size: 10px; color: var(--text3); }
+        .request-actions { display: flex; gap: 4px; }
+        .btn-accept { padding: 6px 12px; background: var(--success); color: #fff; border: none; border-radius: 6px; font-size: 10px; cursor: pointer; }
+        .btn-decline { padding: 6px 12px; background: rgba(255,77,79,0.1); color: var(--error); border: none; border-radius: 6px; font-size: 10px; cursor: pointer; }
+        
+        .affiliate-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #F3F4F6; }
+        .affiliate-rank { font-weight: 800; font-size: 16px; color: var(--accent); width: 28px; text-align: center; }
+        .affiliate-info { flex: 1; }
+        .affiliate-name { font-weight: 600; font-size: 12px; }
+        .affiliate-sales { font-size: 10px; color: var(--text2); }
+        .affiliate-nipa { font-weight: 700; font-size: 13px; color: var(--success); text-align: right; }
+        .affiliate-commission { font-size: 9px; color: var(--text3); text-align: right; }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet { background: #fff; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; max-height: 75vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+        .toggle-label { font-weight: 600; font-size: 13px; }
+        .toggle-switch { width: 48px; height: 28px; border-radius: 14px; background: #D1D5DB; cursor: pointer; position: relative; transition: background 0.3s; }
+        .toggle-switch.on { background: var(--success); }
+        .toggle-switch::after { content: ''; width: 24px; height: 24px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.3s; }
+        .toggle-switch.on::after { left: 22px; }
+        .form-input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: var(--font); }
+        .btn-submit { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: #fff; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 0 22px; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--text3); border: none; background: none; font-family: var(--font); padding: 5px 10px; text-decoration: none; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appRoot">
+        <div style="text-align:center;padding:80px;color:var(--text3);">Loading dashboard...</div>
+    </div>
+
+    <div class="modal-overlay" id="affiliateSettingsModal">
+        <div class="modal-sheet" id="affiliateSettingsContent"></div>
+    </div>
+
+    <div class="modal-overlay" id="affiliateDetailModal">
+        <div class="modal-sheet" id="affiliateDetailContent"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null, storeData = null, storeId = null;
+        let allProducts = [], allAffiliates = [], allOrders = [], affiliateRequests = [];
+        let affiliateSettings = { enabled: false, autoApprove: false, defaultCommission: 10, perProduct: {} };
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user || !user.emailVerified) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            
+            const allStores = await db.collection('stores').get();
+            const myStore = allStores.docs.find(d => d.data().ownerId === user.uid);
+            if (!myStore) {
+                document.getElementById('appRoot').innerHTML = `<div style="text-align:center;padding:80px;"><i class="fas fa-store-slash" style="font-size:48px;opacity:0.3;display:block;margin-bottom:16px;color:var(--text3);"></i><h3>No Store Found</h3><button onclick="window.location.href='wizard.html'" style="padding:14px 28px;background:var(--accent);color:#fff;border:none;border-radius:25px;font-weight:700;cursor:pointer;">Create Store</button></div>`;
+                return;
+            }
+            storeData = myStore.data(); storeId = myStore.id;
+            
+            // Load settings
+            const settingsDoc = await db.collection('affiliateSettings').doc(storeId).get();
+            if (settingsDoc.exists) affiliateSettings = settingsDoc.data();
+            
+            const [prodSnap, affSnap, ordSnap] = await Promise.all([
+                db.collection('products').get(), db.collection('affiliates').get(), db.collection('orders').get()
+            ]);
+            allProducts = prodSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.storeId === storeId);
+            allAffiliates = affSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => a.storeId === storeId);
+            allOrders = ordSnap.docs.map(d => d.data()).filter(o => o.storeId === storeId);
+            affiliateRequests = allAffiliates.filter(a => a.status === 'pending');
+            
+            const storeOrders = allOrders;
+            const storeProducts = allProducts;
+            const allUsers = await db.collection('users').get();
+            const followersCount = allUsers.docs.map(d => d.data()).filter(u => (u.following || []).includes(storeId)).length;
+            const allEvents = await db.collection('events').get();
+            const storeEvents = allEvents.docs.map(d => ({ id: d.id, ...d.data() })).filter(e => e.storeId === storeId);
+            const allTickets = await db.collection('tickets').get();
+            const storeTickets = allTickets.docs.map(d => d.data()).filter(t => storeEvents.some(e => e.id === t.eventId));
+            const ticketSoldCount = storeTickets.filter(t => t.status === 'active' || t.status === 'used').length;
+            const ticketRevenue = storeTickets.filter(t => t.status === 'active' || t.status === 'used').reduce((s, t) => s + (t.price || 0), 0);
+            const allTeam = await db.collection('teamMembers').get();
+            const teamCount = allTeam.docs.map(d => d.data()).filter(t => t.storeId === storeId && t.status === 'active').length;
+            
+            renderDashboard(storeOrders, storeProducts, followersCount, storeEvents, ticketSoldCount, ticketRevenue, teamCount);
+        });
+
+        function renderDashboard(orders, products, followersCount, storeEvents, ticketSoldCount, ticketRevenue, teamCount) {
+            const pendingOrders = orders.filter(o => o.status === 'new' || o.status === 'pending').length;
+            const processingOrders = orders.filter(o => o.status === 'processing').length;
+            const shippedOrders = orders.filter(o => o.status === 'shipped').length;
+            const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'completed').length;
+            const totalProducts = products.length;
+            const outOfStock = products.filter(p => p.inStock === false || p.stockQuantity === 0).length;
+            const storeRating = (storeData.rating || 0).toFixed(1);
+            
+            // Affiliate stats
+            const activeAffiliates = allAffiliates.filter(a => a.status === 'active').length;
+            const affiliateSales = allOrders.filter(o => o.affiliateId && o.status === 'delivered').length;
+            const affiliateCommissions = allOrders.filter(o => o.affiliateId && o.status === 'delivered').reduce((s, o) => s + (o.affiliateCommission || 0), 0);
+            
+            const root = document.getElementById('appRoot');
+            root.innerHTML = `
+                <div class="page-header"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><h2 class="page-title">Store Dashboard</h2></div>
+
+                <div class="store-preview-card" onclick="window.location.href='store.html?id=${storeId}'">
+                    ${storeData.banner ? `<img src="${storeData.banner}" class="store-preview-banner" onerror="this.style.background='linear-gradient(135deg, #6C3CF0, #4A1FB8)';">` : '<div class="store-preview-banner"></div>'}
+                    <div class="store-preview-body"><img src="${storeData.logo || 'https://via.placeholder.com/60'}" class="store-preview-logo" onerror="this.src='https://via.placeholder.com/60'"><div class="store-preview-name">${storeData.name} ${storeData.verified ? '<i class="fas fa-check-circle" style="color:#6C3CF0;font-size:13px;"></i>' : ''}</div><div class="store-preview-meta">${storeData.category || 'Store'} • ${followersCount} followers • ${storeRating} ★</div></div>
+                    <div class="store-preview-link"><i class="fas fa-eye"></i> View Public Store</div>
+                </div>
+
+                <div class="order-stats">
+                    <div class="order-stat" onclick="window.location.href='orders.html'"><div class="num" style="color:var(--warning);">${pendingOrders}</div><div class="lbl">New</div></div>
+                    <div class="order-stat"><div class="num" style="color:#3B82F6;">${processingOrders}</div><div class="lbl">Processing</div></div>
+                    <div class="order-stat"><div class="num" style="color:var(--accent);">${shippedOrders}</div><div class="lbl">Shipped</div></div>
+                    <div class="order-stat"><div class="num" style="color:var(--success);">${completedOrders}</div><div class="lbl">Completed</div></div>
+                </div>
+
+                <div class="menu-section"><div class="menu-title">Products</div><div class="menu-grid">
+                    <a class="menu-card" href="manage-products.html"><i class="fas fa-boxes"></i><span>All Products</span><span class="badge-count">${totalProducts}</span></a>
+                    <a class="menu-card" href="add-product.html"><i class="fas fa-plus-circle"></i><span>Add Product</span></a>
+                    <a class="menu-card" href="inventory.html"><i class="fas fa-warehouse"></i><span>Inventory</span>${outOfStock > 0 ? `<span class="badge-count">${outOfStock}</span>` : ''}</a>
+                </div></div>
+
+                <!-- AFFILIATE SECTION -->
+                <div class="menu-section"><div class="menu-title">Affiliate Program</div>
+                    <div class="affiliate-stats">
+                        <div class="aff-stat"><div class="val" style="color:var(--accent);">${activeAffiliates}</div><div class="lbl">Active Affiliates</div></div>
+                        <div class="aff-stat"><div class="val" style="color:var(--success);">${affiliateSales}</div><div class="lbl">Affiliate Sales</div></div>
+                        <div class="aff-stat"><div class="val" style="color:var(--error);">$${affiliateCommissions.toFixed(2)}</div><div class="lbl">Commissions Paid</div></div>
+                    </div>
+                    <div class="menu-grid">
+                        <a class="menu-card" onclick="openAffiliateSettings()"><i class="fas fa-cog"></i><span>Settings</span></a>
+                        <a class="menu-card" onclick="viewAffiliateRequests()"><i class="fas fa-user-clock"></i><span>Requests</span><span class="badge-count">${affiliateRequests.length}</span></a>
+                        <a class="menu-card" onclick="viewAffiliateRankings()"><i class="fas fa-trophy"></i><span>Rankings</span></a>
+                    </div>
+                </div>
+
+                <div class="menu-section"><div class="menu-title">Events & Tickets</div><div class="menu-grid">
+                    <a class="menu-card" href="events.html"><i class="fas fa-calendar-alt"></i><span>Events</span><span class="badge-count">${storeEvents.length}</span></a>
+                    <a class="menu-card" href="create-event.html"><i class="fas fa-plus-circle"></i><span>Create Event</span></a>
+                    <a class="menu-card" href="event-scanner.html${storeEvents.length > 0 ? '?id=' + storeEvents[0].id : ''}"><i class="fas fa-qrcode"></i><span>Scanner</span></a>
+                </div></div>
+
+                <div class="menu-section"><div class="menu-title">Orders & Promotions</div><div class="menu-grid">
+                    <a class="menu-card" href="orders.html"><i class="fas fa-shopping-bag"></i><span>All Orders</span><span class="badge-count">${orders.length}</span></a>
+                    <a class="menu-card" href="discounts.html"><i class="fas fa-tags"></i><span>Discounts</span></a>
+                    <a class="menu-card" href="flash-sales.html"><i class="fas fa-bolt"></i><span>Flash Sales</span></a>
+                </div></div>
+
+                <div class="menu-section"><div class="menu-title">Fulfillment</div><div class="menu-grid">
+                    <a class="menu-card" href="fulfillment.html"><i class="fas fa-truck"></i><span>Fulfill</span></a>
+                    <a class="menu-card" href="printondemand.html"><i class="fas fa-print"></i><span>POD</span></a>
+                    <a class="menu-card" href="affiliates.html"><i class="fas fa-users"></i><span>Affiliates</span></a>
+                </div></div>
+
+                <div class="menu-section"><div class="menu-title">Store Settings</div><div class="menu-grid">
+                    <a class="menu-card" href="appearance.html"><i class="fas fa-palette"></i><span>Appearance</span></a>
+                    <a class="menu-card" href="followers.html"><i class="fas fa-users"></i><span>Followers</span><span class="badge-count">${followersCount}</span></a>
+                    <a class="menu-card" href="chat.html"><i class="fas fa-comments"></i><span>Messages</span></a>
+                </div></div>
+
+                <div class="menu-section"><div class="menu-title">Team Management</div><div class="menu-grid">
+                    <a class="menu-card" href="team.html"><i class="fas fa-user-friends"></i><span>Team</span><span class="badge-count">${teamCount}</span></a>
+                    <a class="menu-card" href="team.html?action=invite"><i class="fas fa-user-plus"></i><span>Invite</span></a>
+                    <a class="menu-card" href="activity-log.html"><i class="fas fa-history"></i><span>Activity</span></a>
+                </div></div>
+
+                <div class="wallet-banner" onclick="window.open('wallet.html', '_blank')">
+                    <div class="wallet-icon"><i class="fas fa-wallet"></i></div>
+                    <div class="wallet-text"><h4>Stoliy Wallet App</h4><p>Payouts, Pre-Orders, Waitlist, Notify, Analytics & More</p></div>
+                    <i class="fas fa-external-link-alt" style="opacity:0.5;"></i>
+                </div>
+                <div style="text-align:center;padding:20px;color:var(--text3);font-size:11px;">Stoliy Store Dashboard • v2.0</div>
+            `;
+        }
+
+        // ============ AFFILIATE SETTINGS MODAL ============
+        window.openAffiliateSettings = function() {
+            var modal = document.getElementById('affiliateSettingsModal');
+            var content = document.getElementById('affiliateSettingsContent');
+            content.innerHTML = `
+                <div class="modal-title">Affiliate Program Settings</div>
+                <div class="toggle-row"><span class="toggle-label">Enable Affiliate Program</span><div class="toggle-switch ${affiliateSettings.enabled ? 'on' : ''}" id="affEnabled" onclick="this.classList.toggle('on')"></div></div>
+                <div class="toggle-row"><span class="toggle-label">Auto-Approve Affiliates</span><div class="toggle-switch ${affiliateSettings.autoApprove ? 'on' : ''}" id="affAutoApprove" onclick="this.classList.toggle('on')"></div></div>
+                <div style="margin:12px 0;"><label style="font-size:12px;font-weight:600;">Default Commission (%)</label><input type="number" class="form-input" id="affDefaultCommission" value="${affiliateSettings.defaultCommission || 10}" min="1" max="80" style="margin-top:4px;"></div>
+                <div style="margin:12px 0;"><label style="font-size:12px;font-weight:600;">Per-Product Commission</label>
+                ${allProducts.map(p => `
+                    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:11px;">
+                        <span style="flex:1;">${p.name || 'Product'}</span>
+                        <input type="number" class="form-input" id="comm_${p.id}" value="${(affiliateSettings.perProduct||{})[p.id] || affiliateSettings.defaultCommission || 10}" min="0" max="80" style="width:60px;padding:6px;text-align:center;">
+                        <span>%</span>
+                        <span style="font-size:10px;color:var(--text3);">${p.affiliateEnabled ? '✓' : '○'}</span>
+                        <button style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:10px;" onclick="toggleProductAffiliate('${p.id}')">${p.affiliateEnabled ? 'Disable' : 'Enable'}</button>
+                    </div>
+                `).join('')}</div>
+                <button class="btn-submit" onclick="saveAffiliateSettings()">Save Settings</button>
+                <button style="width:100%;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;margin-top:8px;cursor:pointer;" onclick="closeAffiliateSettings()">Cancel</button>
+            `;
+            modal.classList.add('show');
+        };
+
+        window.toggleProductAffiliate = async function(productId) {
+            var product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+            await db.collection('products').doc(productId).update({ affiliateEnabled: !product.affiliateEnabled });
+            product.affiliateEnabled = !product.affiliateEnabled;
+            openAffiliateSettings();
+        };
+
+        window.saveAffiliateSettings = async function() {
+            var settings = {
+                enabled: document.getElementById('affEnabled').classList.contains('on'),
+                autoApprove: document.getElementById('affAutoApprove').classList.contains('on'),
+                defaultCommission: parseInt(document.getElementById('affDefaultCommission').value) || 10,
+                perProduct: {}
+            };
+            allProducts.forEach(function(p) {
+                var val = parseInt(document.getElementById('comm_' + p.id)?.value) || settings.defaultCommission;
+                settings.perProduct[p.id] = val;
+                if (settings.enabled && !p.affiliateEnabled) {
+                    db.collection('products').doc(p.id).update({ affiliateEnabled: true, affiliateCommission: val });
+                }
+            });
+            await db.collection('affiliateSettings').doc(storeId).set(settings, { merge: true });
+            affiliateSettings = settings;
+            closeAffiliateSettings();
+            alert('Affiliate settings saved!');
+        };
+
+        window.closeAffiliateSettings = function() { document.getElementById('affiliateSettingsModal').classList.remove('show'); };
+
+        // ============ AFFILIATE REQUESTS ============
+        window.viewAffiliateRequests = function() {
+            var modal = document.getElementById('affiliateDetailModal');
+            var content = document.getElementById('affiliateDetailContent');
+            var requests = allAffiliates.filter(a => a.status === 'pending');
+            content.innerHTML = `<div class="modal-title">Affiliate Requests (${requests.length})</div>` +
+                (requests.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--text3);">No pending requests</div>' :
+                requests.map(r => {
+                    var product = allProducts.find(p => p.id === r.productId);
+                    return `<div class="request-item"><img src="${r.affiliatePhoto || 'https://via.placeholder.com/36'}" onerror="this.src='https://via.placeholder.com/36'"><div class="request-info"><div class="request-name">${r.affiliateName || 'Affiliate'}</div><div class="request-product">${product ? product.name : 'Product'} • ${r.commissionRate || 10}% commission</div></div><div class="request-actions"><button class="btn-accept" onclick="handleAffiliateRequest('${r.id}','approve')">Approve</button><button class="btn-decline" onclick="handleAffiliateRequest('${r.id}','decline')">Decline</button></div></div>`;
+                }).join('')) +
+                `<button style="width:100%;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;margin-top:12px;cursor:pointer;" onclick="closeAffiliateDetail()">Close</button>`;
+            modal.classList.add('show');
+        };
+
+        window.handleAffiliateRequest = async function(affiliateId, action) {
+            var status = action === 'approve' ? 'active' : 'rejected';
+            await db.collection('affiliates').doc(affiliateId).update({ status: status });
+            var aff = allAffiliates.find(a => a.id === affiliateId);
+            if (aff) aff.status = status;
+            
+            // Send notification
+            await db.collection('notifications').add({
+                userId: aff.affiliateId, type: 'affiliate_' + status,
+                message: 'Your affiliate request was ' + status + '!',
+                link: 'affiliates.html', read: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            viewAffiliateRequests();
+            location.reload();
+        };
+
+        // ============ AFFILIATE RANKINGS ============
+        window.viewAffiliateRankings = function() {
+            var modal = document.getElementById('affiliateDetailModal');
+            var content = document.getElementById('affiliateDetailContent');
+            
+            // Calculate NIPA (Net Income Per Affiliate)
+            var affiliatePerformance = allAffiliates.filter(a => a.status === 'active').map(function(a) {
+                var sales = allOrders.filter(o => o.affiliateId === a.affiliateId && o.status === 'delivered');
+                var totalSales = sales.length;
+                var totalCommission = sales.reduce((s, o) => s + (o.affiliateCommission || 0), 0);
+                var totalOrderValue = sales.reduce((s, o) => s + (o.totalAmount || 0), 0);
+                var nipa = totalSales > 0 ? totalCommission / totalSales : 0;
+                return { ...a, totalSales, totalCommission, totalOrderValue, nipa };
+            }).sort((a, b) => b.totalCommission - a.totalCommission);
+            
+            var totalAffiliateRevenue = affiliatePerformance.reduce((s, a) => s + a.totalOrderValue, 0);
+            var totalAffiliateCommissions = affiliatePerformance.reduce((s, a) => s + a.totalCommission, 0);
+            
+            content.innerHTML = `<div class="modal-title">Affiliate Rankings</div>
+                <div style="display:flex;gap:8px;margin-bottom:12px;text-align:center;">
+                    <div style="flex:1;background:#F9FAFB;padding:10px;border-radius:8px;"><div style="font-weight:800;font-size:16px;color:var(--accent);">${affiliatePerformance.length}</div><div style="font-size:9px;color:var(--text2);">Active</div></div>
+                    <div style="flex:1;background:#F9FAFB;padding:10px;border-radius:8px;"><div style="font-weight:800;font-size:16px;color:var(--success);">$${totalAffiliateRevenue.toFixed(2)}</div><div style="font-size:9px;color:var(--text2);">Total Revenue</div></div>
+                    <div style="flex:1;background:#F9FAFB;padding:10px;border-radius:8px;"><div style="font-weight:800;font-size:16px;color:var(--error);">$${totalAffiliateCommissions.toFixed(2)}</div><div style="font-size:9px;color:var(--text2);">Commissions</div></div>
+                </div>` +
+                (affiliatePerformance.length === 0 ? '<div style="text-align:center;padding:20px;color:var(--text3);">No active affiliates</div>' :
+                affiliatePerformance.map(function(a, i) {
+                    return `<div class="affiliate-row">
+                        <div class="affiliate-rank">${i + 1}</div>
+                        <img src="${a.affiliatePhoto || 'https://via.placeholder.com/32'}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" onerror="this.src='https://via.placeholder.com/32'">
+                        <div class="affiliate-info"><div class="affiliate-name">${a.affiliateName || 'Affiliate'}</div><div class="affiliate-sales">${a.totalSales} sales • $${a.totalOrderValue.toFixed(2)} revenue</div></div>
+                        <div><div class="affiliate-nipa">$${a.nipa.toFixed(2)}</div><div class="affiliate-commission">NIPA</div></div>
+                        <div><div class="affiliate-nipa">$${a.totalCommission.toFixed(2)}</div><div class="affiliate-commission">Earned</div></div>
+                    </div>`;
+                }).join('')) +
+                `<button style="width:100%;padding:14px;background:transparent;border:1px solid var(--border);border-radius:12px;margin-top:12px;cursor:pointer;" onclick="closeAffiliateDetail()">Close</button>`;
+            modal.classList.add('show');
+        };
+
+        window.closeAffiliateDetail = function() { document.getElementById('affiliateDetailModal').classList.remove('show'); };
+
+        document.getElementById('affiliateSettingsModal').addEventListener('click', function(e) { if (e.target === this) closeAffiliateSettings(); });
+        document.getElementById('affiliateDetailModal').addEventListener('click', function(e) { if (e.target === this) closeAffiliateDetail(); });
+    })();
+    </script>
+</body>
+</html>

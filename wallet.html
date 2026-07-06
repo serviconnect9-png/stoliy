@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Wallet - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0B0B14; --card: #151521; --text: #FFFFFF; --text2: #A0A0B8; --text3: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, select { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, select:focus { outline: none !important; box-shadow: none !important; }
+        button:active { transform: scale(0.96); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        
+        .page-header { padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 15px; }
+        .page-title { font-size: 17px; font-weight: 700; flex: 1; }
+        
+        .country-badge { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; font-weight: 600; }
+        
+        .balance-card { background: linear-gradient(135deg, #1A1A2E, #2D2D44); border-radius: var(--radius); padding: 24px; margin: 14px; color: #fff; }
+        .balance-label { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-amount { font-size: 36px; font-weight: 800; margin: 8px 0; }
+        .balance-sub { font-size: 12px; opacity: 0.6; }
+        
+        .action-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 0 14px; margin-bottom: 14px; }
+        .action-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 8px; text-align: center; cursor: pointer; transition: all 0.15s; }
+        .action-card:hover { border-color: #3A3A55; }
+        .action-card:active { transform: scale(0.95); }
+        .action-card i { font-size: 22px; color: var(--accent); margin-bottom: 6px; display: block; }
+        .action-card span { font-size: 9px; font-weight: 600; color: var(--text2); }
+        
+        .section { padding: 0 14px; margin-bottom: 14px; }
+        .section-title { font-size: 10px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        
+        .tx-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; }
+        .tx-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .tx-info { flex: 1; }
+        .tx-name { font-weight: 600; font-size: 12px; }
+        .tx-date { font-size: 9px; color: var(--text3); }
+        .tx-amount { font-weight: 700; font-size: 13px; }
+        .tx-amount.in { color: var(--success); }
+        .tx-amount.out { color: var(--error); }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; display: none; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; max-height: 80vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+        
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 13px 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: #fff; font-size: 14px; font-family: var(--font); }
+        .form-input:focus { border-color: var(--accent); }
+        
+        .user-result { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; }
+        .user-result img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .user-result .name { font-weight: 600; font-size: 13px; }
+        .user-result .username { font-size: 10px; color: var(--text3); }
+        
+        .btn-action { width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 8px; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+        
+        .pin-dots { display: flex; justify-content: center; gap: 12px; margin: 16px 0; }
+        .pin-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--border); transition: all 0.2s; }
+        .pin-dot.filled { background: var(--accent); }
+        
+        .rate-info { background: rgba(108,60,240,0.05); border: 1px solid rgba(108,60,240,0.1); border-radius: 8px; padding: 8px 12px; font-size: 11px; color: var(--text2); text-align: center; margin-bottom: 12px; }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #0B0B14; padding: 12px 22px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; color: #fff; }
+        .toast.error { background: #FF4D4F; color: #fff; }
+        .toast.warning { background: #F4B400; color: #0B0B14; }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appRoot">
+        <div style="text-align:center;padding:80px;">Loading wallet...</div>
+    </div>
+
+    <div class="modal-overlay" id="actionModal">
+        <div class="modal-sheet" id="actionContent"></div>
+    </div>
+
+    <div class="modal-overlay" id="pinModal">
+        <div class="modal-sheet" id="pinContent"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, userData, walletData, countryList = [], exchangeRates = {}, userCurrency = 'USD', userCurrencySymbol = '$';
+        var allUsers = [], transactions = [];
+        var pendingAction = null, pinInput = '', userPin = '';
+        var flutterwaveLoaded = false;
+
+        // ============ LOAD FLUTTERWAVE DYNAMICALLY ============
+        function loadFlutterwaveScript(cb) {
+            if (typeof FlutterwaveCheckout !== 'undefined') { flutterwaveLoaded = true; if(cb)cb(); return; }
+            var s = document.createElement('script');
+            s.src = 'https://checkout.flutterwave.com/v3.js';
+            s.onload = function() { flutterwaveLoaded = true; console.log('✅ Flutterwave loaded'); if(cb)cb(); };
+            s.onerror = function() { console.error('❌ Flutterwave failed'); };
+            document.head.appendChild(s);
+        }
+        loadFlutterwaveScript();
+
+        function loadCountries() {
+            if (typeof countries !== 'undefined' && Array.isArray(countries) && countries.length) countryList = countries;
+            else if (typeof window.countries !== 'undefined' && Array.isArray(window.countries)) countryList = window.countries;
+        }
+        loadCountries(); setTimeout(loadCountries,300); setTimeout(loadCountries,800);
+
+        function getCurrencyForCountry(code) { var c=countryList.find(function(x){return (x.code||x.iso2)===code;}); return c?(c.currency||'USD'):'USD'; }
+        function getCurrencySymbol(code) { var s={USD:'$',NGN:'₦',GHS:'GH₵',KES:'KSh',ZAR:'R',EUR:'€',GBP:'£'}; return s[code]||'$'; }
+        function getCountryFlag(code) { var c=countryList.find(function(x){return (x.code||x.iso2)===code;}); return c?(c.flag||c.emoji||''):''; }
+        function convertPrice(usd, curr) { if(!curr||curr==='USD'||!usd) return usd; var rate=exchangeRates[curr]||1; return usd*rate; }
+
+        async function fetchRates() {
+            try { var r=await fetch('https://api.exchangerate-api.com/v4/latest/USD'); var d=await r.json(); exchangeRates=d.rates; } catch(e) {}
+        }
+
+        function showToast(msg, type) {
+            var t=document.querySelector('.toast'); if(t)t.remove();
+            t=document.createElement('div'); t.className='toast '+(type||''); t.textContent=msg;
+            document.body.appendChild(t); setTimeout(function(){t.classList.add('show')},10);
+            setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},2500);
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            
+            var uDoc = await db.collection('users').doc(user.uid).get();
+            userData = uDoc.exists ? uDoc.data() : {};
+            if (userData.country) { userCurrency = getCurrencyForCountry(userData.country); }
+            if (!userCurrency || userCurrency === 'USD') userCurrency = userData.currency || 'USD';
+            userCurrencySymbol = getCurrencySymbol(userCurrency);
+            userPin = userData.paymentPin || '';
+            
+            await fetchRates();
+            
+            var wDoc = await db.collection('wallets').doc(user.uid).get();
+            walletData = wDoc.exists ? wDoc.data() : { balance: 0, pendingBalance: 0, currency: userCurrency, walletId: 'WAL-' + user.uid.substring(0,8).toUpperCase() };
+            if (!wDoc.exists) await db.collection('wallets').doc(user.uid).set(walletData);
+            
+            var usersSnap = await db.collection('users').get();
+            allUsers = usersSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+            
+            var txSnap = await db.collection('walletTransactions').get();
+            transactions = txSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; })
+                .filter(function(t) { return t.userId === currentUser.uid || t.toUserId === currentUser.uid; })
+                .sort(function(a, b) { return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0); });
+            
+            renderWallet();
+            
+            // Handle payment link from URL
+            handlePaymentLinkURL();
+        });
+
+        function handlePaymentLinkURL() {
+            var params = new URLSearchParams(window.location.search);
+            var payLinkId = params.get('pay');
+            if (payLinkId) {
+                setTimeout(async function() {
+                    var linkDoc = await db.collection('paymentLinks').doc(payLinkId).get();
+                    if (linkDoc.exists && linkDoc.data().status === 'pending') {
+                        var link = linkDoc.data();
+                        if (link.userId === currentUser.uid) { showToast('Cannot pay yourself','warning'); return; }
+                        var amount = link.amount;
+                        if (!amount) {
+                            var input = prompt(link.userName + ' requests a payment for: ' + link.reason + '\n\nEnter amount (' + userCurrency + '):');
+                            amount = parseFloat(input) || 0;
+                        }
+                        if (amount > 0) {
+                            if (!userPin) { showToast('Set payment PIN first','warning'); openPinSetup(); return; }
+                            pendingAction = { type: 'pay_link', linkId: payLinkId, toUserId: link.userId, amount: amount, reason: link.reason };
+                            openPinVerify(function() { executePaymentLink(); });
+                        }
+                    }
+                }, 2000);
+            }
+        }
+
+        function renderWallet() {
+            var root = document.getElementById('appRoot');
+            var country = countryList.find(function(c) { return c.code === userData.country; });
+            var flag = country ? (country.flag || country.emoji || '') : '';
+            var countryName = country ? country.name : (userData.country || 'United States');
+            var balance = walletData.balance || 0;
+            var pendingBalance = walletData.pendingBalance || 0;
+            
+            root.innerHTML = 
+                '<div class="page-header">' +
+                    '<button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>' +
+                    '<h2 class="page-title"><i class="fas fa-wallet" style="color:var(--accent);margin-right:6px;"></i>Wallet</h2>' +
+                    '<div class="country-badge">' + flag + ' ' + countryName + ' • ' + userCurrency + '</div>' +
+                '</div>' +
+                '<div class="balance-card">' +
+                    '<div class="balance-label">Available Balance</div>' +
+                    '<div class="balance-amount">' + userCurrencySymbol + balance.toFixed(2) + '</div>' +
+                    '<div class="balance-sub">Pending: ' + userCurrencySymbol + pendingBalance.toFixed(2) + ' • ID: ' + (walletData.walletId || 'N/A') + '</div>' +
+                '</div>' +
+                '<div class="action-grid">' +
+                    '<div class="action-card" onclick="openDeposit()"><i class="fas fa-arrow-down"></i><span>Deposit</span></div>' +
+                    '<div class="action-card" onclick="openTransfer()"><i class="fas fa-paper-plane"></i><span>Send</span></div>' +
+                    '<div class="action-card" onclick="openPaymentLink()"><i class="fas fa-link"></i><span>Request</span></div>' +
+                    '<div class="action-card" onclick="openPinSetup()"><i class="fas fa-lock"></i><span>' + (userPin ? 'Change PIN' : 'Set PIN') + '</span></div>' +
+                '</div>' +
+                '<div class="section"><div class="section-title">Recent Transactions</div>' +
+                (transactions.length === 0 ? '<div style="text-align:center;padding:30px;color:var(--text3);">No transactions yet</div>' :
+                transactions.slice(0,15).map(function(t) {
+                    var isIncoming = t.toUserId === currentUser.uid;
+                    var icon = t.type === 'deposit' ? 'fa-arrow-down' : 'fa-paper-plane';
+                    var iconBg = t.type === 'deposit' ? 'rgba(46,204,113,0.15)' : 'rgba(108,60,240,0.15)';
+                    var iconColor = t.type === 'deposit' ? '#2ECC71' : '#6C3CF0';
+                    return '<div class="tx-item">' +
+                        '<div class="tx-icon" style="background:' + iconBg + ';color:' + iconColor + ';"><i class="fas ' + icon + '"></i></div>' +
+                        '<div class="tx-info"><div class="tx-name">' + (t.description || t.type) + '</div><div class="tx-date">' + (t.createdAt?.toDate?t.createdAt.toDate().toLocaleDateString():'') + '</div></div>' +
+                        '<div class="tx-amount ' + (isIncoming ? 'in' : 'out') + '">' + (isIncoming ? '+' : '-') + userCurrencySymbol + (t.amount || 0).toFixed(2) + '</div>' +
+                    '</div>';
+                }).join('')) + '</div>';
+        }
+
+        // ============ DEPOSIT ============
+        window.openDeposit = function() {
+            var content = document.getElementById('actionContent');
+            var rate = exchangeRates[userCurrency] || 1;
+            content.innerHTML = 
+                '<div class="modal-title"><i class="fas fa-arrow-down"></i> Deposit Funds</div>' +
+                '<div class="rate-info">1 USD = ' + rate.toFixed(2) + ' ' + userCurrency + ' • You pay in ' + userCurrency + '</div>' +
+                '<div class="form-group"><label class="form-label">Amount (USD)</label><input type="number" class="form-input" id="depositUSD" placeholder="0.00" step="0.01" oninput="updateDepositPreview()"></div>' +
+                '<div class="form-group"><label class="form-label">You Pay (' + userCurrency + ')</label><input type="text" class="form-input" id="depositLocal" disabled style="background:var(--card);font-weight:700;font-size:18px;text-align:center;" value="' + userCurrencySymbol + '0.00"></div>' +
+                '<button class="btn-action btn-primary" id="btnDeposit" onclick="proceedDeposit()"><i class="fas fa-credit-card"></i> Pay with Flutterwave</button>' +
+                '<button class="btn-action btn-cancel" onclick="closeActionModal()">Cancel</button>';
+            document.getElementById('actionModal').classList.add('show');
+        };
+
+        window.updateDepositPreview = function() {
+            var usd = parseFloat(document.getElementById('depositUSD').value) || 0;
+            var local = convertPrice(usd, userCurrency);
+            document.getElementById('depositLocal').value = userCurrencySymbol + local.toFixed(2);
+        };
+
+        window.proceedDeposit = function() {
+            var usd = parseFloat(document.getElementById('depositUSD').value) || 0;
+            if (usd <= 0) { showToast('Enter amount','error'); return; }
+            
+            // Ensure Flutterwave is loaded
+            if (!flutterwaveLoaded && typeof FlutterwaveCheckout === 'undefined') {
+                showToast('Loading payment system...','warning');
+                loadFlutterwaveScript(function() {
+                    showToast('Ready! Click Pay again','success');
+                });
+                return;
+            }
+
+            var localAmount = convertPrice(usd, userCurrency);
+            var txRef = 'DEP-' + Date.now() + '-' + Math.random().toString(36).substr(2,6).toUpperCase();
+            var rate = exchangeRates[userCurrency] || 1;
+            var btn = document.getElementById('btnDeposit');
+            btn.textContent = 'Opening Flutterwave...'; btn.disabled = true;
+
+            console.log('💳 Deposit:', { usd: usd, local: localAmount, currency: userCurrency, txRef: txRef });
+
+            setTimeout(function() {
+                FlutterwaveCheckout({
+                    public_key: CONFIG.flutterwaveKey,
+                    tx_ref: txRef,
+                    amount: Math.round(localAmount * 100) / 100,
+                    currency: userCurrency,
+                    payment_options: 'card,banktransfer,ussd',
+                    customer: { email: currentUser.email, name: currentUser.displayName || 'User' },
+                    customizations: { title: 'STOLIY Wallet', description: 'Deposit ' + userCurrencySymbol + localAmount.toFixed(2), logo: 'app-icon.png' },
+                    callback: async function(r) {
+                        console.log('📩 Flutterwave callback:', r);
+                        if (r.status === 'successful' || r.status === 'completed') {
+                            var newBalance = (walletData.balance || 0) + usd;
+                            await db.collection('wallets').doc(currentUser.uid).update({ balance: newBalance });
+                            await db.collection('walletTransactions').add({
+                                userId: currentUser.uid, type: 'deposit', amount: usd, currency: userCurrency,
+                                localAmount: localAmount, exchangeRate: rate, reference: r.transaction_id || txRef,
+                                description: 'Deposit via Flutterwave', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            walletData.balance = newBalance;
+                            closeActionModal(); renderWallet(); showToast('Deposit successful! ✅','success');
+                        } else { showToast('Payment failed','error'); btn.textContent = 'Pay with Flutterwave'; btn.disabled = false; }
+                    },
+                    onclose: function() { 
+                        showToast('Payment cancelled','warning');
+                        btn.textContent = 'Pay with Flutterwave'; btn.disabled = false;
+                    }
+                });
+            }, 300);
+        };
+
+        // ============ TRANSFER ============
+        window.openTransfer = function() {
+            if (!userPin) { showToast('Set your payment PIN first','warning'); openPinSetup(); return; }
+            var content = document.getElementById('actionContent');
+            content.innerHTML = 
+                '<div class="modal-title"><i class="fas fa-paper-plane"></i> Send Money</div>' +
+                '<div class="form-group"><label class="form-label">Recipient Username or Email</label><input type="text" class="form-input" id="transferSearch" placeholder="Search user..." oninput="searchTransferUser(this.value)"></div>' +
+                '<div id="transferUserResult"></div>' +
+                '<div class="form-group"><label class="form-label">Amount (' + userCurrency + ')</label><input type="number" class="form-input" id="transferAmount" placeholder="0.00" step="0.01" oninput="updateTransferPreview()"></div>' +
+                '<div style="font-size:10px;color:var(--text3);margin-bottom:8px;">Fee: 1% • <span id="transferFee">0.00</span> • Total: <span id="transferTotal">0.00</span></div>' +
+                '<div class="form-group"><label class="form-label">Note (Optional)</label><input type="text" class="form-input" id="transferNote" placeholder="What\'s this for?"></div>' +
+                '<input type="hidden" id="transferToUserId">' +
+                '<button class="btn-action btn-primary" onclick="confirmTransfer()">Continue</button>' +
+                '<button class="btn-action btn-cancel" onclick="closeActionModal()">Cancel</button>';
+            document.getElementById('actionModal').classList.add('show');
+        };
+
+        window.updateTransferPreview = function() {
+            var amount = parseFloat(document.getElementById('transferAmount').value) || 0;
+            var fee = amount * 0.01;
+            document.getElementById('transferFee').textContent = userCurrencySymbol + fee.toFixed(2);
+            document.getElementById('transferTotal').textContent = userCurrencySymbol + (amount + fee).toFixed(2);
+        };
+
+        window.searchTransferUser = function(query) {
+            var container = document.getElementById('transferUserResult');
+            if (!query || query.length < 2) { container.innerHTML = ''; return; }
+            var q = query.toLowerCase();
+            var results = allUsers.filter(function(u) {
+                return (u.username||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || (u.name||'').toLowerCase().includes(q);
+            }).slice(0, 5);
+            container.innerHTML = results.map(function(u) {
+                var isSelf = u.id === currentUser.uid;
+                return '<div class="user-result" onclick="selectTransferUser(\'' + u.id + '\',\'' + (u.name||u.username||'User').replace(/'/g,"\\'") + '\',\'' + (u.photoURL||'') + '\')">' +
+                    '<img src="' + (u.photoURL||'https://via.placeholder.com/40') + '" onerror="this.src=\'https://via.placeholder.com/40\'">' +
+                    '<div><div class="name">' + (u.name||u.username||'User') + (isSelf ? ' <span style="font-size:9px;color:var(--accent);">(You)</span>' : '') + '</div><div class="username">@' + (u.username||'user') + '</div></div>' +
+                '</div>';
+            }).join('');
+        };
+
+        window.selectTransferUser = function(userId, name, photo) {
+            document.getElementById('transferToUserId').value = userId;
+            document.getElementById('transferUserResult').innerHTML = 
+                '<div class="user-result" style="border-color:var(--accent);"><img src="' + (photo||'https://via.placeholder.com/40') + '" onerror="this.src=\'https://via.placeholder.com/40\'"><div><div class="name">' + name + '</div><div class="username" style="color:var(--success);">✓ Selected</div></div></div>';
+        };
+
+        window.confirmTransfer = function() {
+            var toUserId = document.getElementById('transferToUserId').value;
+            var amount = parseFloat(document.getElementById('transferAmount').value) || 0;
+            if (!toUserId) { showToast('Select a recipient','error'); return; }
+            if (amount <= 0) { showToast('Enter amount','error'); return; }
+            var fee = amount * 0.01; var total = amount + fee;
+            if (total > (walletData.balance || 0)) { showToast('Insufficient balance','error'); return; }
+            
+            var toUser = allUsers.find(function(u) { return u.id === toUserId; });
+            pendingAction = { type: 'transfer', toUserId: toUserId, toUserName: toUser ? (toUser.name||toUser.username) : 'User', amount: amount, fee: fee, total: total, note: document.getElementById('transferNote').value.trim() };
+            closeActionModal();
+            openPinVerify(function() { executeTransfer(); });
+        };
+
+        async function executeTransfer() {
+            var a = pendingAction;
+            var newSenderBalance = (walletData.balance || 0) - a.total;
+            await db.collection('wallets').doc(currentUser.uid).update({ balance: newSenderBalance });
+            
+            var toWallet = await db.collection('wallets').doc(a.toUserId).get();
+            var toBalance = (toWallet.exists ? toWallet.data().balance || 0 : 0) + a.amount;
+            await db.collection('wallets').doc(a.toUserId).set({ balance: toBalance }, { merge: true });
+            
+            var txRef = 'TXN-' + Date.now().toString(36).toUpperCase();
+            var txData = { userId: currentUser.uid, toUserId: a.toUserId, type: 'transfer', amount: a.amount, fee: a.fee, total: a.total, currency: userCurrency, description: a.note || 'Transfer', reference: txRef, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+            await db.collection('walletTransactions').add(txData);
+            await db.collection('walletTransactions').add(Object.assign({}, txData, { userId: a.toUserId, type: 'transfer_received' }));
+            
+            await db.collection('notifications').add({
+                userId: a.toUserId, type: 'wallet_received',
+                message: userCurrencySymbol + a.amount.toFixed(2) + ' received from ' + (currentUser.displayName||'User'),
+                link: 'wallet.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            walletData.balance = newSenderBalance;
+            pendingAction = null; renderWallet(); showToast('Sent! ✅','success');
+        }
+
+        // ============ PAYMENT LINK ============
+        window.openPaymentLink = function() {
+            var content = document.getElementById('actionContent');
+            content.innerHTML = 
+                '<div class="modal-title"><i class="fas fa-link"></i> Request Payment</div>' +
+                '<div class="form-group"><label class="form-label">Amount (' + userCurrency + ') (Optional - leave blank for sender)</label><input type="number" class="form-input" id="linkAmount" placeholder="Enter amount or leave blank" step="0.01"></div>' +
+                '<div class="form-group"><label class="form-label">Reason *</label><input type="text" class="form-input" id="linkReason" placeholder="What\'s this payment for?"></div>' +
+                '<div class="form-group"><label class="form-label">Sender Email (Optional)</label><input type="email" class="form-input" id="linkEmail" placeholder="sender@example.com"></div>' +
+                '<button class="btn-action btn-primary" onclick="createPaymentLink()"><i class="fas fa-paper-plane"></i> Create & Share Request</button>' +
+                '<button class="btn-action btn-cancel" onclick="closeActionModal()">Cancel</button>';
+            document.getElementById('actionModal').classList.add('show');
+        };
+
+        window.createPaymentLink = async function() {
+            var amount = parseFloat(document.getElementById('linkAmount').value) || 0;
+            var reason = document.getElementById('linkReason').value.trim();
+            var email = document.getElementById('linkEmail').value.trim();
+            if (!reason) { showToast('Enter a reason','error'); return; }
+            
+            var linkId = 'PAY-' + Date.now().toString(36).toUpperCase();
+            var linkData = {
+                linkId: linkId, userId: currentUser.uid, userName: currentUser.displayName || 'User',
+                amount: amount || null, reason: reason, email: email, status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection('paymentLinks').doc(linkId).set(linkData);
+            
+            // Notify sender if email provided
+            if (email) {
+                var sender = allUsers.find(function(u) { return u.email === email; });
+                if (sender) {
+                    await db.collection('notifications').add({
+                        userId: sender.id, type: 'payment_request',
+                        message: (currentUser.displayName||'User') + ' requests ' + (amount ? userCurrencySymbol + amount.toFixed(2) : 'a payment') + ' for: ' + reason,
+                        link: 'wallet.html?pay=' + linkId, read: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showToast('Notification sent to ' + email + '! ✅','success');
+                } else {
+                    showToast('User not found. Share the link manually.','warning');
+                }
+            }
+            
+            var url = window.location.origin + '/wallet.html?pay=' + linkId;
+            if (navigator.share) { 
+                navigator.share({ title: 'Payment Request', text: reason + (amount > 0 ? ' - ' + userCurrencySymbol + amount.toFixed(2) : ''), url: url }).catch(function(){});
+            } else { 
+                navigator.clipboard.writeText(url).then(function() { showToast('Payment link copied! 📋','success'); }); 
+            }
+            
+            closeActionModal();
+        };
+
+        // ============ EXECUTE PAYMENT LINK ============
+        async function executePaymentLink() {
+            var a = pendingAction;
+            var fee = a.amount * 0.01; var total = a.amount + fee;
+            if (total > (walletData.balance || 0)) { showToast('Insufficient balance','error'); return; }
+            
+            var newBalance = walletData.balance - total;
+            await db.collection('wallets').doc(currentUser.uid).update({ balance: newBalance });
+            
+            var toWallet = await db.collection('wallets').doc(a.toUserId).get();
+            var toBalance = (toWallet.exists ? toWallet.data().balance || 0 : 0) + a.amount;
+            await db.collection('wallets').doc(a.toUserId).set({ balance: toBalance }, { merge: true });
+            
+            await db.collection('paymentLinks').doc(a.linkId).update({ status: 'paid', paidBy: currentUser.uid, paidAt: firebase.firestore.FieldValue.serverTimestamp() });
+            
+            var txRef = 'PAYLINK-' + Date.now().toString(36).toUpperCase();
+            await db.collection('walletTransactions').add({ userId: currentUser.uid, toUserId: a.toUserId, type: 'payment_link', amount: a.amount, fee: fee, total: total, currency: userCurrency, description: a.reason, reference: txRef, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            
+            await db.collection('notifications').add({ userId: a.toUserId, type: 'payment_received', message: userCurrencySymbol + a.amount.toFixed(2) + ' received for: ' + a.reason, link: 'wallet.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            
+            walletData.balance = newBalance;
+            pendingAction = null; renderWallet(); showToast('Payment sent! ✅','success');
+        }
+
+        // ============ PIN MANAGEMENT ============
+        window.openPinSetup = function() {
+            var content = document.getElementById('pinContent');
+            content.innerHTML = 
+                '<div class="modal-title"><i class="fas fa-lock"></i> ' + (userPin ? 'Change Payment PIN' : 'Set Payment PIN') + '</div>' +
+                '<p style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:12px;">' + (userPin ? 'Enter current PIN first' : 'Create a 4-digit PIN') + '</p>' +
+                (userPin ? '<div class="form-group"><label class="form-label">Current PIN</label><input type="password" class="form-input" id="currentPin" maxlength="4" placeholder="••••" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')"></div>' : '') +
+                '<div class="form-group"><label class="form-label">' + (userPin ? 'New PIN' : 'PIN') + '</label><input type="password" class="form-input" id="newPin" maxlength="4" placeholder="••••" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')"></div>' +
+                '<div class="form-group"><label class="form-label">Confirm PIN</label><input type="password" class="form-input" id="confirmPin" maxlength="4" placeholder="••••" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')"></div>' +
+                '<button class="btn-action btn-primary" onclick="savePin()">Save PIN</button>' +
+                '<button class="btn-action btn-cancel" onclick="closePinModal()">Cancel</button>';
+            document.getElementById('pinModal').classList.add('show');
+        };
+
+        window.savePin = async function() {
+            var current = document.getElementById('currentPin')?.value || '';
+            var newPin = document.getElementById('newPin').value;
+            var confirm = document.getElementById('confirmPin').value;
+            if (userPin && current !== userPin) { showToast('Current PIN incorrect','error'); return; }
+            if (newPin.length !== 4) { showToast('PIN must be 4 digits','error'); return; }
+            if (newPin !== confirm) { showToast('PINs do not match','error'); return; }
+            await db.collection('users').doc(currentUser.uid).update({ paymentPin: newPin });
+            userPin = newPin; userData.paymentPin = newPin;
+            closePinModal(); renderWallet(); showToast('PIN saved!','success');
+        };
+
+        // ============ PIN VERIFICATION ============
+        window.openPinVerify = function(callback) {
+            var content = document.getElementById('pinContent');
+            pinInput = '';
+            content.innerHTML = 
+                '<div class="modal-title"><i class="fas fa-lock"></i> Enter PIN</div>' +
+                '<div class="pin-dots" id="pinDots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>' +
+                '<input type="password" class="form-input" id="pinInput" maxlength="4" placeholder="••••" style="text-align:center;font-size:20px;letter-spacing:8px;" oninput="handlePinInput(this.value)" autofocus>' +
+                '<button class="btn-action btn-primary" id="pinSubmitBtn" onclick="verifyPin()" disabled>Verify</button>' +
+                '<button class="btn-action btn-cancel" onclick="closePinModal()">Cancel</button>';
+            document.getElementById('pinModal').classList.add('show');
+            window._pinCallback = callback;
+        };
+
+        window.handlePinInput = function(val) {
+            pinInput = val.replace(/[^0-9]/g, '').substring(0,4);
+            document.getElementById('pinInput').value = pinInput;
+            var dots = document.querySelectorAll('#pinDots .pin-dot');
+            dots.forEach(function(d, i) { d.classList.toggle('filled', i < pinInput.length); });
+            document.getElementById('pinSubmitBtn').disabled = pinInput.length !== 4;
+        };
+
+        window.verifyPin = function() {
+            if (pinInput.length !== 4 || pinInput !== userPin) { showToast('Incorrect PIN','error'); pinInput = ''; document.getElementById('pinInput').value = ''; document.querySelectorAll('#pinDots .pin-dot').forEach(function(d){d.classList.remove('filled');}); return; }
+            closePinModal();
+            if (window._pinCallback) { var cb = window._pinCallback; window._pinCallback = null; cb(); }
+        };
+
+        // ============ MODAL CONTROLS ============
+        window.closeActionModal = function() { document.getElementById('actionModal').classList.remove('show'); };
+        window.closePinModal = function() { document.getElementById('pinModal').classList.remove('show'); pendingAction = null; };
+
+        document.getElementById('actionModal').addEventListener('click', function(e) { if (e.target === this) closeActionModal(); });
+        document.getElementById('pinModal').addEventListener('click', function(e) { if (e.target === this) closePinModal(); });
+    })();
+    </script>
+</body>
+</html>

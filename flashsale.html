@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Flash Sale - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root { --bg-primary: #0B0B14; --bg-card: #151521; --text-primary: #FFFFFF; --text-secondary: #A0A0B8; --text-muted: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 12px; --radius-lg: 16px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg-primary); color: var(--text-primary); }
+        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+        
+        .flash-header { background: linear-gradient(135deg, #FF4D4F, #C62828); padding: 24px 16px; text-align: center; }
+        .flash-header h1 { font-size: 28px; font-weight: 800; }
+        .flash-header p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+        .flash-timer { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+        .timer-block { background: rgba(0,0,0,0.3); padding: 10px 16px; border-radius: 10px; text-align: center; }
+        .timer-block .num { font-size: 24px; font-weight: 800; }
+        .timer-block .label { font-size: 10px; text-transform: uppercase; opacity: 0.8; }
+        
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 16px; }
+        .product-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: all 0.2s; position: relative; }
+        .product-card:hover { border-color: #FF4D4F; }
+        .product-card img { width: 100%; height: 150px; object-fit: cover; }
+        .product-card .body { padding: 10px 12px; }
+        .product-card .name { font-weight: 600; font-size: 12px; margin-bottom: 4px; }
+        .product-card .price { font-weight: 700; font-size: 16px; color: var(--success); }
+        .product-card .original { font-size: 11px; color: var(--text-muted); text-decoration: line-through; margin-left: 4px; }
+        .flash-tag { position: absolute; top: 8px; right: 8px; background: var(--error); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: rgba(11,11,20,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 0 22px; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--text-muted); border: none; background: none; font-family: var(--font); padding: 5px 12px; }
+        .nav-item.active { color: var(--error); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="flash-header">
+            <h1><i class="fas fa-bolt"></i> Flash Sale</h1>
+            <p>Limited time deals - Grab them fast!</p>
+            <div class="flash-timer">
+                <div class="timer-block"><div class="num" id="hours">00</div><div class="label">Hours</div></div>
+                <div class="timer-block"><div class="num" id="minutes">00</div><div class="label">Mins</div></div>
+                <div class="timer-block"><div class="num" id="seconds">00</div><div class="label">Secs</div></div>
+            </div>
+        </div>
+        <div class="products-grid" id="flashProducts"></div>
+        <nav class="bottom-nav">
+            <button class="nav-item" onclick="window.location.href='home.html'"><i class="fas fa-home"></i><span>Home</span></button>
+            <button class="nav-item" onclick="window.location.href='search.html'"><i class="fas fa-search"></i><span>Search</span></button>
+            <button class="nav-item" onclick="window.location.href='cart.html'"><i class="fas fa-shopping-bag"></i><span>Cart</span></button>
+            <button class="nav-item" onclick="window.location.href='orders.html'"><i class="fas fa-box-open"></i><span>Orders</span></button>
+            <button class="nav-item" onclick="window.location.href='profile.html'"><i class="fas fa-user-circle"></i><span>Profile</span></button>
+        </nav>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        const db = firebase.firestore();
+
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'login.html'; return; }
+            const now = new Date();
+            const snap = await db.collection('flashSales').where('active','==',true).where('startDate','<=',now).where('endDate','>=',now).limit(20).get();
+            const container = document.getElementById('flashProducts');
+            
+            if (snap.empty) {
+                container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-bolt" style="font-size:48px;opacity:0.3;"></i><p>No active flash sales right now</p><p style="font-size:12px;">Check back soon!</p></div>';
+                return;
+            }
+
+            let endTime = null;
+            container.innerHTML = snap.docs.map(d => {
+                const s = d.data();
+                if (!endTime || s.endDate.toDate() < endTime) endTime = s.endDate.toDate();
+                const price = s.salePrice||0, orig = s.product?.price||0;
+                return `<div class="product-card" onclick="window.location.href='products.html?id=${s.productId}'">
+                    <img src="${(s.product?.images&&s.product.images[0])||'https://via.placeholder.com/200'}" onerror="this.src='https://via.placeholder.com/200'" loading="lazy">
+                    <span class="flash-tag">⚡ FLASH</span>
+                    <div class="body"><div class="name">${s.product?.name||'Product'}</div><span class="price">$${price.toFixed(2)}</span><span class="original">$${orig.toFixed(2)}</span></div>
+                </div>`;
+            }).join('');
+
+            if (endTime) startCountdown(endTime);
+        });
+
+        function startCountdown(end) {
+            function update() {
+                const now = new Date(), diff = end - now;
+                if (diff <= 0) { document.getElementById('hours').textContent='00'; document.getElementById('minutes').textContent='00'; document.getElementById('seconds').textContent='00'; return; }
+                const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+                document.getElementById('hours').textContent = String(h).padStart(2,'0');
+                document.getElementById('minutes').textContent = String(m).padStart(2,'0');
+                document.getElementById('seconds').textContent = String(s).padStart(2,'0');
+            }
+            update();
+            setInterval(update, 1000);
+        }
+    </script>
+</body>
+</html>

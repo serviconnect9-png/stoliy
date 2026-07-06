@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>My Tickets - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        
+        .tabs { display: flex; padding: 0 16px; background: #fff; border-bottom: 1px solid var(--border); gap: 4px; }
+        .tab { padding: 12px 18px; border: none; background: none; font-weight: 600; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; font-family: var(--font); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        
+        .ticket-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); margin: 12px 16px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+        .ticket-card:hover { border-color: #D1D5DB; }
+        .ticket-banner { width: 100%; height: 100px; object-fit: cover; background: linear-gradient(135deg,#6C3CF0,#4A1FB8); display: flex; align-items: center; justify-content: center; }
+        .ticket-banner .event-icon { font-size: 40px; color: rgba(255,255,255,0.3); }
+        .ticket-body { padding: 14px; }
+        .ticket-event { font-weight: 700; font-size: 15px; }
+        .ticket-type { font-size: 13px; color: var(--accent); margin: 2px 0; }
+        .ticket-date { font-size: 12px; color: var(--text2); }
+        .ticket-id { font-size: 10px; color: var(--text3); font-family: monospace; margin-top: 4px; }
+        .ticket-status { display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; margin-top: 6px; }
+        .status-active { background: rgba(46,204,113,0.1); color: var(--success); }
+        .status-used { background: rgba(107,114,128,0.1); color: var(--text2); }
+        .status-cancelled { background: rgba(255,77,79,0.1); color: var(--error); }
+        
+        .qr-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; display: none; align-items: center; justify-content: center; }
+        .qr-modal.show { display: flex; }
+        .qr-card { background: #fff; border-radius: 20px; padding: 30px; text-align: center; max-width: 350px; width: 90%; }
+        .qr-code { width: 200px; height: 200px; background: #000; margin: 20px auto; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+        .qr-code canvas { width: 180px; height: 180px; }
+        .qr-ticket-id { font-family: monospace; font-size: 18px; font-weight: 800; letter-spacing: 2px; margin: 12px 0; }
+        .btn-close { padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: 25px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+        
+        .empty-state { text-align: center; padding: 60px; color: var(--text2); }
+        .empty-state i { font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: #fff; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 0 22px; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--text3); border: none; background: none; font-family: var(--font); padding: 5px 10px; text-decoration: none; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-ticket-alt" style="color:var(--accent);margin-right:6px;"></i>My Tickets</h2>
+        </div>
+        <div class="tabs">
+            <button class="tab active" onclick="filterTickets('upcoming',this)">Upcoming</button>
+            <button class="tab" onclick="filterTickets('past',this)">Past</button>
+            <button class="tab" onclick="filterTickets('all',this)">All</button>
+        </div>
+        <div id="ticketsList"><div style="text-align:center;padding:60px;">Loading tickets...</div></div>
+    </div>
+
+    <div class="qr-modal" id="qrModal">
+        <div class="qr-card">
+            <h3 id="qrEventName">Event Name</h3>
+            <div class="qr-code" id="qrCodeContainer"></div>
+            <div class="qr-ticket-id" id="qrTicketId">TKT-XXXXXXXX</div>
+            <p style="font-size:12px;color:var(--text2);" id="qrTicketType">VIP</p>
+            <p style="font-size:11px;color:var(--text3);" id="qrCustomerName">John Doe</p>
+            <button class="btn-close" onclick="closeQR()">Close</button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a class="nav-item" href="home.html"><i class="fas fa-home"></i><span>Home</span></a>
+        <a class="nav-item" href="search.html"><i class="fas fa-search"></i><span>Search</span></a>
+        <a class="nav-item" href="orders.html"><i class="fas fa-box"></i><span>Orders</span></a>
+        <a class="nav-item active"><i class="fas fa-ticket-alt"></i><span>Tickets</span></a>
+        <a class="nav-item" href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    var auth = firebase.auth(), db = firebase.firestore();
+    var currentUser, allTickets = [], allEvents = {}, currentFilter = 'upcoming';
+
+    auth.onAuthStateChanged(async function(user) {
+        if (!user) { window.location.href = 'login.html'; return; }
+        currentUser = user;
+        await loadTickets();
+    });
+
+    async function loadTickets() {
+        var allTicketsSnap = await db.collection('tickets').get();
+        allTickets = allTicketsSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(t) { return t.userId === currentUser.uid; });
+        
+        // Load associated events
+        for (var t of allTickets) {
+            if (!allEvents[t.eventId]) {
+                try {
+                    var eDoc = await db.collection('events').doc(t.eventId).get();
+                    if (eDoc.exists) allEvents[t.eventId] = eDoc.data();
+                } catch(e) {}
+            }
+        }
+        
+        renderTickets();
+    }
+
+    function renderTickets() {
+        var container = document.getElementById('ticketsList');
+        var now = new Date();
+        var filtered = allTickets.filter(function(t) {
+            var event = allEvents[t.eventId];
+            if (!event) return currentFilter === 'all';
+            var endDate = event.endDate ? new Date(event.endDate) : null;
+            if (currentFilter === 'upcoming') return t.status === 'active' && endDate && endDate >= now;
+            if (currentFilter === 'past') return t.status === 'used' || (endDate && endDate < now);
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-ticket-alt"></i><h3>No tickets</h3><p>' + (currentFilter==='upcoming'?'You have no upcoming events':'No tickets found') + '</p></div>';
+            return;
+        }
+
+        container.innerHTML = filtered.map(function(t) {
+            var event = allEvents[t.eventId] || {};
+            var startDate = event.startDate ? new Date(event.startDate) : null;
+            var statusClass = t.status === 'active' ? 'status-active' : t.status === 'used' ? 'status-used' : 'status-cancelled';
+            
+            return '<div class="ticket-card" onclick="showQR(\'' + t.id + '\')">' +
+                (event.banner ? '<img src="' + event.banner + '" class="ticket-banner" onerror="this.innerHTML=\'<div class=ticket-banner><div class=event-icon><i class=fas fa-calendar-alt></i></div></div>\'">' : '<div class="ticket-banner"><div class="event-icon"><i class="fas fa-calendar-alt"></i></div></div>') +
+                '<div class="ticket-body">' +
+                '<div class="ticket-event">' + (event.name || 'Event') + '</div>' +
+                '<div class="ticket-type">' + t.ticketType + '</div>' +
+                '<div class="ticket-date">' + (startDate ? startDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) + ' at ' + startDate.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : 'Date TBD') + '</div>' +
+                '<div class="ticket-id">' + t.ticketNumber + '</div>' +
+                '<span class="ticket-status ' + statusClass + '">' + t.status.toUpperCase() + '</span>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    window.filterTickets = function(filter, btn) {
+        currentFilter = filter;
+        document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+        btn.classList.add('active');
+        renderTickets();
+    };
+
+    window.showQR = function(ticketId) {
+        var t = allTickets.find(function(x) { return x.id === ticketId; });
+        if (!t) return;
+        var event = allEvents[t.eventId] || {};
+        
+        document.getElementById('qrEventName').textContent = event.name || 'Event';
+        document.getElementById('qrTicketId').textContent = t.ticketNumber;
+        document.getElementById('qrTicketType').textContent = t.ticketType;
+        document.getElementById('qrCustomerName').textContent = t.customerName || 'Guest';
+        
+        // Generate QR code
+        var container = document.getElementById('qrCodeContainer');
+        container.innerHTML = '';
+        var qrData = t.qrToken || t.ticketNumber + '-' + t.userId;
+        try {
+            new QRCode(container, {
+                text: qrData,
+                width: 180,
+                height: 180,
+                colorDark: '#000000',
+                colorLight: '#ffffff'
+            });
+        } catch(e) {
+            container.innerHTML = '<div style="color:#fff;font-size:12px;">QR: ' + t.ticketNumber + '</div>';
+        }
+        
+        document.getElementById('qrModal').classList.add('show');
+    };
+
+    window.closeQR = function() {
+        document.getElementById('qrModal').classList.remove('show');
+    };
+
+    document.getElementById('qrModal').addEventListener('click', function(e) {
+        if (e.target === this) closeQR();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Events - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .btn-add { padding: 8px 16px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 14px 16px; }
+        .stat-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 8px; text-align: center; }
+        .stat-value { font-size: 18px; font-weight: 800; }
+        .stat-label { font-size: 9px; color: var(--text2); text-transform: uppercase; margin-top: 2px; }
+        
+        .event-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); margin: 12px 16px; overflow: hidden; }
+        .event-banner { width: 100%; height: 130px; object-fit: cover; background: linear-gradient(135deg,#6C3CF0,#4A1FB8); }
+        .event-body { padding: 14px; }
+        .event-name { font-weight: 700; font-size: 16px; }
+        .event-date { font-size: 12px; color: var(--text2); margin: 4px 0; }
+        .event-meta { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--text2); }
+        .event-status { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; display: inline-block; }
+        .status-live { background: rgba(46,204,113,0.1); color: var(--success); }
+        .status-draft { background: rgba(244,180,0,0.1); color: var(--warning); }
+        .status-ended { background: rgba(107,114,128,0.1); color: var(--text2); }
+        .status-cancelled { background: rgba(255,77,79,0.1); color: var(--error); }
+        
+        .ticket-types { margin-top: 10px; }
+        .ticket-type-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #F3F4F6; font-size: 12px; }
+        
+        .empty-state { text-align: center; padding: 60px; color: var(--text2); }
+        .empty-state i { font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px; }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; transition: transform 0.3s ease; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-calendar-alt" style="color:var(--accent);margin-right:6px;"></i>My Events</h2>
+            <button class="btn-add" onclick="window.location.href='create-event.html'"><i class="fas fa-plus"></i> Create</button>
+        </div>
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-value" style="color:var(--accent);" id="totalEvents">0</div><div class="stat-label">Events</div></div>
+            <div class="stat-card"><div class="stat-value" style="color:var(--success);" id="ticketsSold">0</div><div class="stat-label">Sold</div></div>
+            <div class="stat-card"><div class="stat-value" style="color:var(--warning);" id="checkins">0</div><div class="stat-label">Checked In</div></div>
+            <div class="stat-card"><div class="stat-value" id="revenue">$0</div><div class="stat-label">Revenue</div></div>
+        </div>
+        <div id="eventsList"><div style="text-align:center;padding:40px;">Loading events...</div></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    var auth = firebase.auth(), db = firebase.firestore();
+    var BASE_URL = (typeof CONFIG !== 'undefined' && CONFIG.baseUrl) ? CONFIG.baseUrl : window.location.origin;
+
+    auth.onAuthStateChanged(async function(user) {
+        if (!user) { window.location.href = 'login.html'; return; }
+        var allStores = await db.collection('stores').get();
+        var myStore = allStores.docs.find(function(d) { return d.data().ownerId === user.uid; });
+        if (!myStore) { window.location.href = 'wizard.html'; return; }
+        
+        var allEvents = await db.collection('events').get();
+        var myEvents = allEvents.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(e) { return e.storeId === myStore.id; });
+        var allTickets = await db.collection('tickets').get();
+        var myTickets = allTickets.docs.map(function(d) { return d.data(); }).filter(function(t) { return myEvents.some(function(e) { return e.id === t.eventId; }); });
+        
+        document.getElementById('totalEvents').textContent = myEvents.length;
+        document.getElementById('ticketsSold').textContent = myTickets.filter(function(t) { return t.status === 'active' || t.status === 'used'; }).length;
+        document.getElementById('checkins').textContent = myTickets.filter(function(t) { return t.status === 'used'; }).length;
+        var rev = myTickets.filter(function(t) { return t.status === 'active' || t.status === 'used'; }).reduce(function(s, t) { return s + (t.price||0); }, 0);
+        document.getElementById('revenue').textContent = '$' + rev.toFixed(2);
+        
+        var container = document.getElementById('eventsList');
+        if (myEvents.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-alt"></i><h3>No events yet</h3><p>Create your first event</p></div>';
+            return;
+        }
+        
+        container.innerHTML = myEvents.map(function(e) {
+            var sold = myTickets.filter(function(t) { return t.eventId === e.id && (t.status==='active'||t.status==='used'); }).length;
+            var checkedIn = myTickets.filter(function(t) { return t.eventId === e.id && t.status==='used'; }).length;
+            var now = new Date();
+            var status = e.status === 'cancelled' ? 'cancelled' : (e.endDate && new Date(e.endDate) < now ? 'ended' : e.status === 'published' ? 'live' : 'draft');
+            var statusClass = status === 'live' ? 'status-live' : status === 'draft' ? 'status-draft' : status === 'cancelled' ? 'status-cancelled' : 'status-ended';
+            var eventUrl = BASE_URL + '/event-detail.html?id=' + e.id;
+            
+            return '<div class="event-card">' +
+                (e.banner ? '<img src="' + e.banner + '" class="event-banner" onerror="this.style.background=\'linear-gradient(135deg,#6C3CF0,#4A1FB8)\'">' : '<div class="event-banner"></div>') +
+                '<div class="event-body">' +
+                '<div class="event-name">' + e.name + ' <span class="event-status ' + statusClass + '">' + status.toUpperCase() + '</span></div>' +
+                '<div class="event-date"><i class="fas fa-clock"></i> ' + (e.startDate ? new Date(e.startDate).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) : 'TBD') + '</div>' +
+                '<div class="event-meta"><span><i class="fas fa-ticket-alt"></i> ' + sold + ' sold</span><span><i class="fas fa-check-circle"></i> ' + checkedIn + ' checked in</span><span><i class="fas fa-map-marker-alt"></i> ' + (e.venue||'Online') + '</span></div>';
+                
+                if (e.ticketTypes && e.ticketTypes.length) {
+                    h += '<div class="ticket-types">' + e.ticketTypes.map(function(t) { return '<div class="ticket-type-row"><span>' + t.name + '</span><span>$' + (t.price||0).toFixed(2) + ' • ' + (t.quantity||0) + ' left</span></div>'; }).join('') + '</div>';
+                }
+                
+                h += '<div style="margin-top:10px;display:flex;gap:8px;">' +
+                    '<button class="btn-add" style="flex:1;font-size:11px;" onclick="event.stopPropagation();copyEventLink(\'' + eventUrl + '\')"><i class="fas fa-share-alt"></i> Share</button>' +
+                    '<button class="btn-add" style="flex:1;font-size:11px;" onclick="event.stopPropagation();window.location.href=\'event-scanner.html?id=' + e.id + '\'"><i class="fas fa-qrcode"></i> Scanner</button>' +
+                    '<button class="btn-add" style="flex:1;font-size:11px;background:var(--success);" onclick="event.stopPropagation();window.location.href=\'edit-event.html?id=' + e.id + '\'"><i class="fas fa-edit"></i> Edit</button>' +
+                '</div></div></div>';
+        }).join('');
+    });
+
+    function copyEventLink(url) {
+        navigator.clipboard.writeText(url).then(function() {
+            var t = document.createElement('div');
+            t.className = 'toast success show';
+            t.textContent = 'Event link copied!';
+            document.body.appendChild(t);
+            setTimeout(function() { t.remove(); }, 2000);
+        });
+    }
+    window.copyEventLink = copyEventLink;
+    </script>
+</body>
+</html>

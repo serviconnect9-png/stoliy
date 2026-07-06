@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0B14">
+    <title>Orders - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #0B0B14; --card: #151521; --text: #FFFFFF; --text2: #A0A0B8; --text3: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #2A2A40; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+        button, input, textarea, select { font-family: var(--font); outline: none !important; }
+        button:focus, input:focus, textarea:focus, select:focus { outline: none !important; box-shadow: none !important; }
+        button:active { transform: scale(0.96); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+        
+        .page-header { padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 15px; }
+        .page-title { font-size: 17px; font-weight: 700; flex: 1; }
+        .role-badge { font-size: 9px; padding: 4px 8px; border-radius: 6px; font-weight: 700; }
+        .badge-buyer { background: rgba(46,204,113,0.15); color: var(--success); }
+        .badge-seller { background: rgba(108,60,240,0.15); color: var(--accent); }
+        
+        .filter-tabs { display: flex; gap: 4px; padding: 10px 14px; overflow-x: auto; scrollbar-width: none; background: var(--card); border-bottom: 1px solid var(--border); }
+        .filter-tabs::-webkit-scrollbar { display: none; }
+        .filter-tab { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; font-size: 11px; font-weight: 500; white-space: nowrap; font-family: var(--font); }
+        .filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        
+        .order-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin: 10px 14px; overflow: hidden; cursor: pointer; transition: all 0.15s; }
+        .order-card:hover { border-color: #3A3A55; }
+        .order-card:active { transform: scale(0.98); }
+        .order-header { padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .order-number { font-weight: 700; font-size: 12px; color: var(--accent); font-family: monospace; }
+        .order-date { font-size: 10px; color: var(--text3); }
+        .order-status { padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+        .status-pending { background: rgba(244,180,0,0.15); color: var(--warning); }
+        .status-processing { background: rgba(59,130,246,0.15); color: #3B82F6; }
+        .status-shipped { background: rgba(108,60,240,0.15); color: var(--accent); }
+        .status-delivered { background: rgba(46,204,113,0.15); color: var(--success); }
+        .status-cancelled { background: rgba(255,77,79,0.15); color: var(--error); }
+        .status-refund { background: rgba(244,180,0,0.15); color: var(--warning); }
+        
+        .order-body { padding: 12px 14px; }
+        .order-items { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; }
+        .order-item-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: var(--bg); flex-shrink: 0; }
+        .order-customer { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+        .order-meta { font-size: 10px; color: var(--text3); }
+        .order-total { font-weight: 800; font-size: 15px; color: var(--success); }
+        
+        .detail-view { padding: 16px; }
+        .detail-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+        .detail-title { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--text2); }
+        .detail-value { font-weight: 600; text-align: right; }
+        .detail-value.mono { font-family: monospace; font-size: 11px; }
+        
+        .timeline { position: relative; padding-left: 24px; }
+        .timeline-item { position: relative; padding-bottom: 16px; }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot { position: absolute; left: -20px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+        .timeline-dot.done { background: var(--success); }
+        .timeline-dot.current { background: var(--accent); box-shadow: 0 0 0 4px rgba(108,60,240,0.2); }
+        .timeline-dot.cancelled { background: var(--error); }
+        .timeline-line { position: absolute; left: -15px; top: 16px; bottom: -4px; width: 2px; background: var(--border); }
+        .timeline-item:last-child .timeline-line { display: none; }
+        .timeline-text { font-size: 12px; }
+        .timeline-time { font-size: 9px; color: var(--text3); }
+        
+        .btn-action { width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 8px; }
+        .btn-accept { background: var(--success); color: #fff; }
+        .btn-reject { background: var(--error); color: #fff; }
+        .btn-ship { background: var(--accent); color: #fff; }
+        .btn-refund { background: var(--warning); color: #0B0B14; }
+        .btn-contact { background: var(--accent); color: #fff; }
+        .btn-track { background: var(--success); color: #fff; }
+        .btn-reorder { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+        .btn-undo { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; display: none; align-items: flex-end; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-sheet { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; max-height: 80vh; overflow-y: auto; padding: 24px 20px 40px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+        
+        .refund-reason { padding: 12px; border: 2px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer; }
+        .refund-reason.selected { border-color: var(--accent); background: rgba(108,60,240,0.05); }
+        .refund-reason .reason-name { font-weight: 600; font-size: 13px; }
+        
+        .upload-zone { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; }
+        .upload-zone img { max-width: 100%; max-height: 100px; border-radius: 8px; margin-top: 8px; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+        .empty-state i { font-size: 48px; opacity: 0.2; margin-bottom: 12px; display: block; }
+        
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #fff; color: #0B0B14; padding: 12px 22px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.5); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; color: #fff; }
+        .toast.error { background: #FF4D4F; color: #fff; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 0 22px; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--text3); border: none; background: none; font-family: var(--font); padding: 5px 10px; text-decoration: none; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appRoot">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title"><i class="fas fa-box" style="color:var(--accent);margin-right:6px;"></i>Orders</h2>
+            <span class="role-badge badge-buyer" id="roleBadge">Buyer</span>
+        </div>
+        <div class="filter-tabs" id="filterTabs">
+            <button class="filter-tab active" onclick="filterOrders('all',this)">All</button>
+            <button class="filter-tab" onclick="filterOrders('pending',this)">Pending</button>
+            <button class="filter-tab" onclick="filterOrders('shipped',this)">Shipped</button>
+            <button class="filter-tab" onclick="filterOrders('delivered',this)">Delivered</button>
+            <button class="filter-tab" onclick="filterOrders('refund',this)">Refunds</button>
+        </div>
+        <div id="contentArea" style="flex:1;overflow-y:auto;"></div>
+    </div>
+
+    <div class="modal-overlay" id="refundModal">
+        <div class="modal-sheet" id="refundContent"></div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a class="nav-item" href="home.html"><i class="fas fa-home"></i><span>Home</span></a>
+        <a class="nav-item" href="search.html"><i class="fas fa-search"></i><span>Search</span></a>
+        <a class="nav-item" href="cart.html"><i class="fas fa-shopping-bag"></i><span>Cart</span></a>
+        <a class="nav-item active"><i class="fas fa-box"></i><span>Orders</span></a>
+        <a class="nav-item" href="profile.html"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, userData, isSeller = false, storeId, allOrders = [], currentFilter = 'all', viewingOrder = null;
+
+        var refundReasons = ['Item Not Received','Wrong Item','Damaged Item','Missing Parts','Defective Product','Doesn\'t Match Description','Ordered by Mistake','Duplicate Order','Other'];
+
+        var orderStatuses = [
+            { key:'placed', label:'Order Placed', icon:'fa-shopping-bag' },
+            { key:'payment_confirmed', label:'Payment Confirmed', icon:'fa-credit-card' },
+            { key:'accepted', label:'Seller Accepted', icon:'fa-check-circle' },
+            { key:'preparing', label:'Preparing Order', icon:'fa-box' },
+            { key:'packed', label:'Packed', icon:'fa-box-open' },
+            { key:'shipped', label:'Shipped', icon:'fa-truck' },
+            { key:'out_for_delivery', label:'Out for Delivery', icon:'fa-shipping-fast' },
+            { key:'delivered', label:'Delivered', icon:'fa-home' },
+            { key:'completed', label:'Completed', icon:'fa-check-double' }
+        ];
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast ' + (type||'');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); }, 10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 2500);
+        }
+
+        function getSym(currency) {
+            var s = { USD:'$', NGN:'₦', GHS:'GH₵', KES:'KSh', ZAR:'R', EUR:'€', GBP:'£' };
+            return s[currency] || '$';
+        }
+
+        function getStatusClass(status) {
+            var map = { paid:'status-pending', processing:'status-processing', preparing:'status-processing', packed:'status-processing', shipped:'status-shipped', out_for_delivery:'status-shipped', delivered:'status-delivered', completed:'status-delivered', cancelled:'status-cancelled', refunded:'status-refund' };
+            return map[status] || 'status-pending';
+        }
+
+        function getFilterStatuses(filter) {
+            if (filter === 'pending') return ['paid','processing','confirmed','preparing','packed','ready_to_ship'];
+            if (filter === 'shipped') return ['shipped','out_for_delivery'];
+            if (filter === 'delivered') return ['delivered','completed'];
+            if (filter === 'refund') return ['refunded','refund_requested'];
+            return null;
+        }
+
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            var uDoc = await db.collection('users').doc(user.uid).get();
+            userData = uDoc.exists ? uDoc.data() : {};
+            
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d) { return d.data().ownerId === user.uid; });
+            if (myStore) { isSeller = true; storeId = myStore.id; }
+            
+            document.getElementById('roleBadge').textContent = isSeller ? 'Seller' : 'Buyer';
+            document.getElementById('roleBadge').className = 'role-badge ' + (isSeller ? 'badge-seller' : 'badge-buyer');
+            
+            await loadOrders();
+        });
+
+        async function loadOrders() {
+            var allOrdersSnap = await db.collection('orders').get();
+            
+            if (isSeller) {
+                allOrders = allOrdersSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; })
+                    .filter(function(o) { return o.storeId === storeId; })
+                    .sort(function(a, b) { return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0); });
+            } else {
+                allOrders = allOrdersSnap.docs.map(function(d) { return { id: d.id, ...d.data() }; })
+                    .filter(function(o) { return o.userId === currentUser.uid; })
+                    .sort(function(a, b) { return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0); });
+            }
+            renderOrderList();
+        }
+
+        function renderOrderList() {
+            var container = document.getElementById('contentArea');
+            var filtered = allOrders;
+            var filterStatuses = getFilterStatuses(currentFilter);
+            if (filterStatuses) filtered = allOrders.filter(function(o) { return filterStatuses.includes(o.status); });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><h3>No orders</h3><p>' + (currentFilter === 'all' ? 'Orders will appear here' : 'No ' + currentFilter + ' orders') + '</p></div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(function(o) {
+                var items = o.items || [];
+                var total = o.totalAmountUSD || o.totalAmount || 0;
+                var currency = o.currency || 'USD';
+                var sym = getSym(currency);
+                var date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+                var customer = o.shippingAddress || {};
+                
+                return '<div class="order-card" onclick="viewOrder(\'' + o.id + '\')">' +
+                    '<div class="order-header"><span class="order-number">#' + (o.orderNumber || o.id.substring(0,8).toUpperCase()) + '</span><span class="order-status ' + getStatusClass(o.status) + '">' + (o.status||'pending').replace(/_/g,' ') + '</span></div>' +
+                    '<div class="order-body">' +
+                        '<div class="order-items">' + items.slice(0,6).map(function(i) { return '<img src="' + (i.image||'https://via.placeholder.com/50') + '" class="order-item-img" onerror="this.src=\'https://via.placeholder.com/50\'">'; }).join('') + '</div>' +
+                        (isSeller ? '<div class="order-customer">' + (customer.name || 'Customer') + '</div>' : '') +
+                        '<div class="order-meta">' + date + ' • ' + items.length + ' item(s)' + (o.trackingNumber ? ' • 📦 ' + o.trackingNumber : '') + '</div>' +
+                        '<div style="text-align:right;"><span class="order-total">' + sym + total.toFixed(2) + '</span></div>' +
+                    '</div></div>';
+            }).join('');
+        }
+
+        window.filterOrders = function(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+            btn.classList.add('active');
+            renderOrderList();
+        };
+
+        // ============ VIEW ORDER ============
+        window.viewOrder = function(orderId) {
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (!order) return;
+            viewingOrder = order;
+            
+            var container = document.getElementById('contentArea');
+            var items = order.items || [];
+            var total = order.totalAmountUSD || order.totalAmount || 0;
+            var currency = order.currency || 'USD';
+            var sym = getSym(currency);
+            var shipping = order.shippingAddress || {};
+            var customerName = shipping.name || 'Customer';
+            
+            var h = '<div class="detail-view"><button onclick="renderOrderList()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><i class="fas fa-arrow-left"></i> Back</button>';
+            
+            // Order header
+            h += '<div class="detail-section"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span class="order-number" style="font-size:14px;">#' + (order.orderNumber || orderId.substring(0,8).toUpperCase()) + '</span><span class="order-status ' + getStatusClass(order.status) + '">' + (order.status||'pending').replace(/_/g,' ') + '</span></div><div style="font-size:11px;color:var(--text3);margin-bottom:12px;">' + (order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : '') + '</div>';
+            
+            // Items
+            items.forEach(function(item) {
+                var itemTotal = (item.price||0)*(item.quantity||1);
+                h += '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:center;"><img src="' + (item.image||'https://via.placeholder.com/40') + '" style="width:40px;height:40px;border-radius:8px;object-fit:cover;" onerror="this.src=\'https://via.placeholder.com/40\'"><div style="flex:1;"><div style="font-weight:600;font-size:12px;">' + (item.name||'Product') + '</div><div style="font-size:10px;color:var(--text3);">Qty: ' + (item.quantity||1) + (item.variant?' • '+item.variant:'') + '</div></div><div style="font-weight:700;font-size:13px;color:var(--success);">' + sym + itemTotal.toFixed(2) + '</div></div>';
+            });
+            
+            h += '<div class="detail-row" style="margin-top:8px;"><span class="detail-label">Subtotal</span><span class="detail-value">' + sym + (order.subtotalUSD||total).toFixed(2) + '</span></div>';
+            if (order.discountUSD) h += '<div class="detail-row"><span class="detail-label">Discount</span><span class="detail-value" style="color:var(--error);">-' + sym + order.discountUSD.toFixed(2) + '</span></div>';
+            if (order.shippingCostUSD) h += '<div class="detail-row"><span class="detail-label">Shipping</span><span class="detail-value">' + sym + order.shippingCostUSD.toFixed(2) + '</span></div>';
+            if (order.maintenanceFeeUSD) h += '<div class="detail-row"><span class="detail-label">Service Fee</span><span class="detail-value">' + sym + order.maintenanceFeeUSD.toFixed(2) + '</span></div>';
+            h += '<div class="detail-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><span class="detail-label" style="font-weight:700;">Total</span><span class="detail-value" style="font-size:16px;color:var(--success);">' + sym + total.toFixed(2) + '</span></div>';
+            if (order.paymentReference) h += '<div class="detail-row"><span class="detail-label">Payment Ref</span><span class="detail-value mono">' + order.paymentReference + '</span></div>';
+            if (order.discountCode) h += '<div class="detail-row"><span class="detail-label">Coupon</span><span class="detail-value" style="color:var(--accent);">' + order.discountCode + '</span></div>';
+            h += '</div>';
+            
+            // Customer/Shipping
+            if (shipping.name || shipping.address) {
+                h += '<div class="detail-section"><div class="detail-title">' + (isSeller ? 'Customer' : 'Shipping') + '</div><p style="font-size:12px;color:var(--text2);line-height:1.6;">' + customerName + '<br>' + (shipping.address||'') + '<br>' + (shipping.city||'') + ', ' + (shipping.state||'') + '<br>' + (shipping.country||'') + '<br>📞 ' + (shipping.phone||'') + '</p>';
+                if (order.trackingNumber) h += '<div class="detail-row"><span class="detail-label">Tracking</span><span class="detail-value mono" style="color:var(--accent);">' + order.trackingNumber + '</span></div>';
+                if (order.courierService) h += '<div class="detail-row"><span class="detail-label">Courier</span><span class="detail-value">' + order.courierService + '</span></div>';
+                if (order.estimatedDelivery) h += '<div class="detail-row"><span class="detail-label">Est. Delivery</span><span class="detail-value">' + order.estimatedDelivery + '</span></div>';
+                h += '</div>';
+            }
+            
+            // Timeline
+            h += '<div class="detail-section"><div class="detail-title">Timeline</div><div class="timeline">';
+            var currentFound = false;
+            orderStatuses.forEach(function(s) {
+                var isDone = order.timeline && order.timeline[s.key];
+                var isCurrent = order.status === s.key;
+                if (isCurrent) currentFound = true;
+                var dotClass = order.status === 'cancelled' ? 'cancelled' : (isDone || (currentFound && !isCurrent && s.key !== 'completed') ? 'done' : isCurrent ? 'current' : '');
+                if (order.status === 'cancelled' && !isDone && s.key !== 'placed' && s.key !== 'payment_confirmed') return;
+                h += '<div class="timeline-item"><div class="timeline-dot ' + dotClass + '"></div><div class="timeline-line"></div><div class="timeline-text">' + s.label + '</div>' + (isDone ? '<div class="timeline-time">✓</div>' : isCurrent ? '<div class="timeline-time" style="color:var(--accent);">Now</div>' : '') + '</div>';
+            });
+            if (order.status === 'cancelled') h += '<div class="timeline-item"><div class="timeline-dot cancelled"></div><div class="timeline-text" style="color:var(--error);">Cancelled</div></div>';
+            if (order.status === 'refunded') h += '<div class="timeline-item"><div class="timeline-dot" style="background:var(--warning);"></div><div class="timeline-text" style="color:var(--warning);">Refunded</div></div>';
+            h += '</div></div>';
+            
+            // Buttons
+            h += '<div style="padding:0 0 16px;">';
+            
+            if (isSeller) {
+                // SELLER ACTIONS
+                if (['paid','processing'].includes(order.status)) {
+                    h += '<div style="display:flex;gap:8px;"><button class="btn-action btn-accept" style="flex:1;" onclick="acceptOrder(\'' + orderId + '\')">✓ Accept</button><button class="btn-action btn-reject" style="flex:1;" onclick="rejectOrder(\'' + orderId + '\')">✕ Reject</button></div>';
+                }
+                if (['accepted','confirmed','preparing'].includes(order.status)) {
+                    h += '<button class="btn-action btn-ship" onclick="updateOrderStatus(\'' + orderId + '\',\'packed\')"><i class="fas fa-box"></i> Mark as Packed</button>';
+                }
+                if (['packed','ready_to_ship'].includes(order.status)) {
+                    h += '<button class="btn-action btn-ship" onclick="window.location.href=\'fulfillment.html\'"><i class="fas fa-truck"></i> Fulfill Order</button>';
+                }
+                if (['shipped','out_for_delivery'].includes(order.status)) {
+                    h += '<button class="btn-action btn-ship" onclick="updateOrderStatus(\'' + orderId + '\',\'delivered\')"><i class="fas fa-check-circle"></i> Mark Delivered</button>';
+                }
+                if (order.refundRequested && order.refundStatus === 'pending') {
+                    h += '<div style="display:flex;gap:8px;"><button class="btn-action btn-accept" style="flex:1;" onclick="approveRefund(\'' + orderId + '\')">Approve Refund</button><button class="btn-action btn-reject" style="flex:1;" onclick="rejectRefund(\'' + orderId + '\')">Reject Refund</button></div>';
+                }
+                h += '<button class="btn-action btn-contact" onclick="contactCustomer(\'' + orderId + '\')"><i class="fas fa-comment-dots"></i> Contact Customer</button>';
+            } else {
+                // CUSTOMER ACTIONS
+                if (order.trackingNumber) {
+                    h += '<button class="btn-action btn-track" onclick="window.open(\'https://track.aftership.com/' + order.trackingNumber + '\',\'_blank\')"><i class="fas fa-search-location"></i> Track Package</button>';
+                }
+                if (['paid','processing','confirmed','preparing','packed'].includes(order.status)) {
+                    h += '<button class="btn-action btn-contact" onclick="contactSeller(\'' + (order.storeId||'') + '\')"><i class="fas fa-comment-dots"></i> Contact Seller</button>';
+                }
+                if (['delivered','completed'].includes(order.status) && !order.refundRequested) {
+                    h += '<button class="btn-action btn-refund" onclick="openRefundModal(\'' + orderId + '\')"><i class="fas fa-undo"></i> Request Refund</button>';
+                }
+                if (order.refundRequested && !['refunded','cancelled'].includes(order.status)) {
+                    h += '<div class="detail-section" style="text-align:center;color:var(--warning);"><i class="fas fa-clock"></i> Refund under review - ' + (order.refundStatus||'pending') + '</div>';
+                }
+                h += '<button class="btn-action btn-reorder" onclick="reorder(\'' + orderId + '\')"><i class="fas fa-redo"></i> Buy Again</button>';
+            }
+            
+            h += '</div></div>';
+            container.innerHTML = h;
+        };
+
+        // ============ SELLER ACTIONS ============
+        window.acceptOrder = async function(orderId) {
+            await db.collection('orders').doc(orderId).update({
+                status: 'accepted',
+                timeline: { accepted: new Date().toISOString() },
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (order) {
+                await db.collection('notifications').add({ userId: order.userId, type: 'order_accepted', message: 'Your order #' + (order.orderNumber||'') + ' has been accepted!', link: 'orders.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            await loadOrders(); viewOrder(orderId);
+            showToast('Order accepted!','success');
+        };
+
+        window.rejectOrder = async function(orderId) {
+            var reason = prompt('Reason for rejection:');
+            if (!reason) return;
+            await db.collection('orders').doc(orderId).update({
+                status: 'cancelled', rejectionReason: reason,
+                timeline: { cancelled: new Date().toISOString() },
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (order) {
+                await db.collection('notifications').add({ userId: order.userId, type: 'order_cancelled', message: 'Your order #' + (order.orderNumber||'') + ' was cancelled. Reason: ' + reason, link: 'orders.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            await loadOrders(); viewOrder(orderId);
+            showToast('Order rejected','');
+        };
+
+        window.updateOrderStatus = async function(orderId, status) {
+            var update = { status: status, timeline: {}, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            update.timeline[status] = new Date().toISOString();
+            await db.collection('orders').doc(orderId).update(update);
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (order) {
+                await db.collection('notifications').add({ userId: order.userId, type: 'order_' + status, message: 'Your order #' + (order.orderNumber||'') + ' is now ' + status.replace(/_/g,' '), link: 'orders.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            await loadOrders(); viewOrder(orderId);
+            showToast('Status updated!','success');
+        };
+
+        window.approveRefund = async function(orderId) {
+            await db.collection('orders').doc(orderId).update({
+                status: 'refunded', refundStatus: 'approved',
+                refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (order) {
+                await db.collection('notifications').add({ userId: order.userId, type: 'refund_approved', message: 'Your refund for order #' + (order.orderNumber||'') + ' has been approved!', link: 'orders.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            await loadOrders(); viewOrder(orderId);
+            showToast('Refund approved! Seller will process payment.','success');
+        };
+
+        window.rejectRefund = async function(orderId) {
+            var reason = prompt('Reason for rejecting refund:');
+            if (!reason) return;
+            await db.collection('orders').doc(orderId).update({ refundStatus: 'rejected', refundRejectionReason: reason, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (order) {
+                await db.collection('notifications').add({ userId: order.userId, type: 'refund_rejected', message: 'Your refund request was rejected. Reason: ' + reason, link: 'orders.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            await loadOrders(); viewOrder(orderId);
+            showToast('Refund rejected','');
+        };
+
+        window.contactCustomer = function(orderId) {
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (order) window.location.href = 'chat-detail.html?user=' + order.userId;
+        };
+
+        // ============ CUSTOMER ACTIONS ============
+        window.contactSeller = function(storeId) {
+            if (storeId) window.location.href = 'chat-detail.html?store=' + storeId;
+            else showToast('Seller not available','error');
+        };
+
+        window.reorder = async function(orderId) {
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (!order || !order.items) return;
+            for (var i = 0; i < order.items.length; i++) {
+                var item = order.items[i];
+                await db.collection('cart').add({ userId: currentUser.uid, productId: item.productId, storeId: order.storeId, storeName: order.storeName, name: item.name, price: item.price, image: item.image, quantity: item.quantity||1, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            showToast('Added to cart!','success');
+            setTimeout(function() { window.location.href = 'cart.html'; }, 800);
+        };
+
+        // ============ REFUND ============
+        window.openRefundModal = function(orderId) {
+            var modal = document.getElementById('refundModal');
+            var content = document.getElementById('refundContent');
+            content.innerHTML = '<div class="modal-title">Request Refund</div><p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Select reason:</p>' +
+                refundReasons.map(function(r) { return '<div class="refund-reason" onclick="selectReason(\'' + r + '\',this)"><span class="reason-name">' + r + '</span></div>'; }).join('') +
+                '<div style="margin-top:12px;"><label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;display:block;margin-bottom:5px;">Description</label><textarea id="refundDesc" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--bg);color:#fff;font-size:13px;resize:vertical;min-height:70px;" placeholder="Describe the issue..."></textarea></div>' +
+                '<div style="margin-top:8px;"><label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;display:block;margin-bottom:5px;">Upload Evidence</label><div class="upload-zone" onclick="document.getElementById(\'refundFile\').click()"><i class="fas fa-camera"></i><p style="font-size:11px;color:var(--text3);">Tap to upload</p><input type="file" id="refundFile" accept="image/*" multiple style="display:none;" onchange="previewFiles(this)"></div><div id="filePreviews" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>' +
+                '<button class="btn-action btn-refund" style="margin-top:12px;" onclick="submitRefund(\'' + orderId + '\')">Submit Request</button>' +
+                '<button class="btn-action btn-reorder" onclick="closeRefundModal()">Cancel</button>';
+            modal.classList.add('show');
+            window._selectedReason = '';
+        };
+
+        window.selectReason = function(reason, el) {
+            window._selectedReason = reason;
+            document.querySelectorAll('.refund-reason').forEach(function(r) { r.classList.remove('selected'); });
+            el.classList.add('selected');
+        };
+
+        window.previewFiles = function(input) {
+            var container = document.getElementById('filePreviews'); container.innerHTML = '';
+            Array.from(input.files).forEach(function(f) {
+                var reader = new FileReader();
+                reader.onload = function(e) { container.innerHTML += '<img src="' + e.target.result + '" style="width:60px;height:60px;border-radius:8px;object-fit:cover;">'; };
+                reader.readAsDataURL(f);
+            });
+        };
+
+        window.submitRefund = async function(orderId) {
+            var reason = window._selectedReason;
+            var desc = document.getElementById('refundDesc')?.value?.trim() || '';
+            if (!reason) { showToast('Select a reason','error'); return; }
+            
+            await db.collection('orders').doc(orderId).update({
+                refundRequested: true, refundReason: reason, refundDescription: desc,
+                refundStatus: 'pending', refundRequestedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            var order = allOrders.find(function(o) { return o.id === orderId; });
+            if (order && order.storeId) {
+                var storeDoc = await db.collection('stores').doc(order.storeId).get();
+                if (storeDoc.exists) {
+                    await db.collection('notifications').add({ userId: storeDoc.data().ownerId, type: 'refund_request', message: 'Refund requested for #' + (order.orderNumber||orderId.substring(0,8)), link: 'orders.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                }
+            }
+            closeRefundModal(); await loadOrders(); viewOrder(orderId);
+            showToast('Refund submitted!','success');
+        };
+
+        window.closeRefundModal = function() { document.getElementById('refundModal').classList.remove('show'); };
+        document.getElementById('refundModal').addEventListener('click', function(e) { if (e.target === this) closeRefundModal(); });
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Print on Demand - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        
+        .product-types { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; padding: 16px; }
+        .type-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .type-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .type-card i { font-size: 32px; color: var(--accent); margin-bottom: 10px; display: block; }
+        .type-card span { font-weight: 600; font-size: 13px; }
+        
+        .pod-products { padding: 0 16px; }
+        .pod-item { display: flex; gap: 12px; padding: 14px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; align-items: center; }
+        .pod-item img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; }
+        .pod-info { flex: 1; }
+        .pod-name { font-weight: 600; font-size: 13px; }
+        .pod-type { font-size: 11px; color: var(--text2); }
+        .pod-status { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 700; }
+        .status-active { background: rgba(46,204,113,0.1); color: var(--success); }
+        .status-draft { background: rgba(244,180,0,0.1); color: var(--warning); }
+        
+        .btn-add { padding: 12px 20px; background: var(--accent); color: #fff; border: none; border-radius: 25px; font-weight: 600; cursor: pointer; display: block; margin: 16px auto; }
+        .empty-state { text-align: center; padding: 40px; color: var(--text2); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><h2 class="page-title">Print on Demand</h2></div>
+        
+        <div class="product-types">
+            <div class="type-card" onclick="addPODProduct('T-Shirt')"><i class="fas fa-tshirt"></i><span>T-Shirts</span></div>
+            <div class="type-card" onclick="addPODProduct('Hoodie')"><i class="fas fa-user-tie"></i><span>Hoodies</span></div>
+            <div class="type-card" onclick="addPODProduct('Mug')"><i class="fas fa-mug-hot"></i><span>Mugs</span></div>
+            <div class="type-card" onclick="addPODProduct('Poster')"><i class="fas fa-image"></i><span>Posters</span></div>
+            <div class="type-card" onclick="addPODProduct('Phone Case')"><i class="fas fa-mobile-alt"></i><span>Phone Cases</span></div>
+            <div class="type-card" onclick="addPODProduct('Tote Bag')"><i class="fas fa-shopping-bag"></i><span>Tote Bags</span></div>
+        </div>
+        
+        <div style="padding:0 16px;margin-top:8px;">
+            <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Your POD Products</div>
+        </div>
+        <div class="pod-products" id="podProducts">
+            <div class="empty-state"><i class="fas fa-print" style="font-size:40px;opacity:0.3;display:block;margin-bottom:8px;"></i>No print-on-demand products yet</div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    const auth = firebase.auth(), db = firebase.firestore();
+    let storeId = null;
+
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        const allStores = await db.collection('stores').get();
+        const myStore = allStores.docs.find(d => d.data().ownerId === user.uid);
+        if (!myStore) { window.location.href = 'wizard.html'; return; }
+        storeId = myStore.id;
+        loadPODProducts();
+    });
+
+    async function loadPODProducts() {
+        const allProducts = await db.collection('products').get();
+        const podProducts = allProducts.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.storeId === storeId && p.isPOD === true);
+        document.getElementById('podProducts').innerHTML = podProducts.length === 0 ?
+            '<div class="empty-state"><i class="fas fa-print" style="font-size:40px;opacity:0.3;display:block;margin-bottom:8px;"></i>No print-on-demand products yet</div>' :
+            podProducts.map(p => `
+                <div class="pod-item">
+                    <img src="${(p.images&&p.images[0])||'https://via.placeholder.com/56'}" onerror="this.src='https://via.placeholder.com/56'">
+                    <div class="pod-info">
+                        <div class="pod-name">${p.name}</div>
+                        <div class="pod-type">${p.podType||'Product'} • $${(p.price||0).toFixed(2)}</div>
+                    </div>
+                    <span class="pod-status ${p.active!==false?'status-active':'status-draft'}">${p.active!==false?'Active':'Draft'}</span>
+                </div>
+            `).join('');
+    }
+
+    function addPODProduct(type) {
+        window.location.href = `add-product.html?pod=${encodeURIComponent(type)}`;
+    }
+
+    window.addPODProduct = addPODProduct;
+    </script>
+</body>
+</html>

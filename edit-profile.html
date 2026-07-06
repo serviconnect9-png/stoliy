@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Edit Profile - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF;
+            --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400;
+            --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; }
+        
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .page-title { font-size: 18px; font-weight: 700; }
+        
+        .form-section { padding: 20px 16px; }
+        .section-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .form-group { margin-bottom: 18px; }
+        .form-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+        .form-input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; font-family: var(--font); background: #fff; transition: all 0.2s; }
+        .form-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(108,60,240,0.1); }
+        .form-input:disabled { background: #F9FAFB; color: var(--text2); cursor: not-allowed; }
+        .form-hint { font-size: 11px; color: var(--text2); margin-top: 4px; }
+        .btn-save { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+        .btn-save:hover { filter: brightness(1.1); }
+        .btn-save:active { transform: scale(0.98); }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .username-status { font-size: 12px; margin-top: 4px; min-height: 18px; }
+        .password-strength { margin-top: 6px; }
+        .strength-bar { height: 4px; border-radius: 2px; background: #E5E7EB; margin-bottom: 4px; overflow: hidden; }
+        .strength-fill { height: 100%; border-radius: 2px; transition: all 0.3s; width: 0; }
+        .alert { padding: 12px 16px; border-radius: 12px; font-size: 13px; margin-bottom: 16px; }
+        .alert-success { background: rgba(46,204,113,0.1); color: #2ECC71; border: 1px solid rgba(46,204,113,0.2); }
+        .alert-error { background: rgba(255,77,79,0.1); color: #FF4D4F; border: 1px solid rgba(255,77,79,0.2); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title">Edit Profile</h2>
+        </div>
+        
+        <div class="form-section">
+            <div id="alertContainer"></div>
+            
+            <div class="section-label">Personal Information</div>
+            
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-input" id="editName" placeholder="Your full name">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-input" id="editUsername" placeholder="your_username" oninput="checkUsername()">
+                <div class="username-status" id="usernameStatus"></div>
+                <div class="form-hint">Can be changed once every 30 days</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-input" id="editPhone" placeholder="+1234567890">
+            </div>
+            
+            <div class="section-label" style="margin-top:24px;">Email</div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-input" id="editEmail" disabled>
+                <div class="form-hint">Email cannot be changed. Contact support for assistance.</div>
+            </div>
+            
+            <div class="section-label" style="margin-top:24px;">Change Password</div>
+            <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input type="password" class="form-input" id="currentPassword" placeholder="Enter current password">
+            </div>
+            <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" class="form-input" id="newPassword" placeholder="New password" oninput="checkPasswordStrength()">
+                <div class="password-strength">
+                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                    <span style="font-size:11px;font-weight:500;" id="strengthText"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm new password" oninput="checkPasswordMatch()">
+                <div style="font-size:11px;min-height:16px;" id="passwordMatchStatus"></div>
+            </div>
+            
+            <div class="section-label" style="margin-top:24px;">Security</div>
+            <div class="form-group">
+                <label class="form-label">Payment PIN</label>
+                <input type="password" class="form-input" id="paymentPin" placeholder="4-digit PIN" maxlength="4" pattern="[0-9]{4}">
+                <div class="form-hint">Used for wallet transactions and withdrawals</div>
+            </div>
+            
+            <button class="btn-save" id="btnSave" onclick="saveProfile()">Save Changes</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    const auth = firebase.auth(), db = firebase.firestore();
+    let currentUser = null, userData = null, usernameAvailable = true;
+
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        currentUser = user;
+        const doc = await db.collection('users').doc(user.uid).get();
+        userData = doc.exists ? doc.data() : {};
+        
+        document.getElementById('editName').value = userData.name || user.displayName || '';
+        document.getElementById('editUsername').value = userData.username || '';
+        document.getElementById('editPhone').value = userData.phone || '';
+        document.getElementById('editEmail').value = user.email || '';
+    });
+
+    async function checkUsername() {
+        const username = document.getElementById('editUsername').value.trim();
+        const status = document.getElementById('usernameStatus');
+        if (!username || username === userData.username) { status.textContent = ''; usernameAvailable = true; return; }
+        if (username.length < 3) { status.textContent = 'Min 3 characters'; status.style.color = '#6B7280'; usernameAvailable = false; return; }
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) { status.textContent = 'Only letters, numbers, underscores'; status.style.color = '#FF4D4F'; usernameAvailable = false; return; }
+        
+        // Check if username can be changed (30 day rule)
+        if (userData.usernameChangedAt) {
+            const lastChange = userData.usernameChangedAt.toDate ? userData.usernameChangedAt.toDate() : new Date(userData.usernameChangedAt);
+            const daysSince = (Date.now() - lastChange.getTime()) / 86400000;
+            if (daysSince < 30) {
+                const daysLeft = Math.ceil(30 - daysSince);
+                status.textContent = `Username can be changed in ${daysLeft} days`;
+                status.style.color = '#F4B400';
+                usernameAvailable = false;
+                return;
+            }
+        }
+        
+        status.textContent = 'Checking...'; status.style.color = '#6B7280';
+        const snap = await db.collection('usernames').doc(username.toLowerCase()).get();
+        if (snap.exists && snap.data().uid !== currentUser.uid) {
+            status.textContent = '✖ Username taken'; status.style.color = '#FF4D4F';
+            usernameAvailable = false;
+        } else {
+            status.textContent = '✔ Available'; status.style.color = '#2ECC71';
+            usernameAvailable = true;
+        }
+    }
+
+    function checkPasswordStrength() {
+        const p = document.getElementById('newPassword').value;
+        const fill = document.getElementById('strengthFill');
+        const text = document.getElementById('strengthText');
+        if (!p) { fill.style.width = '0'; text.textContent = ''; return; }
+        
+        let score = 0;
+        if (p.length >= 8) score++;
+        if (/[A-Z]/.test(p)) score++;
+        if (/[0-9]/.test(p)) score++;
+        if (/[^A-Za-z0-9]/.test(p)) score++;
+        
+        const levels = ['Weak','Fair','Good','Strong'];
+        const colors = ['#FF4D4F','#F4B400','#2ECC71','#6C3CF0'];
+        fill.style.width = (score/4*100)+'%';
+        fill.style.background = score > 0 ? colors[score-1] : '#E5E7EB';
+        text.textContent = score > 0 ? levels[score-1] : '';
+        text.style.color = score > 0 ? colors[score-1] : '#6B7280';
+    }
+
+    function checkPasswordMatch() {
+        const p1 = document.getElementById('newPassword').value;
+        const p2 = document.getElementById('confirmPassword').value;
+        const status = document.getElementById('passwordMatchStatus');
+        if (!p2) { status.textContent = ''; return; }
+        status.textContent = p1 === p2 ? '✔ Passwords match' : '✖ Passwords do not match';
+        status.style.color = p1 === p2 ? '#2ECC71' : '#FF4D4F';
+    }
+
+    async function saveProfile() {
+        const btn = document.getElementById('btnSave');
+        const orig = btn.textContent;
+        btn.textContent = 'Saving...'; btn.disabled = true;
+
+        const name = document.getElementById('editName').value.trim();
+        const username = document.getElementById('editUsername').value.trim();
+        const phone = document.getElementById('editPhone').value.trim();
+        const currentPass = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+        const pin = document.getElementById('paymentPin').value;
+
+        if (!name) { showAlert('Name is required', 'error'); resetBtn(); return; }
+
+        // Check username availability if changed
+        if (username !== userData.username && !usernameAvailable) {
+            showAlert('Username is not available', 'error'); resetBtn(); return;
+        }
+
+        // Password change validation
+        if (newPass) {
+            if (!currentPass) { showAlert('Enter current password to change', 'error'); resetBtn(); return; }
+            if (newPass.length < 8) { showAlert('Password must be 8+ characters', 'error'); resetBtn(); return; }
+            if (newPass !== confirmPass) { showAlert('Passwords do not match', 'error'); resetBtn(); return; }
+        }
+
+        // PIN validation
+        if (pin && !/^\d{4}$/.test(pin)) { showAlert('PIN must be 4 digits', 'error'); resetBtn(); return; }
+
+        try {
+            const updates = { name, phone, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            
+            // Handle username change
+            if (username !== userData.username) {
+                updates.username = username.toLowerCase();
+                updates.usernameChangedAt = firebase.firestore.FieldValue.serverTimestamp();
+                await db.collection('usernames').doc(username.toLowerCase()).set({
+                    uid: currentUser.uid, email: currentUser.email
+                });
+            }
+            
+            // Handle PIN
+            if (pin) updates.paymentPin = pin;
+            
+            // Update Firestore
+            await db.collection('users').doc(currentUser.uid).update(updates);
+            
+            // Update display name in auth
+            await currentUser.updateProfile({ displayName: name });
+            
+            // Handle password change
+            if (newPass && currentPass) {
+                const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, currentPass);
+                await currentUser.reauthenticateWithCredential(credential);
+                await currentUser.updatePassword(newPass);
+            }
+            
+            showAlert('Profile updated successfully!', 'success');
+            setTimeout(() => history.back(), 1500);
+        } catch(e) {
+            console.error('Save error:', e);
+            let msg = 'Failed to save';
+            if (e.code === 'auth/wrong-password') msg = 'Current password is incorrect';
+            showAlert(msg, 'error');
+            resetBtn();
+        }
+
+        function resetBtn() { btn.textContent = orig; btn.disabled = false; }
+    }
+
+    function showAlert(msg, type) {
+        const container = document.getElementById('alertContainer');
+        container.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+        container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.checkUsername = checkUsername;
+    window.checkPasswordStrength = checkPasswordStrength;
+    window.checkPasswordMatch = checkPasswordMatch;
+    window.saveProfile = saveProfile;
+    </script>
+</body>
+</html>

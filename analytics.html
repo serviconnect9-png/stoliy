@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Analytics - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --accent: #6C3CF0; --success: #2ECC71; --warning: #F4B400; --error: #FF4D4F; --border: #E5E7EB; --radius: 14px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; padding: 16px; }
+        .stat-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 800; }
+        .stat-label { font-size: 11px; color: var(--text2); margin-top: 4px; }
+        .chart-placeholder { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; margin: 0 16px 12px; text-align: center; }
+        .chart-placeholder h4 { margin-bottom: 12px; }
+        .bar { height: 8px; border-radius: 4px; background: #E5E7EB; margin: 8px 0; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; background: var(--accent); }
+        .metric-row { display: flex; justify-content: space-between; padding: 10px 16px; font-size: 13px; border-bottom: 1px solid #F3F4F6; background: #fff; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><h2 class="page-title">Analytics</h2></div>
+        <div id="analyticsContent"><div style="text-align:center;padding:60px;">Loading analytics...</div></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script>
+    try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+    const auth = firebase.auth(), db = firebase.firestore();
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        const allStores = await db.collection('stores').get();
+        const myStore = allStores.docs.find(d => d.data().ownerId === user.uid);
+        if (!myStore) { window.location.href = 'wizard.html'; return; }
+        const storeId = myStore.id;
+        const allOrders = await db.collection('orders').get();
+        const storeOrders = allOrders.docs.map(d => d.data()).filter(o => o.storeId === storeId);
+        const allProducts = await db.collection('products').get();
+        const storeProducts = allProducts.docs.map(d => d.data()).filter(p => p.storeId === storeId);
+        const allUsers = await db.collection('users').get();
+        const followers = allUsers.docs.map(d => d.data()).filter(u => (u.following||[]).includes(storeId)).length;
+
+        const totalRevenue = storeOrders.filter(o => o.status === 'delivered').reduce((s,o) => s + (o.totalAmount||0), 0);
+        const totalOrders = storeOrders.length;
+        const conversionRate = myStore.data().followers > 0 ? ((totalOrders / myStore.data().followers) * 100).toFixed(1) : 0;
+
+        document.getElementById('analyticsContent').innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value" style="color:var(--accent);">$${totalRevenue.toFixed(0)}</div><div class="stat-label">Total Revenue</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:var(--success);">${totalOrders}</div><div class="stat-label">Total Orders</div></div>
+                <div class="stat-card"><div class="stat-value">${followers}</div><div class="stat-label">Followers</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:var(--warning);">${conversionRate}%</div><div class="stat-label">Conversion Rate</div></div>
+            </div>
+            <div class="chart-placeholder"><h4>Top Products</h4>${storeProducts.slice(0,5).map(p => `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>${p.name||'Product'}</span><span>${p.totalSales||0} sold</span></div><div class="bar"><div class="bar-fill" style="width:${Math.min(((p.totalSales||0)/Math.max(...storeProducts.map(x=>x.totalSales||0),1))*100,100)}%;"></div></div>`).join('')}</div>
+            <div class="metric-row"><span>Store Views</span><strong>${myStore.data().views||0}</strong></div>
+            <div class="metric-row"><span>Product Clicks</span><strong>${storeProducts.reduce((s,p)=>s+(p.clicks||0),0)}</strong></div>
+            <div class="metric-row"><span>Cart Adds</span><strong>${storeProducts.reduce((s,p)=>s+(p.cartAdds||0),0)}</strong></div>
+            <div class="metric-row"><span>Rating</span><strong>${(myStore.data().rating||0).toFixed(1)} ★</strong></div>
+        `;
+    });
+    </script>
+</body>
+</html>

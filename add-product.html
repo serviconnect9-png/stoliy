@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#6C3CF0">
+    <title>Add Product - Stoliy</title>
+    <link rel="icon" type="image/png" href="app-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg: #F7F7F9; --card: #FFFFFF; --text: #1A1A2E; --text2: #6B7280; --text3: #9CA3AF; --accent: #6C3CF0; --success: #2ECC71; --error: #FF4D4F; --warning: #F4B400; --border: #E5E7EB; --radius: 14px; --radius-sm: 10px; --font: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 40px; }
+        .page-header { padding: 14px 16px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        .btn-back { width: 36px; height: 36px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .btn-draft { padding: 8px 14px; background: #F3F4F6; border: 1px solid var(--border); border-radius: 10px; font-weight: 600; font-size: 12px; cursor: pointer; color: var(--text); }
+        .form-section { padding: 16px; }
+        .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; margin-top: 20px; padding-bottom: 6px; border-bottom: 1px solid #F3F4F6; }
+        .section-title:first-child { margin-top: 0; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 5px; display: block; }
+        .form-sublabel { font-size: 10px; color: var(--text2); margin-top: 2px; }
+        .form-input { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font); background: #fff; color: var(--text); transition: all 0.2s; }
+        .form-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(108,60,240,0.06); }
+        textarea.form-input { resize: vertical; min-height: 80px; }
+        select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; cursor: pointer; background-color: #fff; color: var(--text); }
+        select.form-input option { background: #fff; color: var(--text); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .type-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 16px; }
+        .type-card { background: #fff; border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .type-card:hover { border-color: #D1D5DB; }
+        .type-card.selected { border-color: var(--accent); background: rgba(108,60,240,0.03); }
+        .type-card i { font-size: 28px; color: var(--accent); margin-bottom: 8px; display: block; }
+        .type-card span { font-weight: 600; font-size: 12px; }
+        .photos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .photo-upload-box { aspect-ratio: 1; border: 2px dashed #D1D5DB; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; background: #FAFAFA; position: relative; overflow: hidden; transition: all 0.2s; }
+        .photo-upload-box:hover { border-color: var(--accent); }
+        .photo-upload-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+        .photo-upload-box .placeholder { text-align: center; color: #D1D5DB; z-index: 1; }
+        .photo-upload-box .placeholder i { font-size: 20px; display: block; margin-bottom: 2px; }
+        .photo-upload-box .placeholder span { font-size: 9px; }
+        .photo-upload-box .remove-photo { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none; cursor: pointer; font-size: 9px; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .video-upload-box { border: 2px dashed #D1D5DB; border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; background: #FAFAFA; transition: all 0.2s; margin-bottom: 8px; }
+        .video-upload-box:hover { border-color: var(--accent); }
+        .video-upload-box i { font-size: 24px; color: #D1D5DB; margin-bottom: 4px; display: block; }
+        .video-upload-box span { font-size: 12px; color: var(--text2); display: block; }
+        .video-preview { width: 100%; max-height: 200px; border-radius: 10px; margin-top: 8px; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .toggle-label { font-weight: 600; font-size: 13px; }
+        .toggle-switch { width: 46px; height: 26px; border-radius: 13px; background: #D1D5DB; cursor: pointer; position: relative; transition: background 0.3s; flex-shrink: 0; }
+        .toggle-switch.on { background: var(--success); }
+        .toggle-switch::after { content: ''; width: 22px; height: 22px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+        .toggle-switch.on::after { left: 22px; }
+        .variant-group { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 10px; }
+        .variant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .variant-name { font-weight: 700; font-size: 14px; }
+        .btn-remove-variant { background: var(--error); color: #fff; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 11px; }
+        .btn-add-variant { width: 100%; padding: 12px; background: #fff; border: 2px dashed #D1D5DB; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 13px; color: var(--accent); margin-top: 8px; }
+        .shipping-row { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .shipping-row select { flex: 1; min-width: 100px; }
+        .shipping-row input { width: 70px; min-width: 60px; }
+        .btn-remove-shipping { background: var(--error); color: #fff; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 10px; flex-shrink: 0; }
+        .btn-add-shipping { width: 100%; padding: 10px; background: #fff; border: 2px dashed #D1D5DB; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 12px; color: var(--accent); margin-top: 8px; }
+        .btn-submit { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .btn-submit:active { transform: scale(0.97); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 14px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; max-width: 90%; text-align: center; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #2ECC71; }
+        .toast.error { background: #FF4D4F; }
+        .toast.warning { background: #F4B400; color: #1A1A2E; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="page-header">
+            <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="page-title">Add Product</h2>
+            <button class="btn-draft" onclick="publishProduct('draft')">Save Draft</button>
+        </div>
+        <div class="form-section" id="formContent"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="countries.js"></script>
+
+    <script>
+    (function() {
+        console.log('📦 Add Product - Starting...');
+        try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, storeId, photoFiles={}, videoFile=null, variantCount=1, allCountries=[], productType='physical';
+
+        // ============ GET COUNTRIES IMMEDIATELY ============
+        function loadCountries() {
+            if (typeof countries !== 'undefined' && Array.isArray(countries) && countries.length) { allCountries = countries; return true; }
+            if (typeof window.countries !== 'undefined' && Array.isArray(window.countries) && window.countries.length) { allCountries = window.countries; return true; }
+            if (typeof COUNTRIES !== 'undefined' && Array.isArray(COUNTRIES) && COUNTRIES.length) { allCountries = COUNTRIES; return true; }
+            return false;
+        }
+        loadCountries();
+        setTimeout(loadCountries, 100); setTimeout(loadCountries, 500); setTimeout(loadCountries, 1000); setTimeout(loadCountries, 2000);
+
+        function getCountryOptions(sel) {
+            if (!allCountries.length) return '<option value="">Loading countries...</option>';
+            return '<option value="">Select country</option>' + allCountries.map(function(c) {
+                var f = c.flag||c.emoji||c.flagEmoji||'', n = c.name||c.country||c.countryName||'';
+                return '<option value="' + n + '"' + (sel===n?' selected':'') + '>' + f + ' ' + n + '</option>';
+            }).join('');
+        }
+
+        function showToast(msg, type) {
+            var t = document.querySelector('.toast'); if(t) t.remove();
+            t = document.createElement('div'); t.className = 'toast '+(type||'');
+            t.textContent = msg; document.body.appendChild(t);
+            setTimeout(function(){ t.classList.add('show'); },10);
+            setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); },300); },2500);
+        }
+
+        // ============ CATEGORIES ============
+        function getCategoryOptions() {
+            var cats = CONFIG.categories || [];
+            return '<option value="">Select category</option>' + cats.filter(function(c){return c.name!=='All';}).map(function(c){return '<option value="'+c.name+'">'+c.name+'</option>';}).join('');
+        }
+
+        // ============ RENDER FORM ============
+        function renderForm() {
+            var c = document.getElementById('formContent'), h = '';
+            
+            // Product Type Selection
+            h += '<div class="section-title">Product Type</div>';
+            h += '<div class="type-cards">';
+            h += '<div class="type-card'+(productType==='physical'?' selected':'')+'" onclick="setProductType(\'physical\')"><i class="fas fa-box"></i><span>Physical Product</span></div>';
+            h += '<div class="type-card'+(productType==='digital'?' selected':'')+'" onclick="setProductType(\'digital\')"><i class="fas fa-download"></i><span>Digital Product</span></div>';
+            h += '<div class="type-card'+(productType==='ticket'?' selected':'')+'" onclick="setProductType(\'ticket\')"><i class="fas fa-ticket-alt"></i><span>Ticket/Event</span></div>';
+            h += '<div class="type-card'+(productType==='pod'?' selected':'')+'" onclick="setProductType(\'pod\')"><i class="fas fa-print"></i><span>Print on Demand</span></div>';
+            h += '</div>';
+
+            // Basic Info
+            h += '<div class="section-title">Product Information</div>';
+            h += '<div class="form-group"><label class="form-label">Title *</label><input type="text" class="form-input" id="prodTitle" placeholder="Product name"></div>';
+            h += '<div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="prodDesc" placeholder="Describe your product..."></textarea></div>';
+            
+            // Category
+            h += '<div class="form-group"><label class="form-label">Category *</label><select class="form-input" id="prodCategory">' + getCategoryOptions() + '</select></div>';
+
+            // Photos
+            h += '<div class="section-title">Photos</div><p class="form-sublabel" style="margin-bottom:10px;">First photo is cover image</p>';
+            h += '<div class="photos-grid">';
+            for (var i=0;i<8;i++) {
+                h += '<div class="photo-upload-box'+(i===0?' primary':'')+'" onclick="document.getElementById(\'photoInput'+i+'\').click()" id="photoBox'+i+'"><div class="placeholder"><i class="fas '+(i===0?'fa-camera':'fa-plus')+'"></i><span>'+(i===0?'Cover':'Photo '+(i+1))+'</span></div><input type="file" id="photoInput'+i+'" accept="image/*" style="display:none;" onchange="handlePhoto('+i+',this)"></div>';
+            }
+            h += '</div>';
+
+            // Video
+            h += '<div class="section-title">Video (Optional)</div>';
+            h += '<div class="video-upload-box" onclick="document.getElementById(\'videoInput\').click()" id="videoBox"><i class="fas fa-video"></i><span>Tap to upload video</span><video class="video-preview" id="videoPreview" style="display:none;" controls></video><input type="file" id="videoInput" accept="video/*" style="display:none;" onchange="handleVideo(this)"></div>';
+
+            // Pricing
+            h += '<div class="section-title">Pricing</div>';
+            h += '<div class="form-row"><div class="form-group"><label class="form-label">Price *</label><input type="number" class="form-input" id="prodPrice" placeholder="0.00" step="0.01"></div><div class="form-group"><label class="form-label">Compare-at Price</label><input type="number" class="form-input" id="prodComparePrice" placeholder="0.00" step="0.01"></div></div>';
+
+            // Digital Product Fields
+            if (productType === 'digital') {
+                h += '<div class="section-title">Digital Product</div>';
+                h += '<div class="form-group"><label class="form-label">Download Link / File URL</label><input type="url" class="form-input" id="digitalLink" placeholder="https://... or upload file below"></div>';
+                h += '<div class="form-group"><label class="form-label">Upload File (ZIP, PDF, MP3, etc)</label><input type="file" class="form-input" id="digitalFile" style="padding:10px;"></div>';
+                h += '<div class="form-group"><label class="form-label">License Type</label><select class="form-input" id="digitalLicense"><option value="Personal">Personal License</option><option value="Commercial">Commercial License</option><option value="Extended">Extended License</option></select></div>';
+                h += '<div class="form-row"><div class="form-group"><label class="form-label">Max Downloads</label><input type="number" class="form-input" id="maxDownloads" value="5" min="1"></div><div class="form-group"><label class="form-label">Download Expiry (days)</label><input type="number" class="form-input" id="downloadExpiry" value="30" min="0"><span class="form-sublabel">0 = Never expires</span></div></div>';
+            }
+
+            // Ticket Fields
+            if (productType === 'ticket') {
+                h += '<div class="section-title">Event Details</div>';
+                h += '<div class="form-group"><label class="form-label">Event Type</label><select class="form-input" id="eventType"><option value="Concert">Concert</option><option value="Conference">Conference</option><option value="Workshop">Workshop</option><option value="Sports">Sports</option><option value="Festival">Festival</option><option value="Webinar">Webinar</option><option value="Private">Private Event</option></select></div>';
+                h += '<div class="form-row"><div class="form-group"><label class="form-label">Start Date</label><input type="datetime-local" class="form-input" id="eventStart"></div><div class="form-group"><label class="form-label">End Date</label><input type="datetime-local" class="form-input" id="eventEnd"></div></div>';
+                h += '<div class="form-group"><label class="form-label">Venue / Location</label><input type="text" class="form-input" id="eventVenue" placeholder="Physical address or Online link"></div>';
+                h += '<div class="form-group"><label class="form-label">Ticket Quantity Available</label><input type="number" class="form-input" id="ticketQuantity" value="100" min="1"></div>';
+                h += '<div class="form-group"><label class="form-label">Max Tickets Per Customer</label><input type="number" class="form-input" id="maxPerCustomer" value="5" min="1"></div>';
+            }
+
+            // POD Fields
+            if (productType === 'pod') {
+                h += '<div class="section-title">Print on Demand</div>';
+                h += '<div class="form-group"><label class="form-label">Product Base Type</label><select class="form-input" id="podType"><option value="T-Shirt">T-Shirt</option><option value="Hoodie">Hoodie</option><option value="Sweatshirt">Sweatshirt</option><option value="Mug">Mug</option><option value="Phone Case">Phone Case</option><option value="Tote Bag">Tote Bag</option><option value="Cap">Cap</option><option value="Poster">Poster</option><option value="Canvas">Canvas</option></select></div>';
+                h += '<div class="form-group"><label class="form-label">Base Cost ($)</label><input type="number" class="form-input" id="podBaseCost" placeholder="12.00" step="0.01"></div>';
+                h += '<div class="form-group"><label class="form-label">Available Colors (comma separated)</label><input type="text" class="form-input" id="podColors" placeholder="Black, White, Red, Blue"></div>';
+                h += '<div class="form-group"><label class="form-label">Available Sizes (comma separated)</label><input type="text" class="form-input" id="podSizes" placeholder="S, M, L, XL, 2XL"></div>';
+                h += '<div class="form-group"><label class="form-label">Design Upload</label><input type="file" class="form-input" id="podDesign" style="padding:10px;"></div>';
+            }
+
+            // Inventory (physical only)
+            if (productType === 'physical') {
+                h += '<div class="section-title">Inventory</div>';
+                h += '<div class="form-row"><div class="form-group"><label class="form-label">SKU</label><input type="text" class="form-input" id="prodSKU"></div><div class="form-group"><label class="form-label">Barcode</label><input type="text" class="form-input" id="prodBarcode"></div></div>';
+                h += '<div class="form-group"><label class="form-label">Quantity Available</label><input type="number" class="form-input" id="prodQuantity" value="1" min="0"></div>';
+            }
+
+            // Variants
+            h += '<div class="section-title">Variants</div><div id="variantsContainer"><div class="variant-group"><div class="variant-header"><span class="variant-name">Variant 1</span></div><div class="form-row"><div class="form-group"><label class="form-label">Size/Color/Style</label><input type="text" class="form-input variant-name-input" placeholder="e.g. Small, Red"></div><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input variant-price" step="0.01"></div></div><div class="form-row"><div class="form-group"><label class="form-label">SKU</label><input type="text" class="form-input variant-sku"></div><div class="form-group"><label class="form-label">Qty</label><input type="number" class="form-input variant-qty" value="1"></div></div></div></div>';
+            h += '<button class="btn-add-variant" onclick="addVariant()"><i class="fas fa-plus"></i> Add Variant</button>';
+
+            // Shipping (physical only)
+            if (productType === 'physical' || productType === 'pod') {
+                h += '<div class="section-title">Shipping</div>';
+                h += '<div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" class="form-input" id="prodWeight" placeholder="0.5" step="0.01"></div>';
+                h += '<label class="form-label" style="margin-top:8px;">Shipping Destinations & Rates</label>';
+                h += '<div id="shippingRatesContainer"><div class="shipping-row"><select class="form-input shipping-country" style="padding:10px;min-width:120px;">' + getCountryOptions() + '</select><input type="number" class="form-input shipping-rate" placeholder="Rate $" step="0.01" style="padding:10px;width:70px;"><input type="text" class="form-input shipping-estimate" placeholder="3-7 days" style="padding:10px;width:80px;"></div></div>';
+                h += '<button class="btn-add-shipping" onclick="addShippingRow()"><i class="fas fa-plus"></i> Add Destination</button>';
+            }
+
+            // Organization
+            h += '<div class="section-title">Organization</div>';
+            h += '<div class="form-group"><label class="form-label">Vendor / Brand</label><input type="text" class="form-input" id="prodVendor"></div>';
+            h += '<div class="form-group"><label class="form-label">Tags (comma separated)</label><input type="text" class="form-input" id="prodTags" placeholder="cotton, summer, casual"></div>';
+
+            // Status
+            h += '<div class="section-title">Status</div><select class="form-input" id="prodStatus"><option value="active">Active - Published</option><option value="draft">Draft - Hidden</option></select>';
+
+            // Submit
+            h += '<button class="btn-submit" id="btnSubmit" onclick="publishProduct(\'active\')">Publish Product</button>';
+            c.innerHTML = h;
+        }
+
+        // ============ PRODUCT TYPE ============
+        window.setProductType = function(type) {
+            productType = type;
+            renderForm();
+        };
+
+        // ============ PHOTOS ============
+        window.handlePhoto = function(index, input) {
+            if (!input.files||!input.files[0]) return;
+            var f = input.files[0];
+            if (!f.type.startsWith('image/')) { showToast('Please upload an image','error'); return; }
+            photoFiles[index] = f;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('photoBox'+index).innerHTML = '<img src="'+e.target.result+'"><button class="remove-photo" onclick="event.stopPropagation();removePhoto('+index+')">✕</button>';
+            };
+            reader.readAsDataURL(f);
+        };
+        window.removePhoto = function(index) {
+            delete photoFiles[index];
+            var box = document.getElementById('photoBox'+index);
+            box.innerHTML = '<div class="placeholder"><i class="fas '+(index===0?'fa-camera':'fa-plus')+'"></i><span>'+(index===0?'Cover':'Photo '+(index+1))+'</span></div><input type="file" id="photoInput'+index+'" accept="image/*" style="display:none;" onchange="handlePhoto('+index+',this)">';
+        };
+
+        // ============ VIDEO ============
+        window.handleVideo = function(input) {
+            if (!input.files||!input.files[0]) return;
+            videoFile = input.files[0];
+            var v = document.getElementById('videoPreview');
+            v.src = URL.createObjectURL(videoFile);
+            v.style.display = 'block';
+            var box = document.getElementById('videoBox');
+            box.querySelector('i').style.display = 'none';
+            box.querySelectorAll('span').forEach(function(s){s.style.display='none';});
+        };
+
+        // ============ SHIPPING ============
+        window.addShippingRow = function() {
+            var div = document.createElement('div');
+            div.className = 'shipping-row';
+            div.innerHTML = '<select class="form-input shipping-country" style="padding:10px;min-width:120px;">'+getCountryOptions()+'</select><input type="number" class="form-input shipping-rate" placeholder="Rate $" step="0.01" style="padding:10px;width:70px;"><input type="text" class="form-input shipping-estimate" placeholder="3-7 days" style="padding:10px;width:80px;"><button class="btn-remove-shipping" onclick="this.closest(\'.shipping-row\').remove()">✕</button>';
+            document.getElementById('shippingRatesContainer').appendChild(div);
+        };
+
+        // ============ VARIANTS ============
+        window.addVariant = function() {
+            variantCount++;
+            var div = document.createElement('div');
+            div.className = 'variant-group';
+            div.innerHTML = '<div class="variant-header"><span class="variant-name">Variant '+variantCount+'</span><button class="btn-remove-variant" onclick="this.closest(\'.variant-group\').remove()">✕</button></div><div class="form-row"><div class="form-group"><label class="form-label">Size/Color</label><input type="text" class="form-input variant-name-input"></div><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input variant-price" step="0.01"></div></div><div class="form-row"><div class="form-group"><label class="form-label">SKU</label><input type="text" class="form-input variant-sku"></div><div class="form-group"><label class="form-label">Qty</label><input type="number" class="form-input variant-qty" value="1"></div></div>';
+            document.getElementById('variantsContainer').appendChild(div);
+        };
+
+        // ============ CLOUDINARY UPLOAD ============
+        async function uploadFile(file, folder) {
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', CONFIG.cloudinaryPreset||'connect');
+            fd.append('folder', folder);
+            var cn = CONFIG.cloudinaryCloudName||'serviconnect';
+            var res = await fetch('https://api.cloudinary.com/v1_1/'+cn+'/auto/upload', {method:'POST',body:fd});
+            var data = await res.json();
+            if (data.secure_url) return data.secure_url;
+            throw new Error(data.error?.message||'Upload failed');
+        }
+
+        // ============ PUBLISH ============
+        window.publishProduct = async function(status) {
+            var btn = document.getElementById('btnSubmit');
+            var title = document.getElementById('prodTitle').value.trim();
+            var category = document.getElementById('prodCategory').value;
+            var price = parseFloat(document.getElementById('prodPrice').value)||0;
+
+            if (!title) { showToast('Product title is required','warning'); return; }
+            if (!category) { showToast('Please select a category','warning'); return; }
+            if (price <= 0 && status === 'active') { showToast('Price is required for publishing','warning'); return; }
+            if (Object.keys(photoFiles).length === 0) { showToast('Please upload at least one photo','warning'); return; }
+
+            var orig = btn.textContent;
+            btn.textContent = 'Uploading...'; btn.disabled = true;
+
+            try {
+                // Upload photos
+                var imageUrls = [];
+                var keys = Object.keys(photoFiles).sort(function(a,b){return parseInt(a)-parseInt(b);});
+                for (var i=0;i<keys.length;i++) {
+                    btn.textContent = 'Photo '+(parseInt(keys[i])+1)+'...';
+                    var url = await uploadFile(photoFiles[keys[i]], 'products/'+storeId);
+                    if (url) imageUrls.push(url);
+                }
+
+                // Upload video
+                var videoUrl = null;
+                if (videoFile) {
+                    btn.textContent = 'Video...';
+                    videoUrl = await uploadFile(videoFile, 'products/'+storeId+'/videos');
+                }
+
+                // Upload digital file
+                var digitalFileUrl = null;
+                var digitalFileInput = document.getElementById('digitalFile');
+                if (digitalFileInput && digitalFileInput.files[0]) {
+                    btn.textContent = 'Uploading file...';
+                    digitalFileUrl = await uploadFile(digitalFileInput.files[0], 'products/'+storeId+'/files');
+                }
+
+                // Upload POD design
+                var podDesignUrl = null;
+                var podDesignInput = document.getElementById('podDesign');
+                if (podDesignInput && podDesignInput.files[0]) {
+                    btn.textContent = 'Uploading design...';
+                    podDesignUrl = await uploadFile(podDesignInput.files[0], 'products/'+storeId+'/designs');
+                }
+
+                btn.textContent = 'Saving...';
+
+                // Variants
+                var variants = [];
+                document.querySelectorAll('.variant-group').forEach(function(g) {
+                    var n = g.querySelector('.variant-name-input')?.value?.trim();
+                    if (n) variants.push({
+                        name: n,
+                        price: parseFloat(g.querySelector('.variant-price')?.value)||price,
+                        sku: g.querySelector('.variant-sku')?.value?.trim()||'',
+                        quantity: parseInt(g.querySelector('.variant-qty')?.value)||0
+                    });
+                });
+
+                // Shipping rates
+                var shippingRates = [];
+                document.querySelectorAll('.shipping-row').forEach(function(r) {
+                    var c = r.querySelector('.shipping-country')?.value;
+                    var rate = parseFloat(r.querySelector('.shipping-rate')?.value)||0;
+                    var est = r.querySelector('.shipping-estimate')?.value?.trim();
+                    if (c && rate > 0) shippingRates.push({country:c,rate:rate,estimatedDelivery:est||'3-7 days'});
+                });
+
+                // Build product data
+                var data = {
+                    storeId: storeId,
+                    productType: productType,
+                    name: title,
+                    description: document.getElementById('prodDesc').value.trim(),
+                    category: category,
+                    price: price,
+                    originalPrice: parseFloat(document.getElementById('prodComparePrice').value)||price,
+                    images: imageUrls,
+                    video: videoUrl,
+                    vendor: document.getElementById('prodVendor')?.value?.trim()||'',
+                    tags: (document.getElementById('prodTags')?.value||'').split(',').map(function(t){return t.trim();}).filter(Boolean),
+                    variants: variants,
+                    shippingRates: shippingRates,
+                    status: status==='active'?'active':'draft',
+                    active: status==='active',
+                    sponsored: false, rating: 0, totalReviews: 0, totalSales: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // Physical
+                if (productType === 'physical') {
+                    data.sku = document.getElementById('prodSKU')?.value?.trim()||'';
+                    data.barcode = document.getElementById('prodBarcode')?.value?.trim()||'';
+                    data.stockQuantity = parseInt(document.getElementById('prodQuantity')?.value)||0;
+                    data.inStock = data.stockQuantity > 0;
+                    data.isPhysical = true;
+                    data.weight = parseFloat(document.getElementById('prodWeight')?.value)||null;
+                }
+
+                // Digital
+                if (productType === 'digital') {
+                    data.isPhysical = false;
+                    data.digitalLink = document.getElementById('digitalLink')?.value?.trim()||'';
+                    data.downloadUrl = digitalFileUrl || data.digitalLink;
+                    data.license = document.getElementById('digitalLicense')?.value||'Personal';
+                    data.maxDownloads = parseInt(document.getElementById('maxDownloads')?.value)||5;
+                    data.downloadExpiry = parseInt(document.getElementById('downloadExpiry')?.value)||30;
+                }
+
+                // Ticket
+                if (productType === 'ticket') {
+                    data.isPhysical = false;
+                    data.eventType = document.getElementById('eventType')?.value||'';
+                    data.eventStart = document.getElementById('eventStart')?.value||null;
+                    data.eventEnd = document.getElementById('eventEnd')?.value||null;
+                    data.eventVenue = document.getElementById('eventVenue')?.value?.trim()||'';
+                    data.ticketQuantity = parseInt(document.getElementById('ticketQuantity')?.value)||100;
+                    data.maxPerCustomer = parseInt(document.getElementById('maxPerCustomer')?.value)||5;
+                    data.stockQuantity = data.ticketQuantity;
+                }
+
+                // POD
+                if (productType === 'pod') {
+                    data.isPhysical = true;
+                    data.podType = document.getElementById('podType')?.value||'T-Shirt';
+                    data.podBaseCost = parseFloat(document.getElementById('podBaseCost')?.value)||0;
+                    data.podColors = (document.getElementById('podColors')?.value||'').split(',').map(function(c){return c.trim();}).filter(Boolean);
+                    data.podSizes = (document.getElementById('podSizes')?.value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+                    data.podDesignUrl = podDesignUrl;
+                    data.isPOD = true;
+                }
+
+                await db.collection('products').add(data);
+                await db.collection('stores').doc(storeId).update({totalProducts: firebase.firestore.FieldValue.increment(1)});
+                
+                showToast(status==='active'?'✅ Product Published!':'📝 Draft Saved!','success');
+                setTimeout(function(){ window.location.href = 'manage-products.html'; }, 1200);
+            } catch(e) {
+                console.error('Error:',e);
+                showToast('Error: '+(e.message||'Failed to save'),'error');
+                btn.textContent = orig; btn.disabled = false;
+            }
+        };
+
+        // ============ AUTH ============
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            var allStores = await db.collection('stores').get();
+            var myStore = allStores.docs.find(function(d){return d.data().ownerId===user.uid;});
+            if (!myStore) { showToast('Create a store first','warning'); setTimeout(function(){window.location.href='wizard.html';},1500); return; }
+            storeId = myStore.id;
+            renderForm();
+        });
+
+        console.log('✅ Add Product ready');
+    })();
+    </script>
+</body>
+</html>
