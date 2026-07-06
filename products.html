@@ -124,7 +124,6 @@
         <div class="loading-wrap"><div class="spinner"></div></div>
     </div>
 
-    <!-- Review Modal -->
     <div class="modal-overlay" id="reviewModal">
         <div class="modal-sheet">
             <div class="modal-title">Write a Review</div>
@@ -135,7 +134,7 @@
                 <i class="fas fa-star" onclick="setRating(4)"></i>
                 <i class="fas fa-star" onclick="setRating(5)"></i>
             </div>
-            <div style="margin-bottom:12px;"><textarea class="form-input" id="reviewComment" placeholder="Share your experience with this product..." rows="3"></textarea></div>
+            <div style="margin-bottom:12px;"><textarea class="form-input" id="reviewComment" placeholder="Share your experience..." rows="3"></textarea></div>
             <div style="margin-bottom:8px;font-size:11px;color:var(--text2);">Add Photos (Optional)</div>
             <input type="file" id="reviewImages" accept="image/*" multiple style="margin-bottom:8px;">
             <div style="margin-bottom:8px;font-size:11px;color:var(--text2);">Add Video (Optional)</div>
@@ -229,6 +228,7 @@
             }
         }
 
+        // ============ PRODUCT LOADER (SLUG + ID SUPPORT) ============
         async function loadProduct(){
             document.getElementById('appRoot').innerHTML='<div class="loading-wrap"><div class="spinner"></div></div>';
             
@@ -239,28 +239,54 @@
             },8000);
 
             try{
-                if(productSlug&&!productId){
-                    var allProducts=await db.collection('products').get();
-                    var found=allProducts.docs.find(function(d){var p=d.data();var slug=p.slug||(p.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');return slug===productSlug;});
-                    if(found){productId=found.id;}else{throw new Error('not found');}
+                // If slug provided (clean URL), find product by slug
+                if(productSlug && !productId){
+                    console.log('🔍 Looking up product by slug:', productSlug);
+                    var allProducts = await db.collection('products').get();
+                    var found = null;
+                    
+                    allProducts.docs.forEach(function(d){
+                        var p = d.data();
+                        var generatedSlug = (p.name || '').toLowerCase()
+                            .replace(/[^a-z0-9\s-]/g, '')
+                            .replace(/\s+/g, '-')
+                            .replace(/-+/g, '-')
+                            .replace(/^-|-$/g, '');
+                        var storedSlug = (p.slug || '').toLowerCase();
+                        
+                        if(generatedSlug === productSlug || storedSlug === productSlug){
+                            found = d;
+                        }
+                    });
+                    
+                    if(found){
+                        productId = found.id;
+                        console.log('✅ Found product by slug:', productId);
+                    } else {
+                        clearTimeout(timeout);
+                        showError('Product Not Found');
+                        return;
+                    }
                 }
 
-                var doc=await db.collection('products').doc(productId).get();
+                var doc = await db.collection('products').doc(productId).get();
                 if(!doc.exists){clearTimeout(timeout);showError('Product Not Found');return;}
-                productData={id:doc.id,...doc.data()};
+                productData = {id: doc.id, ...doc.data()};
                 clearTimeout(timeout);
+                console.log('✅ Product loaded:', productData.name);
 
                 if(productData.storeId){
-                    var storeDoc=await db.collection('stores').doc(productData.storeId).get();
-                    if(storeDoc.exists) storeData={id:storeDoc.id,...storeDoc.data()};
+                    var storeDoc = await db.collection('stores').doc(productData.storeId).get();
+                    if(storeDoc.exists) storeData = {id: storeDoc.id, ...storeDoc.data()};
                 }
 
-                var allReviews=await db.collection('reviews').get();
-                var reviews=allReviews.docs.map(function(d){return d.data();}).filter(function(r){return r.productId===productId;});
+                var allReviews = await db.collection('reviews').get();
+                var reviews = allReviews.docs.map(function(d){return d.data();}).filter(function(r){return r.productId===productId;});
 
                 renderProduct(reviews);
-            }catch(e){
+            } catch(e) {
                 clearTimeout(timeout);
+                console.error('Product load error:', e);
                 showError('Error loading product');
             }
         }
@@ -432,7 +458,7 @@
         };
 
         window.shareProduct = function() {
-            var slug = productData?.slug || (productData?.name || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            var slug = productData?.slug || (productData?.name || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
             var url = window.location.origin + '/product/' + slug;
             var storedAff = localStorage.getItem('stoliy_affiliate');
             if (storedAff) { try { var aff = JSON.parse(storedAff); if (Date.now() < aff.expiry) url += '?ref=' + aff.id; } catch(e) {} }
@@ -453,7 +479,6 @@
 
         window.buyNow = async function() { await window.addToCart(); window.location.href = 'cart.html'; };
 
-        // ============ REVIEW SYSTEM ============
         window.setRating = function(rating) {
             reviewRating = rating;
             var stars = document.querySelectorAll('#starRating i');
