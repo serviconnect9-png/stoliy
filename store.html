@@ -15,26 +15,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
         button, a { font-family: var(--font); outline: none; cursor: pointer; text-decoration: none; color: inherit; }
-        button:focus, a:focus { outline: none !important; box-shadow: none !important; }
-        button:active { transform: scale(0.96); }
         .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
-        
-        /* WELCOME LOADER */
-        .welcome-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #fff; padding: 40px; text-align: center; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .welcome-loader .store-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent); margin-bottom: 20px; box-shadow: 0 8px 32px rgba(108,60,240,0.2); animation: popIn 0.5s ease; }
-        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .welcome-loader h2 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-        .welcome-loader .welcome-subtitle { font-size: 13px; color: var(--text2); margin-bottom: 32px; }
-        .progress-wrap { width: 100%; max-width: 280px; }
-        .progress-bar-bg { width: 100%; height: 6px; border-radius: 3px; background: #E5E7EB; overflow: hidden; margin-bottom: 8px; }
-        .progress-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), #A78BFA); width: 0%; transition: width 0.3s ease; }
-        .progress-text { font-size: 12px; color: var(--accent); font-weight: 700; display: flex; justify-content: space-between; }
-        .progress-status { font-size: 11px; color: var(--text2); margin-top: 4px; }
-        .welcome-loader .store-stats-preview { display: flex; gap: 16px; margin-top: 24px; }
-        .welcome-loader .stat-preview { text-align: center; }
-        .welcome-loader .stat-preview .val { font-size: 18px; font-weight: 800; color: var(--accent); }
-        .welcome-loader .stat-preview .lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; }
         
         .top-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #fff; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); }
         .btn-back { width: 34px; height: 34px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text); }
@@ -67,6 +48,9 @@
         .tabs::-webkit-scrollbar { display: none; }
         .tab { padding: 10px 16px; border: none; background: none; font-weight: 600; font-size: 12px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; white-space: nowrap; font-family: var(--font); transition: var(--transition); }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab:hover { color: var(--text); }
+        .tab .flash-dot { color: var(--error); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         
         .tab-content { padding: 16px; min-height: 200px; }
         
@@ -78,8 +62,17 @@
         .product-card .card-body { padding: 10px 12px; }
         .product-card .card-name { font-weight: 600; font-size: 12px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
         .product-card .card-price { font-weight: 700; font-size: 15px; color: var(--success); }
+        .product-card .card-original { font-size: 11px; color: var(--text3); text-decoration: line-through; margin-left: 4px; }
         .discount-badge { position: absolute; top: 6px; left: 6px; background: var(--error); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
-        .ticket-badge { position: absolute; top: 6px; right: 6px; background: var(--accent); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; display: flex; align-items: center; gap: 3px; }
+        .flash-badge { position: absolute; top: 6px; right: 6px; background: var(--warning); color: #1A1A2E; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; animation: pulse 1s infinite; display: flex; align-items: center; gap: 3px; }
+        
+        .ticket-card-h { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: var(--transition); margin-bottom: 10px; }
+        .ticket-card-h:hover { border-color: #D1D5DB; transform: translateY(-1px); }
+        .ticket-card-banner { width: 100%; height: 100px; object-fit: cover; background: linear-gradient(135deg,#6C3CF0,#4A1FB8); }
+        .ticket-card-body { padding: 14px; }
+        .ticket-card-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .ticket-card-meta { font-size: 11px; color: var(--text2); display: flex; gap: 12px; flex-wrap: wrap; }
+        .ticket-card-price { font-weight: 800; font-size: 16px; color: var(--accent); margin-top: 6px; }
         
         .about-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
         .about-card h4 { font-weight: 700; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -90,6 +83,18 @@
         .info-row span:first-child { color: var(--text2); }
         .info-row span:last-child { font-weight: 600; }
         
+        .social-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+        .social-link { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; cursor: pointer; transition: var(--transition); }
+        .social-link:hover { transform: scale(1.1); }
+        .social-link.instagram { background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737); }
+        .social-link.facebook { background: #1877F2; }
+        .social-link.x { background: #000; }
+        .social-link.tiktok { background: #000; }
+        .social-link.youtube { background: #FF0000; }
+        .social-link.whatsapp { background: #25D366; }
+        .social-link.telegram { background: #0088cc; }
+        .social-link.website { background: var(--accent); }
+        
         .review-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 8px; }
         .review-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
         .review-name { font-weight: 600; font-size: 13px; }
@@ -97,12 +102,12 @@
         .review-stars { color: var(--warning); font-size: 11px; margin-bottom: 4px; }
         .review-text { font-size: 12px; color: var(--text2); line-height: 1.5; }
         
-        .event-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: var(--transition); }
-        .event-card:hover { transform: translateY(-2px); }
-        .event-card .event-banner { width: 100%; height: 100px; object-fit: cover; background: linear-gradient(135deg,#6C3CF0,#4A1FB8); }
-        .event-card .event-body { padding: 10px 12px; }
-        .event-card .event-name { font-weight: 600; font-size: 13px; }
-        .event-card .event-date { font-size: 10px; color: var(--text2); }
+        .promo-card { background: linear-gradient(135deg, var(--accent), #FF4D4F); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; color: #fff; cursor: pointer; transition: var(--transition); }
+        .promo-card:hover { transform: translateY(-2px); }
+        .promo-card .promo-title { font-weight: 800; font-size: 16px; }
+        .promo-card .promo-discount { font-size: 28px; font-weight: 800; }
+        .promo-card .promo-code { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 6px; font-size: 12px; font-family: monospace; display: inline-block; margin-top: 4px; }
+        .promo-card .promo-ends { font-size: 10px; opacity: 0.8; margin-top: 4px; }
         
         .followers-modal, .share-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; align-items: flex-end; justify-content: center; }
         .followers-modal.show, .share-modal.show { display: flex; }
@@ -114,20 +119,22 @@
         
         .share-options { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; padding: 10px 0; }
         .share-option { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; padding: 12px 8px; border-radius: 12px; transition: var(--transition); }
-        .share-option:active { background: #F3F4F6; }
+        .share-option:active { background: #F3F4F6; transform: scale(0.95); }
         .share-option .share-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; }
         .share-option span { font-size: 10px; font-weight: 600; color: var(--text2); }
         .share-icon.whatsapp { background: #25D366; }
         .share-icon.facebook { background: #1877F2; }
         .share-icon.x { background: #000; }
         .share-icon.telegram { background: #0088cc; }
+        .share-icon.instagram { background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737); }
         .share-icon.email { background: #EA4335; }
         .share-icon.copy { background: var(--accent); }
         .share-icon.messenger { background: #00B2FF; }
         
         .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
         .empty-state i { font-size: 40px; opacity: 0.3; margin-bottom: 8px; display: block; }
-        
+        .empty-state p { font-size: 13px; }
+
         .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 12px 20px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; }
         .toast.show { transform: translateX(-50%) translateY(0); }
         .toast.success { background: #2ECC71; }
@@ -140,18 +147,9 @@
 </head>
 <body>
     <div class="app-container" id="appRoot">
-        <!-- WELCOME LOADER -->
-        <div class="welcome-loader" id="welcomeLoader">
-            <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6C3CF0,#A78BFA);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 32px rgba(108,60,240,0.2);animation:popIn 0.5s ease;">
-                <i class="fas fa-store" style="font-size:32px;color:#fff;"></i>
-            </div>
-            <h2>Welcome to <span id="loaderStoreName">...</span></h2>
-            <p class="welcome-subtitle" id="loaderStoreDesc">Opening store...</p>
-            <div class="progress-wrap">
-                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
-                <div class="progress-text"><span id="progressPercent">0%</span><span>100%</span></div>
-                <div class="progress-status" id="progressStatus">Loading store data...</div>
-            </div>
+        <div style="text-align:center;padding:60px;color:var(--text3);">
+            <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+            <span id="loadingText">Loading store...</span>
         </div>
     </div>
 
@@ -186,60 +184,32 @@
         try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
         var auth = firebase.auth(), db = firebase.firestore();
         var params = new URLSearchParams(window.location.search);
-        var storeId = params.get('id'), storeSlug = params.get('slug');
-        var currentUser, userData, storeData, products=[], reviews=[], events=[], followersList=[], isFollowing=false, currentTab='products';
-        var BASE_URL = window.location.origin;
-        var progressInterval;
+        var storeId = params.get('id');
+        var storeSlug = params.get('slug');
+        var currentUser, userData, storeData, products=[], reviews=[], events=[], followersList=[], isFollowing=false, currentTab='products', storeUrl='', flashSales=[], discountCodes=[];
 
         function showToast(msg, type) {
             var t = document.querySelector('.toast'); if(t) t.remove();
-            t = document.createElement('div'); t.className = 'toast ' + (type || '');
-            t.textContent = msg; document.body.appendChild(t);
-            setTimeout(function(){ t.classList.add('show'); }, 10);
+            t = document.createElement('div'); t.className = 'toast ' + (type||''); t.textContent = msg;
+            document.body.appendChild(t); setTimeout(function(){ t.classList.add('show'); }, 10);
             setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 2000);
         }
 
-        // ============ PROGRESS LOADER ============
-        function startLoader(storeName) {
-            document.getElementById('loaderStoreName').textContent = storeName || 'Store';
-            var fill = document.getElementById('progressFill');
-            var percent = document.getElementById('progressPercent');
-            var status = document.getElementById('progressStatus');
-            var progress = 0;
-            
-            var stages = ['Loading store data...', 'Fetching products...', 'Loading reviews...', 'Almost ready...', 'Opening store! 🎉'];
-            var stageIndex = 0;
-            
-            progressInterval = setInterval(function() {
-                progress += Math.floor(Math.random() * 8) + 3;
-                if (progress > 100) progress = 100;
-                
-                fill.style.width = progress + '%';
-                percent.textContent = progress + '%';
-                
-                var newStage = Math.floor(progress / 25);
-                if (newStage > stageIndex && newStage < stages.length) {
-                    stageIndex = newStage;
-                    status.textContent = stages[stageIndex];
-                }
-                
-                if (progress >= 100) {
-                    clearInterval(progressInterval);
-                    status.textContent = 'Opening store! 🎉';
-                }
-            }, 150);
-        }
+        // Load store immediately - don't wait for auth
+        loadStore();
 
-        function finishLoader() {
-            clearInterval(progressInterval);
-            var fill = document.getElementById('progressFill');
-            fill.style.width = '100%';
-            document.getElementById('progressPercent').textContent = '100%';
-            document.getElementById('progressStatus').textContent = 'Opening store! 🎉';
-        }
+        auth.onAuthStateChanged(async function(user) {
+            currentUser = user;
+            if (user) {
+                var uDoc = await db.collection('users').doc(user.uid).get();
+                userData = uDoc.exists ? uDoc.data() : {};
+                isFollowing = userData ? (userData.following || []).includes(storeId) : false;
+                updateFollowButton();
+            }
+        });
 
         async function resolveStoreId() {
-            if (storeId) return true;
+            if (storeId) return storeId;
             if (storeSlug) {
                 var allStores = await db.collection('stores').get();
                 var found = allStores.docs.find(function(d) {
@@ -247,148 +217,160 @@
                     var slug = s.slug || (s.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
                     return slug === storeSlug;
                 });
-                if (found) { storeId = found.id; return true; }
+                if (found) { storeId = found.id; return storeId; }
             }
-            return false;
+            return null;
         }
 
-        auth.onAuthStateChanged(async function(user) {
-            currentUser = user;
-            if (user) {
-                var uDoc = await db.collection('users').doc(user.uid).get();
-                userData = uDoc.exists ? uDoc.data() : {};
-            }
+        async function loadStore() {
+            document.getElementById('loadingText').textContent = 'Finding store...';
             
-            var resolved = await resolveStoreId();
-            if (!resolved) {
-                document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px 20px;"><i class="fas fa-store-slash" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;color:var(--text3);"></i><h3>Store Not Found</h3><p style="color:var(--text2);margin-top:4px;">Invalid store link</p></div>';
+            var resolvedId = await resolveStoreId();
+            if (!resolvedId) {
+                document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px;"><i class="fas fa-store-slash" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;color:var(--text3);"></i><h3>Store Not Found</h3><p style="color:var(--text2);">This store doesn\'t exist or has been removed.</p><button onclick="history.back()" style="margin-top:16px;padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Go Back</button></div>';
                 return;
             }
-            
-            // Start loader immediately
-            startLoader('...');
-            await loadStore();
-        });
 
-        async function loadStore() {
+            document.getElementById('loadingText').textContent = 'Loading store data...';
+            
+            // Set a 5-second timeout to show partial content
+            var timeoutReached = false;
+            setTimeout(function() {
+                if (!storeData) {
+                    timeoutReached = true;
+                    document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:60px;">' +
+                        '<i class="fas fa-clock" style="font-size:40px;opacity:0.2;display:block;margin-bottom:12px;color:var(--text3);"></i>' +
+                        '<h3>Taking a moment...</h3><p style="color:var(--text2);font-size:13px;">Still loading store data</p>' +
+                        '<button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Retry</button></div>';
+                }
+            }, 5000);
+
             try {
+                // Load store document FIRST
                 var storeDoc = await db.collection('stores').doc(storeId).get();
+                
                 if (!storeDoc.exists) {
-                    document.getElementById('appRoot').innerHTML = '<div class="empty-state" style="padding:80px;"><i class="fas fa-store-slash"></i><h3>Store not found</h3></div>';
+                    document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px;"><i class="fas fa-store-slash" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;color:var(--text3);"></i><h3>Store Not Found</h3></div>';
                     return;
                 }
+                
                 storeData = { id: storeDoc.id, ...storeDoc.data() };
-                isFollowing = userData ? (userData.following || []).includes(storeId) : false;
                 
-                // Update loader with store name
-                document.getElementById('loaderStoreName').textContent = storeData.name || 'Store';
-                document.getElementById('loaderStoreDesc').textContent = storeData.category || 'Opening store...';
+                // RENDER BASIC STORE IMMEDIATELY
+                if (!timeoutReached) renderStoreBasic();
                 
-                var [prodSnap, revSnap, eventSnap, usersSnap] = await Promise.all([
-                    db.collection('products').get(),
-                    db.collection('reviews').get(),
-                    db.collection('events').get(),
-                    db.collection('users').get()
-                ]);
+                // Load all other data
+                var allProducts = await db.collection('products').get();
+                products = allProducts.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(p) { return p.storeId === storeId && p.active !== false; });
                 
-                products = prodSnap.docs.map(function(d){return{id:d.id,...d.data()};}).filter(function(p){return p.storeId===storeId&&p.active!==false;});
-                reviews = revSnap.docs.map(function(d){return d.data();}).filter(function(r){return r.storeId===storeId;});
-                events = eventSnap.docs.map(function(d){return{id:d.id,...d.data()};}).filter(function(e){return e.storeId===storeId&&e.status==='published';});
-                followersList = usersSnap.docs.map(function(d){return d.data();}).filter(function(u){return(u.following||[]).includes(storeId);});
+                var allReviews = await db.collection('reviews').get();
+                reviews = allReviews.docs.map(function(d) { return d.data(); }).filter(function(r) { return r.storeId === storeId; });
                 
-                finishLoader();
+                var allUsers = await db.collection('users').get();
+                followersList = allUsers.docs.map(function(d) { return d.data(); }).filter(function(u) { return (u.following || []).includes(storeId); });
                 
-                // Short delay to show 100% then render
-                setTimeout(function() { renderStore(); }, 400);
+                var allEvents = await db.collection('events').get();
+                events = allEvents.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(e) { return e.storeId === storeId && e.status === 'published'; });
+                
+                var allFlash = await db.collection('flashSales').get();
+                flashSales = allFlash.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(f) { return f.storeId === storeId && f.active; });
+                
+                var allDisc = await db.collection('discountCodes').get();
+                discountCodes = allDisc.docs.map(function(d) { return { id: d.id, ...d.data() }; }).filter(function(d) { return d.storeId === storeId && d.active; });
+                
+                // Render full store
+                if (!timeoutReached) renderStore();
+                
             } catch(e) {
-                document.getElementById('appRoot').innerHTML = '<div class="empty-state" style="padding:80px;"><i class="fas fa-exclamation-triangle"></i><h3>Error loading store</h3></div>';
+                console.error('Store load error:', e);
+                if (!timeoutReached) {
+                    document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:60px;"><i class="fas fa-exclamation-triangle" style="font-size:40px;opacity:0.2;display:block;margin-bottom:12px;color:var(--error);"></i><h3>Error loading store</h3><button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Retry</button></div>';
+                }
             }
+        }
+
+        function renderStoreBasic() {
+            var s = storeData;
+            document.getElementById('appRoot').innerHTML = 
+                '<div class="top-bar"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><span class="top-bar-title">' + (s.name || 'Store') + '</span><button class="btn-back" onclick="openShareModal()"><i class="fas fa-share-alt"></i></button></div>' +
+                (s.banner ? '<img src="' + s.banner + '" class="store-banner" onerror="this.style.display=\'none\';">' : '<div class="store-banner-placeholder"><i class="fas fa-store"></i></div>') +
+                '<div class="store-info"><img src="' + (s.logo || 'https://via.placeholder.com/70') + '" class="store-logo" onerror="this.src=\'https://via.placeholder.com/70\'"><div class="store-info-text"><div class="store-name">' + (s.name || 'Store') + (s.verified ? ' <i class="fas fa-check-circle verified-icon"></i>' : '') + '</div><div class="store-category"><i class="fas fa-tag"></i> ' + (s.category || 'Store') + '</div></div></div>' +
+                '<div class="action-row"><button class="btn-action btn-follow" onclick="toggleFollow()" id="followBtn"><i class="fas fa-user-plus"></i> Follow</button><button class="btn-action" onclick="openChatWithOwner()"><i class="fas fa-comment-dots"></i> Chat</button><button class="btn-action" onclick="openShareModal()"><i class="fas fa-share-alt"></i> Share</button></div>' +
+                '<div style="text-align:center;padding:30px;color:var(--text3);"><i class="fas fa-spinner fa-spin"></i> Loading products...</div>';
         }
 
         function renderStore() {
-            var s = storeData, followersCount = followersList.length, storeRating = (s.rating||0).toFixed(1);
+            var s = storeData;
+            var followersCount = followersList.length;
+            var storeRating = (s.rating || 0).toFixed(1);
+            var hasPromo = flashSales.length > 0 || discountCodes.length > 0;
             
             document.getElementById('appRoot').innerHTML = 
-                '<div class="top-bar"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><span class="top-bar-title">' + (s.name||'Store') + '</span><button class="btn-back" onclick="openShareModal()"><i class="fas fa-share-alt"></i></button></div>' +
-                (s.banner ? '<img src="' + s.banner + '" class="store-banner" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' : '') +
-                (!s.banner ? '<div class="store-banner-placeholder"><i class="fas fa-store"></i></div>' : '<div class="store-banner-placeholder" style="display:none;"><i class="fas fa-store"></i></div>') +
-                '<div class="store-info"><img src="' + (s.logo||'https://via.placeholder.com/70') + '" class="store-logo" onerror="this.src=\'https://via.placeholder.com/70\'"><div class="store-info-text"><div class="store-name">' + (s.name||'Store') + (s.verified?' <i class="fas fa-check-circle verified-icon"></i>':'') + '</div><div class="store-category"><i class="fas fa-tag"></i> ' + (s.category||'General Store') + '</div></div></div>' +
-                '<div class="action-row">' +
-                    '<button class="btn-action btn-follow ' + (isFollowing?'following':'') + '" onclick="toggleFollow()" id="followBtn"><i class="fas ' + (isFollowing?'fa-user-check':'fa-user-plus') + '"></i> ' + (isFollowing?'Following':'Follow') + '</button>' +
-                    '<button class="btn-action" onclick="openStoreChat()"><i class="fas fa-comment-dots"></i> Chat</button>' +
-                    '<button class="btn-action" onclick="openShareModal()"><i class="fas fa-share-alt"></i> Share</button>' +
-                '</div>' +
-                '<div class="stats-row">' +
-                    '<div class="stat-box" onclick="showFollowers()"><div class="stat-num">' + followersCount + '</div><div class="stat-lbl">Followers</div></div>' +
-                    '<div class="stat-box"><div class="stat-num">' + storeRating + ' <i class="fas fa-star" style="color:#F4B400;font-size:10px;"></i></div><div class="stat-lbl">Rating</div></div>' +
-                    '<div class="stat-box"><div class="stat-num">' + reviews.length + '</div><div class="stat-lbl">Reviews</div></div>' +
-                    '<div class="stat-box"><div class="stat-num">' + (products.length + events.length) + '</div><div class="stat-lbl">Items</div></div>' +
-                '</div>' +
-                '<div class="tabs">' +
-                    '<button class="tab active" onclick="switchTab(\'products\',this)"><i class="fas fa-box"></i> Products</button>' +
-                    '<button class="tab" onclick="switchTab(\'events\',this)"><i class="fas fa-ticket-alt"></i> Tickets</button>' +
-                    '<button class="tab" onclick="switchTab(\'reviews\',this)"><i class="fas fa-star"></i> Reviews</button>' +
-                    '<button class="tab" onclick="switchTab(\'about\',this)"><i class="fas fa-info-circle"></i> About</button>' +
-                '</div>' +
+                '<div class="top-bar"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><span class="top-bar-title">' + (s.name || 'Store') + '</span><button class="btn-back" onclick="openShareModal()"><i class="fas fa-share-alt"></i></button></div>' +
+                (s.banner ? '<img src="' + s.banner + '" class="store-banner" onerror="this.style.display=\'none\';">' : '<div class="store-banner-placeholder"><i class="fas fa-store"></i></div>') +
+                '<div class="store-info"><img src="' + (s.logo || 'https://via.placeholder.com/70') + '" class="store-logo" onerror="this.src=\'https://via.placeholder.com/70\'"><div class="store-info-text"><div class="store-name">' + (s.name || 'Store') + (s.verified ? ' <i class="fas fa-check-circle verified-icon"></i>' : '') + '</div><div class="store-category"><i class="fas fa-tag"></i> ' + (s.category || 'Store') + '</div></div></div>' +
+                '<div class="action-row"><button class="btn-action btn-follow ' + (isFollowing ? 'following' : '') + '" onclick="toggleFollow()" id="followBtn"><i class="fas ' + (isFollowing ? 'fa-user-check' : 'fa-user-plus') + '"></i> ' + (isFollowing ? 'Following' : 'Follow') + '</button><button class="btn-action" onclick="openChatWithOwner()"><i class="fas fa-comment-dots"></i> Chat</button><button class="btn-action" onclick="openShareModal()"><i class="fas fa-share-alt"></i> Share</button></div>' +
+                '<div class="stats-row"><div class="stat-box" onclick="showFollowers()"><div class="stat-num">' + followersCount + '</div><div class="stat-lbl">Followers</div></div><div class="stat-box"><div class="stat-num">' + storeRating + ' <i class="fas fa-star" style="color:#F4B400;font-size:10px;"></i></div><div class="stat-lbl">Rating</div></div><div class="stat-box"><div class="stat-num">' + reviews.length + '</div><div class="stat-lbl">Reviews</div></div><div class="stat-box"><div class="stat-num">' + products.length + '</div><div class="stat-lbl">Products</div></div>' +
+                '<div class="tabs"><button class="tab active" onclick="switchTab(\'products\',this)">Products</button>' + (hasPromo ? '<button class="tab" onclick="switchTab(\'promo\',this)">Promo <span class="flash-dot">●</span></button>' : '') + (events.length > 0 ? '<button class="tab" onclick="switchTab(\'tickets\',this)">Tickets</button>' : '') + '<button class="tab" onclick="switchTab(\'reviews\',this)">Reviews</button><button class="tab" onclick="switchTab(\'about\',this)">About</button></div>' +
                 '<div class="tab-content" id="tabContent">' + renderProducts() + '</div>';
         }
 
         function renderProducts() {
             if (products.length === 0) return '<div class="empty-state"><i class="fas fa-box-open"></i><p>No products yet</p></div>';
             return '<div class="products-grid">' + products.map(function(p) {
-                var price = p.price||0, original = p.originalPrice||0, discount = original>price?Math.round((1-price/original)*100):0;
-                var image = (p.images&&p.images[0])||'https://via.placeholder.com/200';
-                var isTicket = p.productType==='ticket'||p.category==='Tickets & Events';
-                return '<div class="product-card" onclick="window.location.href=\'' + (isTicket?'event-detail.html':'products.html') + '?id=' + p.id + '\'" style="position:relative;">' +
-                    '<img src="' + image + '" onerror="this.src=\'https://via.placeholder.com/200\'" loading="lazy">' +
-                    (discount>0?'<span class="discount-badge">-' + discount + '%</span>':'') +
-                    (isTicket?'<span class="ticket-badge"><i class="fas fa-ticket-alt"></i> Ticket</span>':'') +
-                    '<div class="card-body"><div class="card-name">' + (p.name||'Product') + '</div><span class="card-price">$' + price.toFixed(2) + '</span>' + (discount>0?'<span class="card-original">$' + original.toFixed(2) + '</span>':'') + '</div></div>';
+                var price = p.price || 0;
+                var original = p.originalPrice || price;
+                var discount = original > price ? Math.round((1 - price / original) * 100) : 0;
+                return '<div class="product-card" onclick="window.location.href=\'products.html?id=' + p.id + '\'" style="position:relative;"><img src="' + ((p.images&&p.images[0])||'https://via.placeholder.com/200') + '" onerror="this.src=\'https://via.placeholder.com/200\'" loading="lazy">' + (discount > 0 ? '<span class="discount-badge">-' + discount + '%</span>' : '') + '<div class="card-body"><div class="card-name">' + (p.name||'Product') + '</div><span class="card-price">$' + price.toFixed(2) + '</span>' + (discount > 0 ? '<span class="card-original">$' + original.toFixed(2) + '</span>' : '') + '</div></div>';
             }).join('') + '</div>';
         }
 
-        function renderEvents() {
-            if (events.length === 0) return '<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No events yet</p></div>';
+        function renderPromo() {
+            if (flashSales.length === 0 && discountCodes.length === 0) return '<div class="empty-state"><i class="fas fa-tags"></i><p>No promotions</p></div>';
+            var html = '';
+            flashSales.forEach(function(f) {
+                var product = products.find(function(p) { return p.id === f.productId; });
+                html += '<div class="promo-card" onclick="window.location.href=\'products.html?id=' + f.productId + '\'" style="background:linear-gradient(135deg,#FF4D4F,#C62828);"><div class="promo-title">⚡ Flash Sale' + (product ? ': ' + product.name : '') + '</div><div class="promo-discount">$' + (f.salePrice||0).toFixed(2) + '</div><div style="font-size:12px;">Was $' + ((product?.price||0).toFixed(2)) + '</div></div>';
+            });
+            discountCodes.forEach(function(d) {
+                html += '<div class="promo-card" style="background:linear-gradient(135deg,#6C3CF0,#4A1FB8);"><div class="promo-title">🎫 Discount Code</div><div class="promo-code">' + d.code + '</div><div style="font-size:14px;margin-top:4px;">' + (d.type === 'percentage' ? d.value + '% OFF' : '$' + d.value + ' OFF') + '</div><div class="promo-ends">Use at checkout</div></div>';
+            });
+            return html;
+        }
+
+        function renderTickets() {
+            if (events.length === 0) return '<div class="empty-state"><i class="fas fa-ticket-alt"></i><p>No events yet</p></div>';
             return events.map(function(e) {
-                return '<div class="event-card" onclick="window.location.href=\'event-detail.html?id=' + e.id + '\'">' +
-                    (e.banner?'<img src="' + e.banner + '" class="event-banner" onerror="this.style.background=\'linear-gradient(135deg,#6C3CF0,#4A1FB8)\'">':'<div class="event-banner"></div>') +
-                    '<div class="event-body"><div class="event-name">' + (e.name||'Event') + '</div><div class="event-date"><i class="fas fa-calendar"></i> ' + new Date(e.startDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + '</div></div></div>';
+                var startDate = new Date(e.startDate);
+                var minPrice = e.ticketTypes && e.ticketTypes.length ? Math.min.apply(null, e.ticketTypes.map(function(t) { return t.price || 0; })) : 0;
+                return '<div class="ticket-card-h" onclick="window.location.href=\'event-detail.html?id=' + e.id + '\'">' + (e.banner ? '<img src="' + e.banner + '" class="ticket-card-banner" onerror="this.style.background=\'linear-gradient(135deg,#6C3CF0,#4A1FB8)\'">' : '<div class="ticket-card-banner"></div>') + '<div class="ticket-card-body"><div class="ticket-card-name">' + (e.name||'Event') + '</div><div class="ticket-card-meta"><span><i class="fas fa-calendar"></i> ' + startDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + '</span><span><i class="fas fa-clock"></i> ' + startDate.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + '</span></div><div class="ticket-card-price">' + (minPrice === 0 ? 'FREE' : 'From $' + minPrice.toFixed(2)) + '</div></div></div>';
             }).join('');
         }
 
         function renderReviews() {
             if (reviews.length === 0) return '<div class="empty-state"><i class="fas fa-star-half-alt"></i><p>No reviews yet</p></div>';
             return reviews.map(function(r) {
-                return '<div class="review-card"><div class="review-top"><span class="review-name">' + (r.userName||'Customer') + '</span><span class="review-date">' + (r.createdAt?.toDate?r.createdAt.toDate().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'Recently') + '</span></div><div class="review-stars">' + '★'.repeat(r.rating||5) + '☆'.repeat(5-(r.rating||5)) + '</div><p class="review-text">' + (r.comment||'No comment') + '</p></div>';
+                return '<div class="review-card"><div class="review-top"><span class="review-name">' + (r.userName||'Customer') + '</span><span class="review-date">' + (r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'Recently') + '</span></div><div class="review-stars">' + '★'.repeat(r.rating||5) + '☆'.repeat(5-(r.rating||5)) + '</div><p class="review-text">' + (r.comment||'') + '</p></div>';
             }).join('');
         }
 
         function renderAbout() {
             var s = storeData;
             return '<div class="about-card"><h4><i class="fas fa-store"></i> About ' + (s.name||'Store') + '</h4><p>' + (s.description||'No description yet.') + '</p></div>' +
-                '<div class="about-card"><h4><i class="fas fa-truck"></i> Shipping & Policies</h4>' +
-                '<div class="info-row"><span>Shipping Time</span><span>' + (s.shippingDuration||'3-7 business days') + '</span></div>' +
-                '<div class="info-row"><span>Country</span><span>' + (s.country||'N/A') + '</span></div></div>' +
-                '<div class="about-card"><h4><i class="fas fa-info-circle"></i> Store Details</h4>' +
-                '<div class="info-row"><span>Category</span><span>' + (s.category||'N/A') + '</span></div>' +
-                '<div class="info-row"><span>Status</span><span>' + (s.verified?'✅ Verified Store':'⏳ Pending') + '</span></div></div>';
+                '<div class="about-card"><h4><i class="fas fa-truck"></i> Shipping & Policies</h4><div class="info-row"><span>Shipping Time</span><span>' + (s.shippingDuration||'3-7 business days') + '</span></div><div class="info-row"><span>Return Policy</span><span>' + (s.returnPolicy||'14 days accepted') + '</span></div><div class="info-row"><span>Country</span><span>' + (s.country||'N/A') + '</span></div></div>' +
+                '<div class="about-card"><h4><i class="fas fa-info-circle"></i> Details</h4><div class="info-row"><span>Category</span><span>' + (s.category||'N/A') + '</span></div><div class="info-row"><span>Joined</span><span>' + (s.createdAt?.toDate ? s.createdAt.toDate().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'Recently') + '</span></div><div class="info-row"><span>Status</span><span>' + (s.verified ? '✅ Verified' : '⏳ Pending') + '</span></div></div>';
         }
 
         window.switchTab = function(tab, btn) {
             currentTab = tab;
-            document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+            document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
             if (btn) btn.classList.add('active');
             var content = document.getElementById('tabContent');
-            if (tab==='products') content.innerHTML = renderProducts();
-            else if (tab==='events') content.innerHTML = renderEvents();
-            else if (tab==='reviews') content.innerHTML = renderReviews();
+            if (tab === 'products') content.innerHTML = renderProducts();
+            else if (tab === 'promo') content.innerHTML = renderPromo();
+            else if (tab === 'tickets') content.innerHTML = renderTickets();
+            else if (tab === 'reviews') content.innerHTML = renderReviews();
             else content.innerHTML = renderAbout();
-        };
-
-        window.openStoreChat = function() {
-            if (!currentUser) { window.location.href = 'login.html'; return; }
-            if (!storeData || !storeData.ownerId) { showToast('Store owner unavailable','error'); return; }
-            window.location.href = 'chat-detail.html?store=' + storeId;
         };
 
         window.toggleFollow = async function() {
@@ -396,58 +378,61 @@
             var btn = document.getElementById('followBtn');
             try {
                 if (isFollowing) {
-                    await db.collection('users').doc(currentUser.uid).update({following:firebase.firestore.FieldValue.arrayRemove(storeId)});
-                    await db.collection('stores').doc(storeId).update({followers:firebase.firestore.FieldValue.increment(-1)});
-                    isFollowing = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Follow'; btn.classList.remove('following');
+                    await db.collection('users').doc(currentUser.uid).update({ following: firebase.firestore.FieldValue.arrayRemove(storeId) });
+                    await db.collection('stores').doc(storeId).update({ followers: firebase.firestore.FieldValue.increment(-1) });
+                    isFollowing = false;
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Follow'; btn.classList.remove('following');
                 } else {
-                    await db.collection('users').doc(currentUser.uid).update({following:firebase.firestore.FieldValue.arrayUnion(storeId)});
-                    await db.collection('stores').doc(storeId).update({followers:firebase.firestore.FieldValue.increment(1)});
-                    isFollowing = true; btn.innerHTML = '<i class="fas fa-user-check"></i> Following'; btn.classList.add('following');
-                    if (storeData.ownerId && storeData.ownerId !== currentUser.uid) {
-                        await db.collection('notifications').add({userId:storeData.ownerId,type:'store_follow',message:(userData?.name||'Someone')+' followed your store!',link:'followers.html',read:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-                    }
+                    await db.collection('users').doc(currentUser.uid).update({ following: firebase.firestore.FieldValue.arrayUnion(storeId) });
+                    await db.collection('stores').doc(storeId).update({ followers: firebase.firestore.FieldValue.increment(1) });
+                    isFollowing = true;
+                    btn.innerHTML = '<i class="fas fa-user-check"></i> Following'; btn.classList.add('following');
                 }
-                if (userData) { userData.following = userData.following||[]; if(isFollowing) userData.following.push(storeId); else userData.following = userData.following.filter(function(f){return f!==storeId;}); sessionStorage.setItem('userData',JSON.stringify(userData)); }
             } catch(e) {}
         };
 
-        window.showFollowers = function() {
+        function updateFollowButton() {
+            var btn = document.getElementById('followBtn');
+            if (btn && isFollowing) {
+                btn.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                btn.classList.add('following');
+            }
+        }
+
+        window.openChatWithOwner = function() {
+            if (!currentUser) { window.location.href = 'login.html'; return; }
+            window.location.href = 'chat.html';
+        };
+
+        function showFollowers() {
             var modal = document.getElementById('followersModal');
             document.getElementById('followersTitle').textContent = 'Followers (' + followersList.length + ')';
-            document.getElementById('followersList').innerHTML = followersList.length===0?'<div style="text-align:center;padding:30px;color:var(--text3);">No followers yet</div>':followersList.map(function(f){return '<div class="follower-item"><img src="'+(f.photoURL||'https://via.placeholder.com/40')+'" onerror="this.src=\'https://via.placeholder.com/40\'"><span class="follower-name">'+(f.name||'User')+'</span></div>';}).join('');
+            document.getElementById('followersList').innerHTML = followersList.length === 0 ? '<div style="text-align:center;padding:30px;color:var(--text3);">No followers yet</div>' : followersList.map(function(f) { return '<div class="follower-item"><img src="' + (f.photoURL||'https://via.placeholder.com/40') + '" onerror="this.src=\'https://via.placeholder.com/40\'"><span class="follower-name">' + (f.name||'User') + '</span></div>'; }).join('');
             modal.classList.add('show');
-        };
+        }
         window.closeFollowersModal = function() { document.getElementById('followersModal').classList.remove('show'); };
 
         window.openShareModal = function() {
-            var slug = storeData.slug||(storeData.name||'store').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-            var storeUrl = BASE_URL + '/store/' + slug;
+            var url = window.location.href;
             document.getElementById('shareOptions').innerHTML = 
-                '<div class="share-option" onclick="shareTo(\'whatsapp\',\'' + encodeURIComponent(storeUrl) + '\',\'' + encodeURIComponent(storeData.name||'Store') + '\')"><div class="share-icon whatsapp"><i class="fab fa-whatsapp"></i></div><span>WhatsApp</span></div>' +
-                '<div class="share-option" onclick="shareTo(\'facebook\',\'' + encodeURIComponent(storeUrl) + '\')"><div class="share-icon facebook"><i class="fab fa-facebook-f"></i></div><span>Facebook</span></div>' +
-                '<div class="share-option" onclick="shareTo(\'x\',\'' + encodeURIComponent(storeUrl) + '\',\'' + encodeURIComponent(storeData.name||'Store') + '\')"><div class="share-icon x"><i class="fab fa-x-twitter"></i></div><span>X</span></div>' +
-                '<div class="share-option" onclick="shareTo(\'telegram\',\'' + encodeURIComponent(storeUrl) + '\',\'' + encodeURIComponent(storeData.name||'Store') + '\')"><div class="share-icon telegram"><i class="fab fa-telegram-plane"></i></div><span>Telegram</span></div>' +
-                '<div class="share-option" onclick="shareTo(\'messenger\',\'' + encodeURIComponent(storeUrl) + '\')"><div class="share-icon messenger"><i class="fab fa-facebook-messenger"></i></div><span>Messenger</span></div>' +
-                '<div class="share-option" onclick="shareTo(\'email\',\'' + encodeURIComponent(storeUrl) + '\',\'' + encodeURIComponent(storeData.name||'Store') + '\',\'' + encodeURIComponent(storeData.description||'') + '\')"><div class="share-icon email"><i class="fas fa-envelope"></i></div><span>Email</span></div>' +
-                '<div class="share-option" onclick="shareTo(\'copy\',\'' + storeUrl + '\')"><div class="share-icon copy"><i class="fas fa-link"></i></div><span>Copy Link</span></div>';
+                '<div class="share-option" onclick="shareTo(\'whatsapp\')"><div class="share-icon whatsapp"><i class="fab fa-whatsapp"></i></div><span>WhatsApp</span></div>' +
+                '<div class="share-option" onclick="shareTo(\'facebook\')"><div class="share-icon facebook"><i class="fab fa-facebook-f"></i></div><span>Facebook</span></div>' +
+                '<div class="share-option" onclick="shareTo(\'x\')"><div class="share-icon x"><i class="fab fa-x-twitter"></i></div><span>X</span></div>' +
+                '<div class="share-option" onclick="shareTo(\'telegram\')"><div class="share-icon telegram"><i class="fab fa-telegram-plane"></i></div><span>Telegram</span></div>' +
+                '<div class="share-option" onclick="shareTo(\'copy\')"><div class="share-icon copy"><i class="fas fa-link"></i></div><span>Copy Link</span></div>';
             document.getElementById('shareModal').classList.add('show');
         };
-
-        window.shareTo = function(platform, url, title, desc) {
-            var decodedUrl = decodeURIComponent(url);
-            var decodedTitle = title ? decodeURIComponent(title) : '';
-            var decodedDesc = desc ? decodeURIComponent(desc) : '';
+        
+        window.shareTo = function(platform) {
+            var title = (storeData?.name || 'Store') + ' on Stoliy';
+            var url = window.location.href;
             var shareUrl = '';
-            switch(platform) {
-                case 'whatsapp': shareUrl = 'https://wa.me/?text=' + encodeURIComponent(decodedTitle + ': ' + decodedUrl); break;
-                case 'facebook': shareUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(decodedUrl); break;
-                case 'x': shareUrl = 'https://x.com/intent/tweet?text=' + encodeURIComponent(decodedTitle) + '&url=' + encodeURIComponent(decodedUrl); break;
-                case 'telegram': shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(decodedUrl) + '&text=' + encodeURIComponent(decodedTitle); break;
-                case 'messenger': shareUrl = 'https://www.facebook.com/dialog/send?link=' + encodeURIComponent(decodedUrl) + '&app_id=0'; break;
-                case 'email': shareUrl = 'mailto:?subject=' + encodeURIComponent(decodedTitle) + '&body=' + encodeURIComponent('Check out this store on Stoliy: ' + decodedUrl + '\n\n' + decodedDesc); break;
-                case 'copy': navigator.clipboard.writeText(decodedUrl).then(function(){showToast('Link copied!','success');}); closeShareModal(); return;
-            }
-            if (shareUrl) { window.open(shareUrl, '_blank', 'noopener,noreferrer'); closeShareModal(); }
+            if (platform === 'whatsapp') shareUrl = 'https://wa.me/?text=' + encodeURIComponent(title + ': ' + url);
+            if (platform === 'facebook') shareUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url);
+            if (platform === 'x') shareUrl = 'https://x.com/intent/tweet?text=' + encodeURIComponent(title) + '&url=' + encodeURIComponent(url);
+            if (platform === 'telegram') shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title);
+            if (platform === 'copy') { navigator.clipboard.writeText(url).then(function() { showToast('Link copied!', 'success'); }); closeShareModal(); return; }
+            if (shareUrl) { window.open(shareUrl, '_blank'); closeShareModal(); }
         };
         window.closeShareModal = function() { document.getElementById('shareModal').classList.remove('show'); };
 
