@@ -1,5 +1,10 @@
 {
     "version": 2,
+    "name": "stoliy",
+    "buildCommand": "",
+    "outputDirectory": ".",
+    "cleanUrls": true,
+    "trailingSlash": false,
     "routes": [
         {
             "src": "/store/(?<slug>[^/]+)",
@@ -15,11 +20,33 @@
         },
         {
             "src": "/event/(?<slug>[^/]+)",
-            "dest": "/event-detail.html?id=$slug"
+            "dest": "/event-detail.html?slug=$slug"
+        },
+        {
+            "src": "/profile/(?<username>[^/]+)",
+            "dest": "/profile.html?username=$username"
         },
         {
             "src": "/(.*)",
             "dest": "/$1"
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/store/:slug",
+            "destination": "/store.html?slug=:slug"
+        },
+        {
+            "source": "/product/:slug",
+            "destination": "/products.html?slug=:slug"
+        },
+        {
+            "source": "/category/:slug",
+            "destination": "/search.html?category=:slug"
+        },
+        {
+            "source": "/event/:slug",
+            "destination": "/event-detail.html?slug=:slug"
         }
     ],
     "headers": [
@@ -39,26 +66,26 @@
                     "value": "1; mode=block"
                 },
                 {
-                    "key": "Cache-Control",
-                    "value": "public, max-age=3600"
+                    "key": "Referrer-Policy",
+                    "value": "strict-origin-when-cross-origin"
                 }
             ]
         },
         {
-            "source": "/store/(.*)",
+            "source": "/app-icon.png",
             "headers": [
                 {
                     "key": "Cache-Control",
-                    "value": "public, max-age=1800"
+                    "value": "public, max-age=31536000, immutable"
                 }
             ]
         },
         {
-            "source": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|webp))",
+            "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2))",
             "headers": [
                 {
                     "key": "Cache-Control",
-                    "value": "public, max-age=86400, immutable"
+                    "value": "public, max-age=2592000"
                 }
             ]
         }
