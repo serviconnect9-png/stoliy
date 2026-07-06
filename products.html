@@ -167,9 +167,36 @@
             return;
         }
 
-        // Track affiliate
-        var affiliateId = params.get('ref')||params.get('affiliate')||params.get('aff');
-        if(affiliateId){var d={id:affiliateId,timestamp:Date.now(),expiry:Date.now()+30*86400000};localStorage.setItem('stoliy_affiliate',JSON.stringify(d));}
+        // ============ TRACKING - SAVE TO LOCAL + FIRESTORE ============
+        var ref = params.get('ref')||params.get('affiliate')||params.get('aff');
+        var dsp = params.get('dropship')||params.get('dsp');
+        var dspStore = params.get('store');
+        var campaign = params.get('campaign')||params.get('utm_campaign');
+        var couponCode = params.get('coupon')||params.get('code');
+
+        // Legacy localStorage tracking (kept for backward compatibility)
+        if(ref) localStorage.setItem('stoliy_ref', ref);
+        if(dsp) localStorage.setItem('stoliy_dsp', dsp);
+        if(dspStore) localStorage.setItem('stoliy_dsp_store', dspStore);
+        if(campaign) sessionStorage.setItem('stoliy_campaign', campaign);
+        if(couponCode) sessionStorage.setItem('stoliy_coupon', couponCode.toUpperCase());
+
+        // Firestore tracking - persists across devices
+        if(ref || dsp) {
+            var visitorId = auth.currentUser ? auth.currentUser.uid : (sessionStorage.getItem('visitor_id') || ('VIS-' + Date.now().toString(36)));
+            if (!auth.currentUser) sessionStorage.setItem('visitor_id', visitorId);
+            
+            db.collection('tracking').add({
+                ref: ref || null,
+                dropship: dsp || null,
+                dropshipStore: dspStore || null,
+                campaign: campaign || null,
+                productId: productId,
+                visitorId: visitorId,
+                converted: false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(function(e) { console.log('Tracking save error:', e); });
+        }
 
         function loadCountries(){
             if(typeof countries!=='undefined'&&Array.isArray(countries)&&countries.length) countryList=countries;
@@ -225,272 +252,46 @@
 
         async function loadProduct(){
             document.getElementById('appRoot').innerHTML='<div class="loading-wrap"><div class="spinner"></div></div>';
-            
-            var timeout=setTimeout(function(){
-                if(!productData){
-                    document.getElementById('appRoot').innerHTML='<div style="text-align:center;padding:60px;"><i class="fas fa-clock" style="font-size:40px;opacity:0.2;display:block;margin-bottom:12px;color:var(--text3);"></i><h3>Taking longer...</h3><button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Retry</button></div>';
-                }
-            },8000);
-
-            try{
-                var doc = await db.collection('products').doc(productId).get();
-                if(!doc.exists){clearTimeout(timeout);showError('Product Not Found');return;}
-                productData = {id: doc.id, ...doc.data()};
-                clearTimeout(timeout);
-
-                if(productData.storeId){
-                    var storeDoc = await db.collection('stores').doc(productData.storeId).get();
-                    if(storeDoc.exists) storeData = {id: storeDoc.id, ...storeDoc.data()};
-                }
-
-                var allReviews = await db.collection('reviews').get();
-                var reviews = allReviews.docs.map(function(d){return d.data();}).filter(function(r){return r.productId===productId;});
-
-                renderProduct(reviews);
-            } catch(e) {
-                clearTimeout(timeout);
-                showError('Error loading product');
-            }
+            var timeout=setTimeout(function(){if(!productData){document.getElementById('appRoot').innerHTML='<div style="text-align:center;padding:60px;"><i class="fas fa-clock" style="font-size:40px;opacity:0.2;display:block;margin-bottom:12px;color:var(--text3);"></i><h3>Taking longer...</h3><button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Retry</button></div>';}},8000);
+            try{var doc=await db.collection('products').doc(productId).get();if(!doc.exists){clearTimeout(timeout);showError('Product Not Found');return;}productData={id:doc.id,...doc.data()};clearTimeout(timeout);if(productData.storeId){var storeDoc=await db.collection('stores').doc(productData.storeId).get();if(storeDoc.exists)storeData={id:storeDoc.id,...storeDoc.data()};}var allReviews=await db.collection('reviews').get();var reviews=allReviews.docs.map(function(d){return d.data();}).filter(function(r){return r.productId===productId;});renderProduct(reviews);}catch(e){clearTimeout(timeout);showError('Error loading product');}
         }
 
-        function showError(msg){
-            document.getElementById('appRoot').innerHTML='<div style="text-align:center;padding:80px;"><i class="fas fa-box-open" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;"></i><h3>'+msg+'</h3><button onclick="history.back()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;">Go Back</button></div>';
-        }
+        function showError(msg){document.getElementById('appRoot').innerHTML='<div style="text-align:center;padding:80px;"><i class="fas fa-box-open" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;"></i><h3>'+msg+'</h3><button onclick="history.back()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;">Go Back</button></div>';}
 
         function renderProduct(reviews) {
-            var p = productData;
-            var images = p.images || [];
-            if (images.length === 0) images = ['https://via.placeholder.com/400'];
-            var hasVideo = !!p.video;
-            var priceUSD = p.price || 0;
-            var origPriceUSD = p.originalPrice || 0;
-            var discount = origPriceUSD > priceUSD ? Math.round((1 - priceUSD/origPriceUSD)*100) : 0;
-            var inStock = p.inStock !== false && (p.stockQuantity || 0) > 0;
-            var rating = p.rating || 0;
-            var totalSales = p.totalSales || 0;
-            var variants = p.variants || [];
-            var shippingRates = p.shippingRates || [];
-            var isDigital = p.isPhysical === false || p.productType === 'digital' || p.productType === 'ticket';
-            var rate = exchangeRates[userCurrency] || 1;
-            var displayPrice = convertPrice(priceUSD, userCurrency);
-            var displayOrigPrice = convertPrice(origPriceUSD, userCurrency);
-            var sym = userCurrencySymbol;
-
-            var html = '';
-            
-            if (userCurrency !== 'USD' && rate > 0 && rate !== 1) {
-                html += '<div class="rate-info"><i class="fas fa-exchange-alt"></i> 1 USD = ' + rate.toFixed(2) + ' ' + userCurrency + ' • Prices shown in ' + userCurrency + '</div>';
-            }
-            
-            html += '<div class="top-bar"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><span class="top-title">Product Details</span><button class="btn-icon' + (isWishlisted ? ' liked' : '') + '" onclick="toggleWishlist()" id="wishlistBtn"><i class="fas fa-heart"></i></button><button class="btn-icon" onclick="shareProduct()"><i class="fas fa-share-alt"></i></button></div>';
-
-            html += '<div class="image-gallery" id="gallery">';
-            images.forEach(function(img, i) {
-                html += '<div class="gallery-slide' + (i===0?' active':'') + '"><img src="' + img + '" alt="Product" onerror="this.src=\'https://via.placeholder.com/400\'"></div>';
-            });
-            if (hasVideo) {
-                html += '<div class="gallery-slide"><video src="' + p.video + '" controls style="width:100%;height:100%;object-fit:contain;"></video></div>';
-            }
-            if (discount > 0) html += '<span class="discount-badge">-' + discount + '% OFF</span>';
-            if (isDigital) html += '<span class="digital-badge"><i class="fas fa-download"></i> Digital</span>';
-            if (images.length > 1 || hasVideo) {
-                html += '<button class="gallery-nav prev" onclick="navigateGallery(-1)"><i class="fas fa-chevron-left"></i></button>';
-                html += '<button class="gallery-nav next" onclick="navigateGallery(1)"><i class="fas fa-chevron-right"></i></button>';
-                html += '<div class="gallery-dots">';
-                images.forEach(function(_, i) { html += '<button class="gallery-dot' + (i===0?' active':'') + '" onclick="goToImage(' + i + ')"></button>'; });
-                if (hasVideo) html += '<button class="gallery-dot" onclick="goToImage(' + images.length + ')"></button>';
-                html += '</div>';
-            }
-            html += '</div>';
-
-            html += '<div class="product-info">';
-            html += '<h1 class="product-name">' + (p.name || 'Product') + '</h1>';
-            if (p.category) html += '<span class="product-category"><i class="fas fa-tag"></i> ' + p.category + '</span>';
-            if (isDigital) html += ' <span class="product-category" style="background:rgba(46,204,113,0.1);color:var(--success);"><i class="fas fa-download"></i> ' + (p.productType || 'Digital') + '</span>';
-            
-            html += '<div class="price-row">';
-            html += '<span class="current-price">' + sym + displayPrice.toFixed(2) + '</span>';
-            if (discount > 0) html += '<span class="original-price">' + sym + displayOrigPrice.toFixed(2) + '</span><span class="saved">Save ' + sym + (displayOrigPrice-displayPrice).toFixed(2) + '</span>';
-            html += '</div>';
-            if (userCurrency !== 'USD') html += '<span class="converted-price">≈ USD $' + priceUSD.toFixed(2) + '</span>';
-
-            if (rating > 0) {
-                html += '<div class="rating-row"><span class="stars">' + '★'.repeat(Math.floor(rating)) + '☆'.repeat(5-Math.floor(rating)) + '</span><span>' + rating.toFixed(1) + ' (' + (p.totalReviews||reviews.length) + ' reviews)</span><span style="margin-left:auto;color:var(--text2);">' + totalSales + ' sold</span></div>';
-            }
-
-            html += '<span class="stock-badge ' + (inStock?'in-stock':'out-stock') + '"><i class="fas fa-circle" style="font-size:6px;"></i> ' + (inStock?'In Stock':'Out of Stock') + '</span>';
-            html += '</div>';
-
-            if (storeData) {
-                html += '<div class="store-card" onclick="window.location.href=\'store.html?id=' + storeData.id + '\'">';
-                html += '<img src="' + (storeData.logo||'https://via.placeholder.com/40') + '" onerror="this.src=\'https://via.placeholder.com/40\'">';
-                html += '<div style="flex:1;"><div class="store-name">' + storeData.name + (storeData.verified?' <i class="fas fa-check-circle" style="color:#6C3CF0;font-size:10px;"></i>':'') + '</div><div class="store-meta">' + (storeData.followers||0) + ' followers • ' + (storeData.totalProducts||0) + ' products</div></div>';
-                html += '<i class="fas fa-chevron-right" style="color:var(--text3);"></i></div>';
-            }
-
-            if (variants.length > 0) {
-                html += '<div class="section-block"><div class="section-title"><i class="fas fa-palette"></i> Options</div><div class="variant-chips">';
-                variants.forEach(function(v, i) {
-                    var vPrice = convertPrice(v.price || priceUSD, userCurrency);
-                    html += '<button class="variant-chip' + (i===0?' selected':'') + '" onclick="selectVariant(' + i + ',this)">' + v.name + ' - ' + sym + vPrice.toFixed(2) + '</button>';
-                });
-                html += '</div></div>';
-                selectedVariant = variants[0];
-            }
-
-            if (p.description) {
-                html += '<div class="section-block"><div class="section-title"><i class="fas fa-align-left"></i> Description</div><p class="desc-text">' + p.description.replace(/\n/g, '<br>') + '</p></div>';
-            }
-
-            if (isDigital && p.license) {
-                html += '<div class="section-block"><div class="section-title"><i class="fas fa-file-contract"></i> License</div><p class="desc-text">' + p.license + ' License</p></div>';
-            }
-
-            if (!isDigital && shippingRates.length > 0) {
-                html += '<div class="section-block"><div class="section-title"><i class="fas fa-truck"></i> Shipping</div>';
-                shippingRates.forEach(function(s) {
-                    var sRate = convertPrice(s.rate || 0, userCurrency);
-                    html += '<div class="shipping-card"><div><div class="shipping-country-name">' + getCountryFlag(s.country) + ' ' + s.country + '</div><div class="shipping-details">Est: ' + (s.estimatedDelivery||'3-7 days') + '</div></div><div><div class="shipping-rate">' + sym + sRate.toFixed(2) + '</div>' + (userCurrency!=='USD'?'<div class="shipping-rate-converted">≈ $' + (s.rate||0).toFixed(2) + ' USD</div>':'') + '</div></div>';
-                });
-                html += '</div>';
-            }
-
-            html += '<div class="section-block"><div class="section-title"><i class="fas fa-star"></i> Reviews (' + reviews.length + ')</div>';
-            if (reviews.length > 0) {
-                reviews.slice(0, 20).forEach(function(r) {
-                    html += '<div class="review-card"><div class="review-top"><span class="review-name">' + (r.userName||'Customer') + (r.verifiedPurchase ? '<span class="verified-purchase">✓ Verified Purchase</span>' : '') + '</span><span class="review-date">' + (r.createdAt?.toDate?r.createdAt.toDate().toLocaleDateString():'') + '</span></div><div class="review-stars">' + '★'.repeat(r.rating||5) + '☆'.repeat(5-(r.rating||5)) + '</div><p class="review-text">' + (r.comment||'') + '</p>';
-                    if (r.images && r.images.length) {
-                        html += '<div class="review-images">' + r.images.map(function(img) { return '<img src="' + img + '" onclick="window.open(\'' + img + '\')" loading="lazy">'; }).join('') + '</div>';
-                    }
-                    if (r.video) {
-                        html += '<div class="review-video"><video src="' + r.video + '" controls style="width:100%;max-width:250px;border-radius:8px;"></video></div>';
-                    }
-                    html += '</div>';
-                });
-            } else {
-                html += '<p class="desc-text">No reviews yet. Be the first to review!</p>';
-            }
-            
-            if (hasPurchased) {
-                html += '<button class="btn-review" onclick="openReviewModal()"><i class="fas fa-star"></i> Write a Review</button>';
-            }
-            html += '</div>';
-
-            document.getElementById('appRoot').innerHTML = html;
-
-            var bottomBar = document.createElement('div');
-            bottomBar.className = 'bottom-bar';
-            bottomBar.innerHTML = '<div class="qty-control"><button class="qty-btn" onclick="changeQty(-1)">−</button><span class="qty-val" id="qtyDisplay">1</span><button class="qty-btn" onclick="changeQty(1)">+</button></div><button class="btn-cart" onclick="addToCart()"><i class="fas fa-shopping-cart"></i> Add to Cart</button><button class="btn-buy" onclick="buyNow()"><i class="fas fa-bolt"></i> Buy Now</button>';
-            document.getElementById('appRoot').appendChild(bottomBar);
+            var p = productData; var images = p.images || []; if(images.length===0) images=['https://via.placeholder.com/400']; var hasVideo=!!p.video; var priceUSD=p.price||0; var origPriceUSD=p.originalPrice||0; var discount=origPriceUSD>priceUSD?Math.round((1-priceUSD/origPriceUSD)*100):0; var inStock=p.inStock!==false&&(p.stockQuantity||0)>0; var rating=p.rating||0; var totalSales=p.totalSales||0; var variants=p.variants||[]; var shippingRates=p.shippingRates||[]; var isDigital=p.isPhysical===false||p.productType==='digital'||p.productType==='ticket'; var rate=exchangeRates[userCurrency]||1; var displayPrice=convertPrice(priceUSD,userCurrency); var displayOrigPrice=convertPrice(origPriceUSD,userCurrency); var sym=userCurrencySymbol;
+            var html='';
+            if(userCurrency!=='USD'&&rate>0&&rate!==1){html+='<div class="rate-info"><i class="fas fa-exchange-alt"></i> 1 USD = '+rate.toFixed(2)+' '+userCurrency+' • Prices shown in '+userCurrency+'</div>';}
+            html+='<div class="top-bar"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><span class="top-title">Product Details</span><button class="btn-icon'+(isWishlisted?' liked':'')+'" onclick="toggleWishlist()" id="wishlistBtn"><i class="fas fa-heart"></i></button><button class="btn-icon" onclick="shareProduct()"><i class="fas fa-share-alt"></i></button></div>';
+            html+='<div class="image-gallery" id="gallery">';images.forEach(function(img,i){html+='<div class="gallery-slide'+(i===0?' active':'')+'"><img src="'+img+'" alt="Product" onerror="this.src=\'https://via.placeholder.com/400\'"></div>';});if(hasVideo){html+='<div class="gallery-slide"><video src="'+p.video+'" controls style="width:100%;height:100%;object-fit:contain;"></video></div>';}if(discount>0)html+='<span class="discount-badge">-'+discount+'% OFF</span>';if(isDigital)html+='<span class="digital-badge"><i class="fas fa-download"></i> Digital</span>';if(images.length>1||hasVideo){html+='<button class="gallery-nav prev" onclick="navigateGallery(-1)"><i class="fas fa-chevron-left"></i></button><button class="gallery-nav next" onclick="navigateGallery(1)"><i class="fas fa-chevron-right"></i></button><div class="gallery-dots">';images.forEach(function(_,i){html+='<button class="gallery-dot'+(i===0?' active':'')+'" onclick="goToImage('+i+')"></button>';});if(hasVideo)html+='<button class="gallery-dot" onclick="goToImage('+images.length+')"></button>';html+='</div>';}html+='</div>';
+            html+='<div class="product-info"><h1 class="product-name">'+(p.name||'Product')+'</h1>';if(p.category)html+='<span class="product-category"><i class="fas fa-tag"></i> '+p.category+'</span>';if(isDigital)html+=' <span class="product-category" style="background:rgba(46,204,113,0.1);color:var(--success);"><i class="fas fa-download"></i> '+(p.productType||'Digital')+'</span>';
+            html+='<div class="price-row"><span class="current-price">'+sym+displayPrice.toFixed(2)+'</span>';if(discount>0)html+='<span class="original-price">'+sym+displayOrigPrice.toFixed(2)+'</span><span class="saved">Save '+sym+(displayOrigPrice-displayPrice).toFixed(2)+'</span>';html+='</div>';if(userCurrency!=='USD')html+='<span class="converted-price">≈ USD $'+priceUSD.toFixed(2)+'</span>';
+            if(rating>0){html+='<div class="rating-row"><span class="stars">'+'★'.repeat(Math.floor(rating))+'☆'.repeat(5-Math.floor(rating))+'</span><span>'+rating.toFixed(1)+' ('+(p.totalReviews||reviews.length)+' reviews)</span><span style="margin-left:auto;color:var(--text2);">'+totalSales+' sold</span></div>';}html+='<span class="stock-badge '+(inStock?'in-stock':'out-stock')+'"><i class="fas fa-circle" style="font-size:6px;"></i> '+(inStock?'In Stock':'Out of Stock')+'</span></div>';
+            if(storeData){html+='<div class="store-card" onclick="window.location.href=\'store.html?id='+storeData.id+'\'"><img src="'+(storeData.logo||'https://via.placeholder.com/40')+'" onerror="this.src=\'https://via.placeholder.com/40\'"><div style="flex:1;"><div class="store-name">'+storeData.name+(storeData.verified?' <i class="fas fa-check-circle" style="color:#6C3CF0;font-size:10px;"></i>':'')+'</div><div class="store-meta">'+(storeData.followers||0)+' followers • '+(storeData.totalProducts||0)+' products</div></div><i class="fas fa-chevron-right" style="color:var(--text3);"></i></div>';}
+            if(variants.length>0){html+='<div class="section-block"><div class="section-title"><i class="fas fa-palette"></i> Options</div><div class="variant-chips">';variants.forEach(function(v,i){var vPrice=convertPrice(v.price||priceUSD,userCurrency);html+='<button class="variant-chip'+(i===0?' selected':'')+'" onclick="selectVariant('+i+',this)">'+v.name+' - '+sym+vPrice.toFixed(2)+'</button>';});html+='</div></div>';selectedVariant=variants[0];}
+            if(p.description){html+='<div class="section-block"><div class="section-title"><i class="fas fa-align-left"></i> Description</div><p class="desc-text">'+p.description.replace(/\n/g,'<br>')+'</p></div>';}
+            if(isDigital&&p.license){html+='<div class="section-block"><div class="section-title"><i class="fas fa-file-contract"></i> License</div><p class="desc-text">'+p.license+' License</p></div>';}
+            if(!isDigital&&shippingRates.length>0){html+='<div class="section-block"><div class="section-title"><i class="fas fa-truck"></i> Shipping</div>';shippingRates.forEach(function(s){var sRate=convertPrice(s.rate||0,userCurrency);html+='<div class="shipping-card"><div><div class="shipping-country-name">'+getCountryFlag(s.country)+' '+s.country+'</div><div class="shipping-details">Est: '+(s.estimatedDelivery||'3-7 days')+'</div></div><div><div class="shipping-rate">'+sym+sRate.toFixed(2)+'</div>'+(userCurrency!=='USD'?'<div class="shipping-rate-converted">≈ $'+(s.rate||0).toFixed(2)+' USD</div>':'')+'</div></div>';});html+='</div>';}
+            html+='<div class="section-block"><div class="section-title"><i class="fas fa-star"></i> Reviews ('+reviews.length+')</div>';if(reviews.length>0){reviews.slice(0,20).forEach(function(r){html+='<div class="review-card"><div class="review-top"><span class="review-name">'+(r.userName||'Customer')+(r.verifiedPurchase?'<span class="verified-purchase">✓ Verified Purchase</span>':'')+'</span><span class="review-date">'+(r.createdAt?.toDate?r.createdAt.toDate().toLocaleDateString():'')+'</span></div><div class="review-stars">'+'★'.repeat(r.rating||5)+'☆'.repeat(5-(r.rating||5))+'</div><p class="review-text">'+(r.comment||'')+'</p>';if(r.images&&r.images.length){html+='<div class="review-images">'+r.images.map(function(img){return'<img src="'+img+'" onclick="window.open(\''+img+'\')" loading="lazy">';}).join('')+'</div>';}if(r.video){html+='<div class="review-video"><video src="'+r.video+'" controls style="width:100%;max-width:250px;border-radius:8px;"></video></div>';}html+='</div>';});}else{html+='<p class="desc-text">No reviews yet. Be the first to review!</p>';}if(hasPurchased){html+='<button class="btn-review" onclick="openReviewModal()"><i class="fas fa-star"></i> Write a Review</button>';}html+='</div>';
+            document.getElementById('appRoot').innerHTML=html;
+            var bottomBar=document.createElement('div');bottomBar.className='bottom-bar';bottomBar.innerHTML='<div class="qty-control"><button class="qty-btn" onclick="changeQty(-1)">−</button><span class="qty-val" id="qtyDisplay">1</span><button class="qty-btn" onclick="changeQty(1)">+</button></div><button class="btn-cart" onclick="addToCart()"><i class="fas fa-shopping-cart"></i> Add to Cart</button><button class="btn-buy" onclick="buyNow()"><i class="fas fa-bolt"></i> Buy Now</button>';document.getElementById('appRoot').appendChild(bottomBar);
         }
 
-        window.navigateGallery = function(dir) {
-            var totalSlides = (productData.images||[]).length + (productData.video ? 1 : 0);
-            if (totalSlides <= 1) return;
-            currentImage = (currentImage + dir + totalSlides) % totalSlides;
-            updateGallery();
-        };
-        window.goToImage = function(index) { currentImage = index; updateGallery(); };
-
-        function updateGallery() {
-            var slides = document.querySelectorAll('.gallery-slide');
-            var dots = document.querySelectorAll('.gallery-dot');
-            slides.forEach(function(s, i) { s.classList.toggle('active', i === currentImage); });
-            dots.forEach(function(d, i) { d.classList.toggle('active', i === currentImage); });
-        }
-
-        window.selectVariant = function(index, btn) {
-            selectedVariant = productData.variants[index];
-            document.querySelectorAll('.variant-chip').forEach(function(c) { c.classList.remove('selected'); });
-            if (btn) btn.classList.add('selected');
-        };
-        window.changeQty = function(delta) { quantity = Math.max(1, quantity + delta); document.getElementById('qtyDisplay').textContent = quantity; };
-
-        window.toggleWishlist = async function() {
-            if(!currentUser){window.location.href='login.html';return;}
-            var btn = document.getElementById('wishlistBtn');
-            if (isWishlisted) {
-                var allWishlist = await db.collection('wishlist').get();
-                for (var d of allWishlist.docs) { var w = d.data(); if (w.userId === currentUser.uid && w.productId === productId) { await d.ref.delete(); break; } }
-                isWishlisted = false; btn.classList.remove('liked'); showToast('Removed from wishlist');
-            } else {
-                await db.collection('wishlist').add({ userId: currentUser.uid, productId: productId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-                isWishlisted = true; btn.classList.add('liked'); showToast('Added to wishlist ❤️', 'success');
-            }
-        };
-
-        window.shareProduct = function() {
-            var url = CONFIG.baseUrl + '/products.html?id=' + productId;
-            var storedAff = localStorage.getItem('stoliy_affiliate');
-            if (storedAff) { try { var aff = JSON.parse(storedAff); if (Date.now() < aff.expiry) url += '&ref=' + aff.id; } catch(e) {} }
-            if (navigator.share) { navigator.share({ title: productData?.name, url: url }).catch(function(){}); }
-            else { navigator.clipboard.writeText(url).then(function() { showToast('Link copied! 📋', 'success'); }); }
-        };
-
-        window.addToCart = async function() {
-            if (!currentUser || !productData) {window.location.href='login.html';return;}
-            var btn = document.querySelector('.btn-cart'); btn.textContent = 'Adding...'; btn.disabled = true;
-            var allCart = await db.collection('cart').get();
-            var existing = allCart.docs.find(function(d) { var c = d.data(); return c.userId === currentUser.uid && c.productId === productId && c.variant === (selectedVariant?.name||null); });
-            if (existing) { await existing.ref.update({ quantity: firebase.firestore.FieldValue.increment(quantity) }); }
-            else { await db.collection('cart').add({ userId: currentUser.uid, productId: productId, storeId: productData.storeId, storeName: storeData?.name || '', quantity: quantity, variant: selectedVariant?.name || null, price: selectedVariant?.price || productData.price, name: productData.name, image: (productData.images&&productData.images[0])||'', createdAt: firebase.firestore.FieldValue.serverTimestamp() }); }
-            btn.textContent = 'Added! ✅'; showToast('Added to cart! 🛒', 'success');
-            setTimeout(function() { btn.textContent = 'Add to Cart'; btn.disabled = false; }, 1500);
-        };
-
-        window.buyNow = async function() { await window.addToCart(); window.location.href = 'cart.html'; };
-
-        window.setRating = function(rating) {
-            reviewRating = rating;
-            document.querySelectorAll('#starRating i').forEach(function(s, i) { s.classList.toggle('active', i < rating); });
-            document.getElementById('reviewRating').value = rating;
-        };
-
-        window.openReviewModal = function() { document.getElementById('reviewModal').classList.add('show'); reviewRating=5; document.querySelectorAll('#starRating i').forEach(function(s,i){s.classList.toggle('active',i<5);}); };
-        window.closeReviewModal = function() { document.getElementById('reviewModal').classList.remove('show'); };
-
-        window.submitReview = async function() {
-            if(!currentUser){window.location.href='login.html';return;}
-            var rating = parseInt(document.getElementById('reviewRating').value);
-            var comment = document.getElementById('reviewComment').value.trim();
-            if (!comment) { showToast('Please write a comment', 'warning'); return; }
-
-            var imageFiles = document.getElementById('reviewImages').files;
-            var videoFile = document.getElementById('reviewVideo').files[0];
-            var imageUrls = [], videoUrl = null;
-
-            for (var i = 0; i < imageFiles.length; i++) {
-                var fd = new FormData(); fd.append('file', imageFiles[i]); fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
-                try { var res = await fetch('https://api.cloudinary.com/v1_1/'+(CONFIG.cloudinaryCloudName||'serviconnect')+'/image/upload',{method:'POST',body:fd}); var data = await res.json(); if(data.secure_url) imageUrls.push(data.secure_url); } catch(e) {}
-            }
-            if (videoFile) {
-                var fd = new FormData(); fd.append('file', videoFile); fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
-                try { var res = await fetch('https://api.cloudinary.com/v1_1/'+(CONFIG.cloudinaryCloudName||'serviconnect')+'/video/upload',{method:'POST',body:fd}); var data = await res.json(); if(data.secure_url) videoUrl = data.secure_url; } catch(e) {}
-            }
-
-            await db.collection('reviews').add({
-                productId: productId, storeId: productData.storeId, userId: currentUser.uid,
-                userName: currentUser.displayName||'Customer', userPhoto: currentUser.photoURL||'',
-                rating: rating, comment: comment, images: imageUrls, video: videoUrl,
-                verifiedPurchase: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            var allReviews = await db.collection('reviews').get();
-            var productReviews = allReviews.docs.map(function(d){return d.data();}).filter(function(r){return r.productId===productId;});
-            var avgRating = productReviews.reduce(function(s,r){return s+(r.rating||0);},0)/productReviews.length;
-            await db.collection('products').doc(productId).update({rating:avgRating,totalReviews:productReviews.length});
-
-            closeReviewModal(); showToast('Review submitted! ✅','success');
-            setTimeout(function(){location.reload();},1500);
-        };
-
+        window.navigateGallery=function(dir){var totalSlides=(productData.images||[]).length+(productData.video?1:0);if(totalSlides<=1)return;currentImage=(currentImage+dir+totalSlides)%totalSlides;updateGallery();};
+        window.goToImage=function(index){currentImage=index;updateGallery();};
+        function updateGallery(){var slides=document.querySelectorAll('.gallery-slide');var dots=document.querySelectorAll('.gallery-dot');slides.forEach(function(s,i){s.classList.toggle('active',i===currentImage);});dots.forEach(function(d,i){d.classList.toggle('active',i===currentImage);});}
+        window.selectVariant=function(index,btn){selectedVariant=productData.variants[index];document.querySelectorAll('.variant-chip').forEach(function(c){c.classList.remove('selected');});if(btn)btn.classList.add('selected');};
+        window.changeQty=function(delta){quantity=Math.max(1,quantity+delta);document.getElementById('qtyDisplay').textContent=quantity;};
+        window.toggleWishlist=async function(){if(!currentUser){window.location.href='login.html';return;}var btn=document.getElementById('wishlistBtn');if(isWishlisted){var allWishlist=await db.collection('wishlist').get();for(var d of allWishlist.docs){var w=d.data();if(w.userId===currentUser.uid&&w.productId===productId){await d.ref.delete();break;}}isWishlisted=false;btn.classList.remove('liked');showToast('Removed from wishlist');}else{await db.collection('wishlist').add({userId:currentUser.uid,productId:productId,createdAt:firebase.firestore.FieldValue.serverTimestamp()});isWishlisted=true;btn.classList.add('liked');showToast('Added to wishlist ❤️','success');}};
+        window.shareProduct=function(){var url=CONFIG.baseUrl+'/products.html?id='+productId;var storedAff=localStorage.getItem('stoliy_affiliate');if(storedAff){try{var aff=JSON.parse(storedAff);if(Date.now()<aff.expiry)url+='&ref='+aff.id;}catch(e){}}if(navigator.share){navigator.share({title:productData?.name,url:url}).catch(function(){});}else{navigator.clipboard.writeText(url).then(function(){showToast('Link copied! 📋','success');});}};
+        window.addToCart=async function(){if(!currentUser||!productData){window.location.href='login.html';return;}var btn=document.querySelector('.btn-cart');btn.textContent='Adding...';btn.disabled=true;var allCart=await db.collection('cart').get();var existing=allCart.docs.find(function(d){var c=d.data();return c.userId===currentUser.uid&&c.productId===productId&&c.variant===(selectedVariant?.name||null);});if(existing){await existing.ref.update({quantity:firebase.firestore.FieldValue.increment(quantity)});}else{await db.collection('cart').add({userId:currentUser.uid,productId:productId,storeId:productData.storeId,storeName:storeData?.name||'',quantity:quantity,variant:selectedVariant?.name||null,price:selectedVariant?.price||productData.price,name:productData.name,image:(productData.images&&productData.images[0])||'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});}btn.textContent='Added! ✅';showToast('Added to cart! 🛒','success');setTimeout(function(){btn.textContent='Add to Cart';btn.disabled=false;},1500);};
+        window.buyNow=async function(){await window.addToCart();window.location.href='cart.html';};
+        window.setRating=function(rating){reviewRating=rating;document.querySelectorAll('#starRating i').forEach(function(s,i){s.classList.toggle('active',i<rating);});document.getElementById('reviewRating').value=rating;};
+        window.openReviewModal=function(){document.getElementById('reviewModal').classList.add('show');reviewRating=5;document.querySelectorAll('#starRating i').forEach(function(s,i){s.classList.toggle('active',i<5);});};
+        window.closeReviewModal=function(){document.getElementById('reviewModal').classList.remove('show');};
+        window.submitReview=async function(){if(!currentUser){window.location.href='login.html';return;}var rating=parseInt(document.getElementById('reviewRating').value);var comment=document.getElementById('reviewComment').value.trim();if(!comment){showToast('Please write a comment','warning');return;}var imageFiles=document.getElementById('reviewImages').files;var videoFile=document.getElementById('reviewVideo').files[0];var imageUrls=[],videoUrl=null;for(var i=0;i<imageFiles.length;i++){var fd=new FormData();fd.append('file',imageFiles[i]);fd.append('upload_preset',CONFIG.cloudinaryPreset||'connect');try{var res=await fetch('https://api.cloudinary.com/v1_1/'+(CONFIG.cloudinaryCloudName||'serviconnect')+'/image/upload',{method:'POST',body:fd});var data=await res.json();if(data.secure_url)imageUrls.push(data.secure_url);}catch(e){}}if(videoFile){var fd=new FormData();fd.append('file',videoFile);fd.append('upload_preset',CONFIG.cloudinaryPreset||'connect');try{var res=await fetch('https://api.cloudinary.com/v1_1/'+(CONFIG.cloudinaryCloudName||'serviconnect')+'/video/upload',{method:'POST',body:fd});var data=await res.json();if(data.secure_url)videoUrl=data.secure_url;}catch(e){}}await db.collection('reviews').add({productId:productId,storeId:productData.storeId,userId:currentUser.uid,userName:currentUser.displayName||'Customer',userPhoto:currentUser.photoURL||'',rating:rating,comment:comment,images:imageUrls,video:videoUrl,verifiedPurchase:false,createdAt:firebase.firestore.FieldValue.serverTimestamp()});var allReviews=await db.collection('reviews').get();var productReviews=allReviews.docs.map(function(d){return d.data();}).filter(function(r){return r.productId===productId;});var avgRating=productReviews.reduce(function(s,r){return s+(r.rating||0);},0)/productReviews.length;await db.collection('products').doc(productId).update({rating:avgRating,totalReviews:productReviews.length});closeReviewModal();showToast('Review submitted! ✅','success');setTimeout(function(){location.reload();},1500);};
         document.getElementById('reviewModal').addEventListener('click',function(e){if(e.target===this)closeReviewModal();});
-
-        var touchStartX=0;
-        document.addEventListener('DOMContentLoaded',function(){
-            var gallery=document.getElementById('gallery');
-            if(gallery){gallery.addEventListener('touchstart',function(e){touchStartX=e.touches[0].clientX;},{passive:true});gallery.addEventListener('touchend',function(e){var diff=touchStartX-e.changedTouches[0].clientX;if(Math.abs(diff)>40)window.navigateGallery(diff>0?1:-1);});}
-        });
+        var touchStartX=0;document.addEventListener('DOMContentLoaded',function(){var gallery=document.getElementById('gallery');if(gallery){gallery.addEventListener('touchstart',function(e){touchStartX=e.touches[0].clientX;},{passive:true});gallery.addEventListener('touchend',function(e){var diff=touchStartX-e.changedTouches[0].clientX;if(Math.abs(diff)>40)window.navigateGallery(diff>0?1:-1);});}});
     })();
     </script>
 </body>
