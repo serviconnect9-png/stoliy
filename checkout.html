@@ -312,20 +312,17 @@
 
             // Physical product shipping
             if (!isDigitalProduct) {
-                // Saved addresses button
                 if (savedAddresses.length > 0) {
                     h += '<div style="padding:0 16px;"><button class="btn-saved-address" onclick="openSavedAddresses()"><i class="fas fa-address-book"></i> Use Saved Address (' + savedAddresses.length + ')</button></div>';
                 }
 
                 if (currentSelectedCountry && canDeliver) {
-                    // Show shipping address fields
                     h += '<div class="section-card"><div class="section-title"><i class="fas fa-map-marker-alt"></i> Shipping Address</div>';
                     h += '<div class="form-row"><div class="form-group"><label class="form-label">City *</label><input type="text" class="form-input" id="addrCity"></div><div class="form-group"><label class="form-label">State/Region</label><input type="text" class="form-input" id="addrState"></div></div>';
                     h += '<div class="form-group"><label class="form-label">Street Address *</label><textarea class="form-input" id="addrFull" placeholder="House number, street name, estate"></textarea></div>';
                     h += '<div class="form-row"><div class="form-group"><label class="form-label">Postal Code</label><input type="text" class="form-input" id="addrZip"></div><div class="form-group"><label class="form-label">Nearest Landmark</label><input type="text" class="form-input" id="addrLandmark"></div></div>';
                     h += '</div>';
 
-                    // Shipping options
                     var opts = getShippingOptionsForCountry(currentSelectedCountry);
                     if (opts.length > 0) {
                         h += '<div class="section-card"><div class="section-title"><i class="fas fa-truck"></i> Shipping Method</div>';
@@ -338,7 +335,6 @@
                         if (!selectedShipping) { shippingUSD = opts[0].rate; recalc(); }
                     }
                 } else if (currentSelectedCountry && !canDeliver) {
-                    // Cannot deliver
                     h += '<div class="section-card"><div class="no-delivery"><i class="fas fa-truck"></i><p style="font-weight:600;color:var(--error);">Sorry, we cannot deliver to ' + currentSelectedCountry + '</p><p style="font-size:12px;color:var(--text2);margin:8px 0;">This product doesn\'t ship to your selected country.</p><p style="font-size:12px;color:var(--text2);">Please select a different country or browse other products.</p><button onclick="window.location.href=\'home.html\'" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Browse Other Products</button></div></div>';
                     shippingUSD = 0; recalc();
                 } else {
@@ -348,14 +344,12 @@
                 shippingUSD = 0; recalc();
             }
 
-            // Recalculate display values
             dSub = convertPrice(subtotalUSD, userCurrency);
             dShip = convertPrice(shippingUSD, userCurrency);
             dFee = convertPrice(feeUSD, userCurrency);
             dDisc = convertPrice(discountUSD, userCurrency);
             dTotal = convertPrice(totalUSD, userCurrency);
 
-            // Order Summary
             h += '<div class="section-card"><div class="section-title"><i class="fas fa-receipt"></i> Order Summary</div>';
             cartItems.forEach(function(item) {
                 var it = (item.price||0)*(item.quantity||1);
@@ -372,20 +366,16 @@
             if (userCurrency !== 'USD') h += '<div class="summary-row total-usd"><span></span><span>≈ $' + totalUSD.toFixed(2) + ' USD</span></div>';
             h += '</div>';
 
-            // Discount
             h += '<div class="section-card"><div class="section-title"><i class="fas fa-tags"></i> Discount Code</div><div class="discount-box"><input type="text" class="form-input" id="discountCode" placeholder="Enter code"><button class="btn-apply" onclick="applyDiscount()">Apply</button></div><div id="discountMsg" style="font-size:12px;min-height:16px;"></div></div>';
 
-            // Payment
             h += '<div class="section-card"><div class="section-title"><i class="fas fa-credit-card"></i> Payment</div><div class="payment-method selected"><i class="fas fa-credit-card" style="font-size:20px;color:var(--accent);"></i><div style="flex:1;"><div style="font-weight:600;font-size:13px;">Flutterwave</div><div style="font-size:11px;color:var(--text2);">Pay in ' + userCurrency + ' • Card, Bank, USSD</div></div><i class="fas fa-check-circle" style="color:var(--accent);"></i></div></div>';
 
-            // Pay button - disabled if cannot deliver
             var canPay = isDigitalProduct || (currentSelectedCountry && canDeliver);
             h += '<div style="padding:0 16px;"><button class="btn-pay" id="btnPay" onclick="processPayment()"' + (!canPay ? ' disabled' : '') + '><i class="fas fa-lock"></i> Pay ' + sym + dTotal.toFixed(2) + '</button></div>';
             h += '<div class="secure-badge"><i class="fas fa-shield-alt"></i> Secured by Flutterwave • ' + userCurrency + '</div>';
 
             c.innerHTML = h;
             
-            // Re-select country in dropdown
             if (currentSelectedCountry) {
                 document.getElementById('addrCountry').value = currentSelectedCountry;
             }
@@ -408,26 +398,19 @@
             currentSelectedCountry = opt.value;
             var newCurrency = opt.getAttribute('data-currency') || 'USD';
             
-            // Update currency if different
             if (newCurrency !== userCurrency) {
                 userCurrency = newCurrency;
                 userCurrencySymbol = getCurrencySymbol(userCurrency);
                 document.getElementById('currencyBadge').textContent = userCurrency;
             }
             
-            // Check delivery
             canDeliver = canDeliverToCountry(currentSelectedCountry);
-            
-            // Reset shipping
             shippingUSD = 0;
             selectedShipping = null;
             
-            // Auto-select first shipping option if available
             if (canDeliver && !isDigitalProduct) {
                 var opts = getShippingOptionsForCountry(currentSelectedCountry);
-                if (opts.length > 0) {
-                    shippingUSD = opts[0].rate;
-                }
+                if (opts.length > 0) { shippingUSD = opts[0].rate; }
             }
             
             recalc();
@@ -519,7 +502,6 @@
                 if (!address) { showToast('Enter street address','warning'); return; }
             }
 
-            // Ensure Flutterwave is loaded
             if (typeof FlutterwaveCheckout === 'undefined') {
                 showToast('Loading payment system...','warning');
                 loadFlutterwaveScript(function() { showToast('Ready! Click Pay again','success'); });
@@ -532,15 +514,12 @@
             btn.disabled = true;
 
             var txRef = 'STL-' + Date.now() + '-' + Math.random().toString(36).substr(2,6).toUpperCase();
-            
-            // FLUTTERWAVE GETS THE CONVERTED AMOUNT IN USER CURRENCY
             var flutterwaveAmount = convertPrice(totalUSD, userCurrency);
             flutterwaveAmount = Math.round(flutterwaveAmount * 100) / 100;
             
             console.log('💳 Flutterwave Payment:');
             console.log('   USD Total: $' + totalUSD.toFixed(2));
             console.log('   ' + userCurrency + ' Total: ' + userCurrencySymbol + flutterwaveAmount.toFixed(2));
-            console.log('   Rate: 1 USD = ' + (exchangeRates[userCurrency]||1).toFixed(2) + ' ' + userCurrency);
 
             FlutterwaveCheckout({
                 public_key: CONFIG.flutterwaveKey,
@@ -551,7 +530,6 @@
                 customer: { email: currentUser.email, name: name, phonenumber: phone },
                 customizations: { title: 'STOLIY', description: isDigitalProduct ? 'Digital Product' : 'Order Payment', logo: 'app-icon.png' },
                 callback: async function(r) {
-                    console.log('📩 Flutterwave response:', r);
                     if (r.status === 'successful' || r.status === 'completed') {
                         btn.innerHTML = '✅ Payment Successful!';
                         showToast('Payment successful! 🎉', 'success',
@@ -595,6 +573,12 @@
         };
 
         async function createOrders(name, phone, country, txRef, txnId) {
+            // ============ GET TRACKING DATA ============
+            var ref = localStorage.getItem('stoliy_ref') || null;
+            var dsp = localStorage.getItem('stoliy_dsp') || null;
+            var dspStore = localStorage.getItem('stoliy_dsp_store') || null;
+            var campaign = sessionStorage.getItem('stoliy_campaign') || null;
+            
             var shipping = {
                 name: name, phone: phone, country: country,
                 city: isDigitalProduct ? '' : document.getElementById('addrCity')?.value?.trim() || '',
@@ -614,6 +598,13 @@
                     currency: userCurrency, baseCurrency: 'USD', exchangeRate: exchangeRates[userCurrency]||1,
                     shippingAddress: shipping, paymentReference: txnId||txRef,
                     paymentMethod: 'flutterwave', isDigital: isDigitalProduct,
+                    // ============ TRACKING FIELDS ============
+                    ref: ref,
+                    dropship: dsp,
+                    dropshipStore: dspStore,
+                    campaign: campaign,
+                    isDropshipOrder: dsp ? true : false,
+                    // ============================================
                     status: isDigitalProduct ? 'completed' : 'paid',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -624,14 +615,6 @@
 
         document.getElementById('addressModal').addEventListener('click', function(e) { if (e.target === this) closeAddressModal(); });
     })();
-    // In checkout.html, add to createOrders function:
-// Get affiliate and campaign for order attribution
-var affiliateId = STOLIY_Router.getAffiliateId();
-var campaign = STOLIY_Router.getCampaign();
-
-// Add to order data:
-if (affiliateId) orderData.affiliateId = affiliateId;
-if (campaign) orderData.campaign = campaign;
     </script>
 </body>
 </html>
