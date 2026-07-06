@@ -184,7 +184,6 @@
             setTimeout(function() { t.classList.remove('show'); setTimeout(function() { t.remove(); }, 300); }, 4000);
         }
 
-        // ============ BUILD COUNTRY OPTIONS ============
         function buildCountryOptions(selectedName) {
             if (!countryList.length) return '<option value="">Loading countries...</option>';
             var h = '<option value="">Select country</option>';
@@ -199,7 +198,6 @@
             return h;
         }
 
-        // ============ COLLECT SHIPPING OPTIONS ============
         function getShippingOptionsForCountry(countryName) {
             var opts = [], seen = {};
             for (var item of cartItems) {
@@ -262,7 +260,6 @@
 
             subtotalUSD = cartItems.reduce(function(s, i) { return s + ((i.price||0)*(i.quantity||1)); }, 0);
             
-            // Set initial country from user profile
             if (userData.country && countryList.length) {
                 var fc = countryList.find(function(x) { return (x.code||x.iso2||x.alpha2) === userData.country; });
                 if (fc) {
@@ -289,20 +286,14 @@
             var dTotal = convertPrice(totalUSD, userCurrency);
             
             document.getElementById('currencyBadge').textContent = userCurrency;
-
             var c = document.getElementById('checkoutContent'), h = '';
             
-            // Exchange rate info
             if (userCurrency !== 'USD' && rate > 0) {
                 h += '<div class="rate-info"><i class="fas fa-exchange-alt"></i> <strong>1 USD = ' + rate.toFixed(2) + ' ' + userCurrency + '</strong> • All prices shown in ' + userCurrency + '</div>';
             }
-
-            // Digital badge
             if (isDigitalProduct) {
                 h += '<div style="padding:0 16px;margin-bottom:8px;"><span class="digital-badge"><i class="fas fa-download"></i> Digital Product • No shipping needed</span></div>';
             }
-
-            // Customer Info
             h += '<div class="section-card"><div class="section-title"><i class="fas fa-user"></i> Your Information</div>';
             h += '<div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-input" id="addrName" value="' + (userData?.name||currentUser?.displayName||'') + '"></div>';
             h += '<div class="form-group"><label class="form-label">Phone Number *</label><input type="tel" class="form-input" id="addrPhone" value="' + (userData?.phone||'') + '"></div>';
@@ -310,19 +301,16 @@
             h += '<div class="form-group"><label class="form-label">Country *</label><select class="form-input" id="addrCountry" onchange="onCountryChanged()">' + buildCountryOptions(currentSelectedCountry) + '</select></div>';
             h += '</div>';
 
-            // Physical product shipping
             if (!isDigitalProduct) {
                 if (savedAddresses.length > 0) {
                     h += '<div style="padding:0 16px;"><button class="btn-saved-address" onclick="openSavedAddresses()"><i class="fas fa-address-book"></i> Use Saved Address (' + savedAddresses.length + ')</button></div>';
                 }
-
                 if (currentSelectedCountry && canDeliver) {
                     h += '<div class="section-card"><div class="section-title"><i class="fas fa-map-marker-alt"></i> Shipping Address</div>';
                     h += '<div class="form-row"><div class="form-group"><label class="form-label">City *</label><input type="text" class="form-input" id="addrCity"></div><div class="form-group"><label class="form-label">State/Region</label><input type="text" class="form-input" id="addrState"></div></div>';
                     h += '<div class="form-group"><label class="form-label">Street Address *</label><textarea class="form-input" id="addrFull" placeholder="House number, street name, estate"></textarea></div>';
                     h += '<div class="form-row"><div class="form-group"><label class="form-label">Postal Code</label><input type="text" class="form-input" id="addrZip"></div><div class="form-group"><label class="form-label">Nearest Landmark</label><input type="text" class="form-input" id="addrLandmark"></div></div>';
                     h += '</div>';
-
                     var opts = getShippingOptionsForCountry(currentSelectedCountry);
                     if (opts.length > 0) {
                         h += '<div class="section-card"><div class="section-title"><i class="fas fa-truck"></i> Shipping Method</div>';
@@ -365,98 +353,46 @@
             h += '<div class="summary-row total"><span>Total</span><span>' + sym + dTotal.toFixed(2) + '</span></div>';
             if (userCurrency !== 'USD') h += '<div class="summary-row total-usd"><span></span><span>≈ $' + totalUSD.toFixed(2) + ' USD</span></div>';
             h += '</div>';
-
             h += '<div class="section-card"><div class="section-title"><i class="fas fa-tags"></i> Discount Code</div><div class="discount-box"><input type="text" class="form-input" id="discountCode" placeholder="Enter code"><button class="btn-apply" onclick="applyDiscount()">Apply</button></div><div id="discountMsg" style="font-size:12px;min-height:16px;"></div></div>';
-
             h += '<div class="section-card"><div class="section-title"><i class="fas fa-credit-card"></i> Payment</div><div class="payment-method selected"><i class="fas fa-credit-card" style="font-size:20px;color:var(--accent);"></i><div style="flex:1;"><div style="font-weight:600;font-size:13px;">Flutterwave</div><div style="font-size:11px;color:var(--text2);">Pay in ' + userCurrency + ' • Card, Bank, USSD</div></div><i class="fas fa-check-circle" style="color:var(--accent);"></i></div></div>';
-
             var canPay = isDigitalProduct || (currentSelectedCountry && canDeliver);
             h += '<div style="padding:0 16px;"><button class="btn-pay" id="btnPay" onclick="processPayment()"' + (!canPay ? ' disabled' : '') + '><i class="fas fa-lock"></i> Pay ' + sym + dTotal.toFixed(2) + '</button></div>';
             h += '<div class="secure-badge"><i class="fas fa-shield-alt"></i> Secured by Flutterwave • ' + userCurrency + '</div>';
-
             c.innerHTML = h;
-            
-            if (currentSelectedCountry) {
-                document.getElementById('addrCountry').value = currentSelectedCountry;
-            }
+            if (currentSelectedCountry) { document.getElementById('addrCountry').value = currentSelectedCountry; }
         }
 
-        // ============ COUNTRY CHANGE ============
         window.onCountryChanged = function() {
             var sel = document.getElementById('addrCountry');
             var opt = sel.options[sel.selectedIndex];
-            if (!opt || !opt.value) {
-                currentSelectedCountry = '';
-                canDeliver = false;
-                shippingUSD = 0;
-                selectedShipping = null;
-                recalc();
-                renderCheckout();
-                return;
-            }
-            
+            if (!opt || !opt.value) { currentSelectedCountry = ''; canDeliver = false; shippingUSD = 0; selectedShipping = null; recalc(); renderCheckout(); return; }
             currentSelectedCountry = opt.value;
             var newCurrency = opt.getAttribute('data-currency') || 'USD';
-            
-            if (newCurrency !== userCurrency) {
-                userCurrency = newCurrency;
-                userCurrencySymbol = getCurrencySymbol(userCurrency);
-                document.getElementById('currencyBadge').textContent = userCurrency;
-            }
-            
+            if (newCurrency !== userCurrency) { userCurrency = newCurrency; userCurrencySymbol = getCurrencySymbol(userCurrency); document.getElementById('currencyBadge').textContent = userCurrency; }
             canDeliver = canDeliverToCountry(currentSelectedCountry);
-            shippingUSD = 0;
-            selectedShipping = null;
-            
-            if (canDeliver && !isDigitalProduct) {
-                var opts = getShippingOptionsForCountry(currentSelectedCountry);
-                if (opts.length > 0) { shippingUSD = opts[0].rate; }
-            }
-            
-            recalc();
-            renderCheckout();
+            shippingUSD = 0; selectedShipping = null;
+            if (canDeliver && !isDigitalProduct) { var opts = getShippingOptionsForCountry(currentSelectedCountry); if (opts.length > 0) { shippingUSD = opts[0].rate; } }
+            recalc(); renderCheckout();
         };
 
-        window.selectShipping = function(rate, el) {
-            shippingUSD = rate;
-            recalc();
-            document.querySelectorAll('.shipping-option').forEach(function(s) { s.classList.remove('selected'); });
-            el.classList.add('selected');
-            renderCheckout();
-        };
-
+        window.selectShipping = function(rate, el) { shippingUSD = rate; recalc(); document.querySelectorAll('.shipping-option').forEach(function(s) { s.classList.remove('selected'); }); el.classList.add('selected'); renderCheckout(); };
         window.openSavedAddresses = function() {
             var list = document.getElementById('savedAddressesList');
-            list.innerHTML = savedAddresses.length === 0 ? '<div style="text-align:center;padding:30px;color:var(--text2);">No saved addresses</div>' :
-                savedAddresses.map(function(a) {
-                    return '<div class="saved-address-item" onclick="useAddress(\'' + a.id + '\')"><div class="saved-address-name">' + (a.fullName||'N/A') + (a.isDefault?' <span class="saved-address-badge">Default</span>':'') + '</div><div class="saved-address-detail">' + (a.streetAddress||'') + ', ' + (a.city||'') + ', ' + (a.state||'') + ', ' + (a.country||'') + '</div><div class="saved-address-detail">📞 ' + (a.phone||'N/A') + (a.landmark?' • 📍 '+a.landmark:'') + '</div></div>';
-                }).join('');
+            list.innerHTML = savedAddresses.length === 0 ? '<div style="text-align:center;padding:30px;color:var(--text2);">No saved addresses</div>' : savedAddresses.map(function(a) { return '<div class="saved-address-item" onclick="useAddress(\'' + a.id + '\')"><div class="saved-address-name">' + (a.fullName||'N/A') + (a.isDefault?' <span class="saved-address-badge">Default</span>':'') + '</div><div class="saved-address-detail">' + (a.streetAddress||'') + ', ' + (a.city||'') + ', ' + (a.state||'') + ', ' + (a.country||'') + '</div><div class="saved-address-detail">📞 ' + (a.phone||'N/A') + (a.landmark?' • 📍 '+a.landmark:'') + '</div></div>'; }).join('');
             document.getElementById('addressModal').classList.add('show');
         };
-        
         window.closeAddressModal = function() { document.getElementById('addressModal').classList.remove('show'); };
-        
         window.useAddress = function(id) {
             var a = savedAddresses.find(function(x) { return x.id === id; }); if (!a) return;
             document.getElementById('addrName').value = a.fullName || '';
             document.getElementById('addrPhone').value = a.phone || '';
-            if (a.country) {
-                currentSelectedCountry = a.country;
-                canDeliver = canDeliverToCountry(a.country);
-                if (canDeliver && !isDigitalProduct) {
-                    var opts = getShippingOptionsForCountry(a.country);
-                    if (opts.length > 0) { shippingUSD = opts[0].rate; }
-                }
-                recalc();
-            }
+            if (a.country) { currentSelectedCountry = a.country; canDeliver = canDeliverToCountry(a.country); if (canDeliver && !isDigitalProduct) { var opts = getShippingOptionsForCountry(a.country); if (opts.length > 0) { shippingUSD = opts[0].rate; } } recalc(); }
             document.getElementById('addrCity').value = a.city || '';
             document.getElementById('addrState').value = a.state || '';
             document.getElementById('addrFull').value = a.streetAddress || '';
             document.getElementById('addrZip').value = a.postalCode || '';
             document.getElementById('addrLandmark').value = a.landmark || '';
-            closeAddressModal();
-            renderCheckout();
-            showToast('Address loaded! ✅', 'success');
+            closeAddressModal(); renderCheckout(); showToast('Address loaded! ✅', 'success');
         };
 
         window.applyDiscount = async function() {
@@ -471,61 +407,29 @@
             if (d.validUntil&&d.validUntil.toDate&&d.validUntil.toDate()<now) { msg.textContent='Expired';msg.style.color='var(--error)';return; }
             if (d.maxUses&&d.currentUses>=d.maxUses) { msg.textContent='Limit reached';msg.style.color='var(--error)';return; }
             if (d.minimumPurchase&&subtotalUSD<d.minimumPurchase) { showToast('Min: $'+d.minimumPurchase,'warning');return; }
-            discountUSD = d.type==='percentage'?(subtotalUSD*d.value/100):d.value;
-            appliedDiscount = d;
-            recalc();
+            discountUSD = d.type==='percentage'?(subtotalUSD*d.value/100):d.value; appliedDiscount = d; recalc();
             var sym = userCurrencySymbol;
-            msg.textContent = '✅ Saved ' + sym + convertPrice(discountUSD,userCurrency).toFixed(2);
-            msg.style.color='var(--success)';
-            showToast('Discount applied!','success');
-            renderCheckout();
+            msg.textContent = '✅ Saved ' + sym + convertPrice(discountUSD,userCurrency).toFixed(2); msg.style.color='var(--success)';
+            showToast('Discount applied!','success'); renderCheckout();
         };
 
         window.processPayment = function() {
             var name = document.getElementById('addrName').value.trim();
             var phone = document.getElementById('addrPhone').value.trim();
             var country = document.getElementById('addrCountry').value;
-            
             if (!name) { showToast('Enter your name','warning'); return; }
             if (!phone) { showToast('Enter phone number','warning'); return; }
             if (!country) { showToast('Select your country','warning'); return; }
-
-            if (!isDigitalProduct && !canDeliver) {
-                showToast('Cannot deliver to this country. Please select another.','error');
-                return;
-            }
-
-            if (!isDigitalProduct) {
-                var city = document.getElementById('addrCity').value.trim();
-                var address = document.getElementById('addrFull').value.trim();
-                if (!city) { showToast('Enter city','warning'); return; }
-                if (!address) { showToast('Enter street address','warning'); return; }
-            }
-
-            if (typeof FlutterwaveCheckout === 'undefined') {
-                showToast('Loading payment system...','warning');
-                loadFlutterwaveScript(function() { showToast('Ready! Click Pay again','success'); });
-                return;
-            }
-
-            var btn = document.getElementById('btnPay');
-            var origHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening Flutterwave...';
-            btn.disabled = true;
-
+            if (!isDigitalProduct && !canDeliver) { showToast('Cannot deliver to this country. Please select another.','error'); return; }
+            if (!isDigitalProduct) { var city = document.getElementById('addrCity').value.trim(); var address = document.getElementById('addrFull').value.trim(); if (!city) { showToast('Enter city','warning'); return; } if (!address) { showToast('Enter street address','warning'); return; } }
+            if (typeof FlutterwaveCheckout === 'undefined') { showToast('Loading payment system...','warning'); loadFlutterwaveScript(function() { showToast('Ready! Click Pay again','success'); }); return; }
+            var btn = document.getElementById('btnPay'); var origHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening Flutterwave...'; btn.disabled = true;
             var txRef = 'STL-' + Date.now() + '-' + Math.random().toString(36).substr(2,6).toUpperCase();
             var flutterwaveAmount = convertPrice(totalUSD, userCurrency);
             flutterwaveAmount = Math.round(flutterwaveAmount * 100) / 100;
-            
-            console.log('💳 Flutterwave Payment:');
-            console.log('   USD Total: $' + totalUSD.toFixed(2));
-            console.log('   ' + userCurrency + ' Total: ' + userCurrencySymbol + flutterwaveAmount.toFixed(2));
-
             FlutterwaveCheckout({
-                public_key: CONFIG.flutterwaveKey,
-                tx_ref: txRef,
-                amount: flutterwaveAmount,
-                currency: userCurrency,
+                public_key: CONFIG.flutterwaveKey, tx_ref: txRef, amount: flutterwaveAmount, currency: userCurrency,
                 payment_options: 'card,banktransfer,ussd',
                 customer: { email: currentUser.email, name: name, phonenumber: phone },
                 customizations: { title: 'STOLIY', description: isDigitalProduct ? 'Digital Product' : 'Order Payment', logo: 'app-icon.png' },
@@ -538,46 +442,28 @@
                             (!isDigitalProduct && savedAddresses.length === 0 ? '<button class="toast-btn" onclick="saveAddress()">💾 Save Address</button>' : '')
                         );
                         await createOrders(name, phone, country, txRef, r.transaction_id||r.tx_ref);
-                    } else {
-                        showToast('Payment failed. Please try again.','error');
-                        btn.innerHTML = origHTML; btn.disabled = false;
-                    }
+                    } else { showToast('Payment failed. Please try again.','error'); btn.innerHTML = origHTML; btn.disabled = false; }
                 },
-                onclose: function() {
-                    if (btn.disabled && btn.innerHTML.indexOf('Successful') === -1) {
-                        showToast('Payment cancelled','warning');
-                        btn.innerHTML = origHTML; btn.disabled = false;
-                    }
-                }
+                onclose: function() { if (btn.disabled && btn.innerHTML.indexOf('Successful') === -1) { showToast('Payment cancelled','warning'); btn.innerHTML = origHTML; btn.disabled = false; } }
             });
         };
 
         window.saveAddress = function() {
-            var data = {
-                userId: currentUser.uid,
-                fullName: document.getElementById('addrName').value.trim(),
-                phone: document.getElementById('addrPhone').value.trim(),
-                country: document.getElementById('addrCountry').value,
-                state: document.getElementById('addrState')?.value?.trim() || '',
-                city: document.getElementById('addrCity')?.value?.trim() || '',
-                streetAddress: document.getElementById('addrFull')?.value?.trim() || '',
-                postalCode: document.getElementById('addrZip')?.value?.trim() || '',
-                landmark: document.getElementById('addrLandmark')?.value?.trim() || '',
-                isDefault: savedAddresses.length === 0,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            db.collection('addresses').add(data).then(function() {
-                showToast('Address saved! ✅','success');
-                document.querySelector('.toast')?.remove();
-            });
+            var data = { userId: currentUser.uid, fullName: document.getElementById('addrName').value.trim(), phone: document.getElementById('addrPhone').value.trim(), country: document.getElementById('addrCountry').value, state: document.getElementById('addrState')?.value?.trim() || '', city: document.getElementById('addrCity')?.value?.trim() || '', streetAddress: document.getElementById('addrFull')?.value?.trim() || '', postalCode: document.getElementById('addrZip')?.value?.trim() || '', landmark: document.getElementById('addrLandmark')?.value?.trim() || '', isDefault: savedAddresses.length === 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+            db.collection('addresses').add(data).then(function() { showToast('Address saved! ✅','success'); document.querySelector('.toast')?.remove(); });
         };
 
+        // ============ CREATE ORDERS WITH FIRESTORE TRACKING ============
         async function createOrders(name, phone, country, txRef, txnId) {
-            // ============ GET TRACKING DATA ============
+            // Get legacy localStorage tracking as fallback
             var ref = localStorage.getItem('stoliy_ref') || null;
             var dsp = localStorage.getItem('stoliy_dsp') || null;
             var dspStore = localStorage.getItem('stoliy_dsp_store') || null;
             var campaign = sessionStorage.getItem('stoliy_campaign') || null;
+            
+            // Firestore-based visitor ID (persists across devices)
+            var visitorId = currentUser ? currentUser.uid : (sessionStorage.getItem('visitor_id') || ('VIS-' + Date.now().toString(36)));
+            if (!currentUser) sessionStorage.setItem('visitor_id', visitorId);
             
             var shipping = {
                 name: name, phone: phone, country: country,
@@ -589,6 +475,7 @@
             };
             var groups = {};
             cartItems.forEach(function(i) { var s = i.storeId||'unknown'; if(!groups[s]) groups[s]=[]; groups[s].push(i); });
+            
             for (var sid in groups) {
                 await db.collection('orders').add({
                     userId: currentUser.uid, storeId: sid,
@@ -598,17 +485,22 @@
                     currency: userCurrency, baseCurrency: 'USD', exchangeRate: exchangeRates[userCurrency]||1,
                     shippingAddress: shipping, paymentReference: txnId||txRef,
                     paymentMethod: 'flutterwave', isDigital: isDigitalProduct,
-                    // ============ TRACKING FIELDS ============
-                    ref: ref,
-                    dropship: dsp,
-                    dropshipStore: dspStore,
-                    campaign: campaign,
+                    // Legacy tracking fields
+                    ref: ref, dropship: dsp, dropshipStore: dspStore, campaign: campaign,
                     isDropshipOrder: dsp ? true : false,
-                    // ============================================
+                    // Firestore visitor ID for cross-device tracking
+                    visitorId: visitorId,
                     status: isDigitalProduct ? 'completed' : 'paid',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
+            
+            // ============ MARK TRACKING AS CONVERTED IN FIRESTORE ============
+            var trackingSnap = await db.collection('tracking').where('visitorId', '==', visitorId).where('converted', '==', false).get();
+            for (var tDoc of trackingSnap.docs) {
+                await tDoc.ref.update({ converted: true, orderId: groups[Object.keys(groups)[0]]?.orderNumber || null, convertedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            }
+            
             for (var item of cartItems) { await db.collection('cart').doc(item.id).delete(); }
             if (appliedDiscount?.id) { await db.collection('discountCodes').doc(appliedDiscount.id).update({ currentUses: firebase.firestore.FieldValue.increment(1) }); }
         }
