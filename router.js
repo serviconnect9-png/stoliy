@@ -1,257 +1,170 @@
 // ============================================
-// STOLIY - ROUTER SYSTEM
+// STOLIY - ROUTER SYSTEM (Clean URL Support)
 // ============================================
 
 const STOLIY_Router = {
-    // Current route info
     currentRoute: null,
     currentParams: {},
-    
-    // Initialize router
+
     init() {
         this.parseRoute();
         this.handleAffiliateTracking();
         this.handleCampaignTracking();
         this.handleCouponCodes();
+        this.redirectToCorrectPage();
     },
 
-    // Parse current URL
     parseRoute() {
         const path = window.location.pathname;
         const params = new URLSearchParams(window.location.search);
         
-        // Store all query params
+        // Store query params
         this.currentParams = {};
         for (const [key, value] of params.entries()) {
             this.currentParams[key] = value;
         }
 
-        // Determine route type
-        if (path.includes('/store/')) {
+        // Detect route from path
+        if (path.startsWith('/store/')) {
             this.currentRoute = 'store';
-            this.currentParams.slug = path.split('/store/')[1];
-        } else if (path.includes('/product/')) {
+            this.currentParams.slug = path.split('/store/')[1].replace(/\/$/, '');
+        } else if (path.startsWith('/product/')) {
             this.currentRoute = 'product';
-            this.currentParams.slug = path.split('/product/')[1];
-        } else if (path.includes('/category/')) {
+            this.currentParams.slug = path.split('/product/')[1].replace(/\/$/, '');
+        } else if (path.startsWith('/category/')) {
             this.currentRoute = 'category';
-            this.currentParams.slug = path.split('/category/')[1];
+            this.currentParams.slug = path.split('/category/')[1].replace(/\/$/, '');
         } else if (path.includes('store.html')) {
             this.currentRoute = 'store';
             this.currentParams.id = params.get('id');
-        } else if (path.includes('products.html')) {
+            this.currentParams.slug = params.get('slug');
+        } else if (path.includes('products.html') || path.includes('product.html')) {
             this.currentRoute = 'product';
             this.currentParams.id = params.get('id');
-        } else if (path.includes('home.html') || path === '/' || path === '') {
-            this.currentRoute = 'home';
-        } else if (path.includes('search.html')) {
-            this.currentRoute = 'search';
-            this.currentParams.category = params.get('category');
-        } else if (path.includes('cart.html')) {
-            this.currentRoute = 'cart';
-        } else if (path.includes('checkout.html')) {
-            this.currentRoute = 'checkout';
-        } else if (path.includes('profile.html')) {
-            this.currentRoute = 'profile';
-        } else if (path.includes('orders.html')) {
-            this.currentRoute = 'orders';
-        } else if (path.includes('wishlist.html')) {
-            this.currentRoute = 'wishlist';
-        } else if (path.includes('store-dashboard.html')) {
-            this.currentRoute = 'dashboard';
-        } else if (path.includes('wizard.html')) {
-            this.currentRoute = 'wizard';
-        } else if (path.includes('flashsale.html')) {
-            this.currentRoute = 'flashsale';
+            this.currentParams.slug = params.get('slug');
         }
 
-        console.log('📍 Route:', this.currentRoute, this.currentParams);
+        console.log('📍 Route detected:', this.currentRoute, this.currentParams);
     },
 
-    // Handle affiliate tracking
+    redirectToCorrectPage() {
+        const path = window.location.pathname;
+        const htmlFile = window.location.pathname.split('/').pop();
+        
+        // If clean URL like /store/slug, redirect to store.html with slug param
+        if (path.startsWith('/store/') && !htmlFile.includes('.html')) {
+            const slug = path.split('/store/')[1].replace(/\/$/, '');
+            console.log('🔄 Redirecting /store/' + slug + ' → store.html?slug=' + slug);
+            window.location.replace('store.html?slug=' + encodeURIComponent(slug));
+            return;
+        }
+        
+        if (path.startsWith('/product/') && !htmlFile.includes('.html')) {
+            const slug = path.split('/product/')[1].replace(/\/$/, '');
+            console.log('🔄 Redirecting /product/' + slug + ' → products.html?slug=' + slug);
+            window.location.replace('products.html?slug=' + encodeURIComponent(slug));
+            return;
+        }
+        
+        if (path.startsWith('/category/') && !htmlFile.includes('.html')) {
+            const slug = path.split('/category/')[1].replace(/\/$/, '');
+            console.log('🔄 Redirecting /category/' + slug + ' → search.html?category=' + slug);
+            window.location.replace('search.html?category=' + encodeURIComponent(slug));
+            return;
+        }
+    },
+
     handleAffiliateTracking() {
         const ref = this.currentParams.ref || this.currentParams.affiliate || this.currentParams.aff;
-        
         if (ref) {
-            // Store affiliate ID in localStorage with 30-day expiry
             const affiliateData = {
                 id: ref,
                 timestamp: Date.now(),
-                expiry: Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
+                expiry: Date.now() + (30 * 24 * 60 * 60 * 1000)
             };
             localStorage.setItem('stoliy_affiliate', JSON.stringify(affiliateData));
             console.log('🔗 Affiliate tracked:', ref);
         }
-
-        // Check for existing affiliate cookie
         const stored = localStorage.getItem('stoliy_affiliate');
         if (stored) {
             const data = JSON.parse(stored);
-            if (Date.now() > data.expiry) {
-                localStorage.removeItem('stoliy_affiliate');
-            }
+            if (Date.now() > data.expiry) localStorage.removeItem('stoliy_affiliate');
         }
     },
 
-    // Handle campaign tracking
     handleCampaignTracking() {
         const campaign = this.currentParams.campaign || this.currentParams.utm_campaign;
-        
-        if (campaign) {
-            sessionStorage.setItem('stoliy_campaign', campaign);
-            console.log('📢 Campaign tracked:', campaign);
-        }
+        if (campaign) sessionStorage.setItem('stoliy_campaign', campaign);
     },
 
-    // Handle coupon codes from URL
     handleCouponCodes() {
         const coupon = this.currentParams.coupon || this.currentParams.code;
-        
-        if (coupon) {
-            sessionStorage.setItem('stoliy_coupon', coupon.toUpperCase());
-            console.log('🎫 Coupon from URL:', coupon);
-        }
+        if (coupon) sessionStorage.setItem('stoliy_coupon', coupon.toUpperCase());
     },
 
-    // Get affiliate ID for order attribution
     getAffiliateId() {
         const stored = localStorage.getItem('stoliy_affiliate');
         if (stored) {
             const data = JSON.parse(stored);
-            if (Date.now() < data.expiry) {
-                return data.id;
-            }
+            if (Date.now() < data.expiry) return data.id;
             localStorage.removeItem('stoliy_affiliate');
         }
         return null;
     },
 
-    // Get campaign for order attribution
-    getCampaign() {
-        return sessionStorage.getItem('stoliy_campaign') || null;
-    },
+    getCampaign() { return sessionStorage.getItem('stoliy_campaign') || null; },
+    getCouponCode() { return sessionStorage.getItem('stoliy_coupon') || null; },
 
-    // Get coupon code
-    getCouponCode() {
-        return sessionStorage.getItem('stoliy_coupon') || null;
-    },
-
-    // Generate store URL
-    getStoreUrl(storeId, storeSlug, storeName) {
-        const slug = storeSlug || (storeName || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const base = window.location.origin;
-        
-        // Append affiliate if exists
+    getStoreUrl(storeId, storeName) {
+        const slug = (storeName || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const affId = this.getAffiliateId();
-        const campaign = this.getCampaign();
-        
-        let url = `${base}/store/${slug}`;
-        const params = [];
-        if (affId) params.push(`ref=${affId}`);
-        if (campaign) params.push(`campaign=${campaign}`);
-        if (params.length) url += '?' + params.join('&');
-        
+        let url = `${window.location.origin}/store/${slug}`;
+        if (affId) url += '?ref=' + affId;
         return url;
     },
 
-    // Generate product URL
-    getProductUrl(productId, productSlug, productName) {
-        const slug = productSlug || (productName || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const base = window.location.origin;
-        
+    getProductUrl(productId, productName) {
+        const slug = (productName || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const affId = this.getAffiliateId();
-        const campaign = this.getCampaign();
-        
-        let url = `${base}/product/${slug}`;
-        const params = [];
-        if (affId) params.push(`ref=${affId}`);
-        if (campaign) params.push(`campaign=${campaign}`);
-        if (params.length) url += '?' + params.join('&');
-        
+        let url = `${window.location.origin}/product/${slug}`;
+        if (affId) url += '?ref=' + affId;
         return url;
     },
 
-    // Generate share URL
-    getShareUrl(type, id, name) {
-        if (type === 'store') return this.getStoreUrl(id, null, name);
-        if (type === 'product') return this.getProductUrl(id, null, name);
-        return window.location.href;
-    },
-
-    // Navigate to route
-    navigateTo(route, params = {}) {
+    navigateTo(page, params = {}) {
         const pages = {
-            home: 'home.html',
-            search: 'search.html',
-            cart: 'cart.html',
-            checkout: 'checkout.html',
-            profile: 'profile.html',
-            orders: 'orders.html',
-            wishlist: 'wishlist.html',
-            dashboard: 'store-dashboard.html',
-            wizard: 'wizard.html',
-            flashsale: 'flashsale.html',
-            addresses: 'addresses.html',
-            notifications: 'notifications.html',
-            chat: 'chat.html'
+            home: 'home.html', search: 'search.html', cart: 'cart.html',
+            checkout: 'checkout.html', profile: 'profile.html', orders: 'orders.html',
+            wishlist: 'wishlist.html', dashboard: 'store-dashboard.html', wizard: 'wizard.html'
         };
-
-        let url = pages[route] || 'home.html';
-        
-        // Build query string
+        let url = pages[page] || 'home.html';
         const queryParts = [];
-        for (const key in params) {
-            if (params[key]) queryParts.push(`${key}=${encodeURIComponent(params[key])}`);
-        }
-        
-        // Add affiliate if exists
+        for (const key in params) { if (params[key]) queryParts.push(`${key}=${encodeURIComponent(params[key])}`); }
         const affId = this.getAffiliateId();
         if (affId && !params.ref) queryParts.push(`ref=${affId}`);
-        
         if (queryParts.length) url += '?' + queryParts.join('&');
-        
         window.location.href = url;
     },
 
-    // Share content
     async shareContent(title, url) {
         if (navigator.share) {
-            try {
-                await navigator.share({ title, url });
-                return true;
-            } catch(e) {
-                return false;
-            }
+            try { await navigator.share({ title, url }); return true; } catch(e) { return false; }
         } else {
-            try {
-                await navigator.clipboard.writeText(url);
-                return 'copied';
-            } catch(e) {
-                return false;
-            }
+            try { await navigator.clipboard.writeText(url); return 'copied'; } catch(e) { return false; }
         }
     }
 };
 
-// Initialize router on page load
+// Initialize immediately
 document.addEventListener('DOMContentLoaded', function() {
     STOLIY_Router.init();
     
-    // Auto-apply coupon from URL
+    // Auto-apply coupon on checkout
     const coupon = STOLIY_Router.getCouponCode();
     if (coupon && window.location.href.includes('checkout.html')) {
-        // Auto-fill discount code on checkout page
         setTimeout(function() {
             const discountInput = document.getElementById('discountCode');
-            if (discountInput) {
-                discountInput.value = coupon;
-                sessionStorage.removeItem('stoliy_coupon');
-            }
+            if (discountInput) { discountInput.value = coupon; sessionStorage.removeItem('stoliy_coupon'); }
         }, 1000);
     }
 });
-
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = STOLIY_Router;
-}
