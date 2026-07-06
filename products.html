@@ -155,134 +155,125 @@
     <script>
     (function() {
         try { if (!firebase.apps.length) firebase.initializeApp(CONFIG.firebaseConfig); } catch(e) {}
-        var auth = firebase.auth();
-        var db = firebase.firestore();
-        
-        var currentUser = null;
-        var userData = null;
-        var productData = null;
-        var storeData = null;
-        var currentImage = 0;
-        var quantity = 1;
-        var selectedVariant = null;
-        var isWishlisted = false;
-        var userCurrency = 'USD';
-        var userCurrencySymbol = '$';
-        var exchangeRates = {};
-        var countryList = [];
-        var hasPurchased = false;
-        var reviewRating = 5;
+        var auth = firebase.auth(), db = firebase.firestore();
+        var currentUser, userData, productData, storeData, currentImage=0, quantity=1, selectedVariant=null, isWishlisted=false, hasPurchased=false, reviewRating=5;
+        var userCurrency='USD', userCurrencySymbol='$', exchangeRates={}, countryList=[];
 
         var params = new URLSearchParams(window.location.search);
         var productId = params.get('id');
         var productSlug = params.get('slug');
-        var affiliateId = params.get('ref') || params.get('affiliate') || params.get('aff');
-        var campaignId = params.get('campaign') || params.get('utm_campaign');
-        var couponCode = params.get('coupon') || params.get('code');
+        var affiliateId = params.get('ref')||params.get('affiliate')||params.get('aff');
+        var campaignId = params.get('campaign')||params.get('utm_campaign');
+        var couponCode = params.get('coupon')||params.get('code');
 
-        if (affiliateId) {
-            var affData = { id: affiliateId, timestamp: Date.now(), expiry: Date.now() + (30*86400000) };
-            localStorage.setItem('stoliy_affiliate', JSON.stringify(affData));
+        if(affiliateId){var d={id:affiliateId,timestamp:Date.now(),expiry:Date.now()+30*86400000};localStorage.setItem('stoliy_affiliate',JSON.stringify(d));}
+        if(campaignId) sessionStorage.setItem('stoliy_campaign',campaignId);
+        if(couponCode) sessionStorage.setItem('stoliy_coupon',couponCode.toUpperCase());
+
+        function loadCountries(){
+            if(typeof countries!=='undefined'&&Array.isArray(countries)&&countries.length) countryList=countries;
+            else if(typeof window.countries!=='undefined'&&Array.isArray(window.countries)&&window.countries.length) countryList=window.countries;
         }
-        if (campaignId) { sessionStorage.setItem('stoliy_campaign', campaignId); }
-        if (couponCode) { sessionStorage.setItem('stoliy_coupon', couponCode.toUpperCase()); }
+        loadCountries();setTimeout(loadCountries,300);setTimeout(loadCountries,800);
 
-        function loadCountries() {
-            if (typeof countries !== 'undefined' && Array.isArray(countries) && countries.length) countryList = countries;
-            else if (typeof window.countries !== 'undefined' && Array.isArray(window.countries) && window.countries.length) countryList = window.countries;
-        }
-        loadCountries(); setTimeout(loadCountries,300); setTimeout(loadCountries,800);
+        function getCurrencyForCountry(code){var c=countryList.find(function(x){return(x.code||x.iso2||x.alpha2)===code;});return c?(c.currency||'USD'):'USD';}
+        function getCurrencySymbol(code){var s={USD:'$',NGN:'₦',GHS:'GH₵',KES:'KSh',ZAR:'R',EUR:'€',GBP:'£'};return s[code]||'$';}
+        function getCountryFlag(name){var c=countryList.find(function(x){return(x.name||x.country)===name;});return c?(c.flag||c.emoji||''):'';}
+        function convertPrice(usd,curr){if(!curr||curr==='USD'||!usd)return usd;var rate=exchangeRates[curr]||1;return usd*rate;}
 
-        function getCurrencyForCountry(code) { var c=countryList.find(function(x){return (x.code||x.iso2||x.alpha2)===code;}); return c?(c.currency||'USD'):'USD'; }
-        function getCurrencySymbol(code) { var s={USD:'$',NGN:'₦',GHS:'GH₵',KES:'KSh',ZAR:'R',EUR:'€',GBP:'£'}; return s[code]||'$'; }
-        function getCountryFlag(name) { var c=countryList.find(function(x){return (x.name||x.country)===name;}); return c?(c.flag||c.emoji||''):''; }
-        function convertPrice(usd, curr) { if(!curr||curr==='USD'||!usd) return usd; var rate=exchangeRates[curr]||1; return usd*rate; }
+        async function fetchRates(){try{var r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');var d=await r.json();exchangeRates=d.rates;sessionStorage.setItem('exchangeRates',JSON.stringify(d.rates));}catch(e){var c=sessionStorage.getItem('exchangeRates');if(c)exchangeRates=JSON.parse(c);}}
 
-        async function fetchRates() {
-            try { var r=await fetch('https://api.exchangerate-api.com/v4/latest/USD'); var d=await r.json(); exchangeRates=d.rates; sessionStorage.setItem('exchangeRates',JSON.stringify(d.rates)); } catch(e) { var c=sessionStorage.getItem('exchangeRates'); if(c) exchangeRates=JSON.parse(c); }
-        }
+        function showToast(msg,type){var t=document.querySelector('.toast');if(t)t.remove();t=document.createElement('div');t.className='toast '+(type||'');t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.classList.add('show')},10);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},2000);}
 
-        function showToast(msg, type) {
-            var t=document.querySelector('.toast'); if(t)t.remove();
-            t=document.createElement('div'); t.className='toast '+(type||''); t.textContent=msg; document.body.appendChild(t);
-            setTimeout(function(){t.classList.add('show')},10);
-            setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove()},300)},2000);
-        }
-
-        if (!productId && !productSlug) {
-            document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px 20px;"><i class="fas fa-box-open" style="font-size:48px;opacity:0.3;display:block;margin-bottom:16px;color:var(--text3);"></i><h3>No Product Specified</h3><button onclick="history.back()" style="margin-top:16px;padding:12px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Go Back</button></div>';
+        if(!productId&&!productSlug){
+            document.getElementById('appRoot').innerHTML='<div style="text-align:center;padding:80px 20px;"><i class="fas fa-box-open" style="font-size:48px;opacity:0.3;display:block;margin-bottom:16px;color:var(--text3);"></i><h3>No Product Specified</h3><button onclick="history.back()" style="margin-top:16px;padding:12px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Go Back</button></div>';
             return;
         }
 
-        auth.onAuthStateChanged(async function(user) {
-            if (!user) { window.location.href = 'login.html'; return; }
-            currentUser = user;
-            
-            var uDoc = await db.collection('users').doc(user.uid).get();
-            userData = uDoc.exists ? uDoc.data() : {};
-            
-            if (userData.country) userCurrency = getCurrencyForCountry(userData.country);
-            if (!userCurrency || userCurrency === 'USD') userCurrency = userData.currency || 'USD';
-            userCurrencySymbol = getCurrencySymbol(userCurrency);
-            
-            await fetchRates();
-            await loadProduct();
+        // ============ LOAD PRODUCT IMMEDIATELY ============
+        loadProduct();
+
+        // ============ AUTH RUNS SEPARATELY ============
+        auth.onAuthStateChanged(async function(user){
+            currentUser=user;
+            if(user){
+                var uDoc=await db.collection('users').doc(user.uid).get();
+                userData=uDoc.exists?uDoc.data():{};
+                if(userData.country) userCurrency=getCurrencyForCountry(userData.country);
+                if(!userCurrency||userCurrency==='USD') userCurrency=userData.currency||'USD';
+                userCurrencySymbol=getCurrencySymbol(userCurrency);
+                await fetchRates();
+                await updateUserSpecificData();
+                if(productData) refreshProductDisplay();
+            }
         });
 
-        async function loadProduct() {
-            try {
-                var doc;
-                if (productId) {
-                    doc = await db.collection('products').doc(productId).get();
-                } else if (productSlug) {
-                    var allProducts = await db.collection('products').get();
-                    var found = allProducts.docs.find(function(d) {
-                        var p = d.data(); var slug = p.slug || (p.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                        return slug === productSlug;
-                    });
-                    if (found) { doc = found; productId = found.id; } else doc = { exists: false };
+        async function updateUserSpecificData(){
+            if(!currentUser||!productId)return;
+            var allWishlist=await db.collection('wishlist').get();
+            isWishlisted=allWishlist.docs.some(function(d){var w=d.data();return w.userId===currentUser.uid&&w.productId===productId;});
+            var allOrders=await db.collection('orders').get();
+            hasPurchased=allOrders.docs.some(function(d){var o=d.data();return o.userId===currentUser.uid&&o.items&&o.items.some(function(i){return i.productId===productId;});});
+        }
+
+        function refreshProductDisplay(){
+            var wishBtn=document.getElementById('wishlistBtn');
+            if(wishBtn){if(isWishlisted)wishBtn.classList.add('liked');else wishBtn.classList.remove('liked');}
+            var reviewSection=document.querySelector('.section-block:last-child');
+            if(reviewSection&&hasPurchased){
+                var existingBtn=reviewSection.querySelector('.btn-review');
+                if(!existingBtn){
+                    var btn=document.createElement('button');btn.className='btn-review';btn.onclick=openReviewModal;btn.innerHTML='<i class="fas fa-star"></i> Write a Review';
+                    reviewSection.appendChild(btn);
+                }
+            }
+        }
+
+        async function loadProduct(){
+            document.getElementById('appRoot').innerHTML='<div class="loading-wrap"><div class="spinner"></div></div>';
+            
+            var timeout=setTimeout(function(){
+                if(!productData){
+                    document.getElementById('appRoot').innerHTML='<div style="text-align:center;padding:60px;"><i class="fas fa-clock" style="font-size:40px;opacity:0.2;display:block;margin-bottom:12px;color:var(--text3);"></i><h3>Taking longer...</h3><button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">Retry</button></div>';
+                }
+            },8000);
+
+            try{
+                if(productSlug&&!productId){
+                    var allProducts=await db.collection('products').get();
+                    var found=allProducts.docs.find(function(d){var p=d.data();var slug=p.slug||(p.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');return slug===productSlug;});
+                    if(found){productId=found.id;}else{throw new Error('not found');}
                 }
 
-                if (!doc || !doc.exists) {
-                    document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px;"><i class="fas fa-box-open" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;"></i><h3>Product Not Found</h3><button onclick="history.back()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;">Go Back</button></div>';
-                    return;
+                var doc=await db.collection('products').doc(productId).get();
+                if(!doc.exists){clearTimeout(timeout);showError('Product Not Found');return;}
+                productData={id:doc.id,...doc.data()};
+                clearTimeout(timeout);
+
+                if(productData.storeId){
+                    var storeDoc=await db.collection('stores').doc(productData.storeId).get();
+                    if(storeDoc.exists) storeData={id:storeDoc.id,...storeDoc.data()};
                 }
-                productData = { id: doc.id, ...doc.data() };
 
-                if (productData.storeId) {
-                    var storeDoc = await db.collection('stores').doc(productData.storeId).get();
-                    if (storeDoc.exists) storeData = { id: storeDoc.id, ...storeDoc.data() };
-                }
-
-                // Check wishlist
-                var allWishlist = await db.collection('wishlist').get();
-                isWishlisted = allWishlist.docs.some(function(d) { var w = d.data(); return w.userId === currentUser.uid && w.productId === productId; });
-
-                // Check if user purchased this product
-                var allOrders = await db.collection('orders').get();
-                hasPurchased = allOrders.docs.some(function(d) {
-                    var o = d.data();
-                    return o.userId === currentUser.uid && o.items && o.items.some(function(i) { return i.productId === productId; });
-                });
-
-                // Load reviews
-                var allReviews = await db.collection('reviews').get();
-                var reviews = allReviews.docs.map(function(d) { return d.data(); }).filter(function(r) { return r.productId === productId; });
+                var allReviews=await db.collection('reviews').get();
+                var reviews=allReviews.docs.map(function(d){return d.data();}).filter(function(r){return r.productId===productId;});
 
                 renderProduct(reviews);
-            } catch(e) {
-                console.error('Load error:', e);
-                document.getElementById('appRoot').innerHTML = '<div style="text-align:center;padding:80px;"><i class="fas fa-exclamation-triangle" style="font-size:48px;opacity:0.3;display:block;"></i><h3>Error loading product</h3><button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;">Retry</button></div>';
+            }catch(e){
+                clearTimeout(timeout);
+                showError('Error loading product');
             }
+        }
+
+        function showError(msg){
+            document.getElementById('appRoot').innerHTML='<div style="text-align:center;padding:80px;"><i class="fas fa-box-open" style="font-size:48px;opacity:0.3;display:block;margin-bottom:12px;"></i><h3>'+msg+'</h3><button onclick="history.back()" style="margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;">Go Back</button></div>';
         }
 
         function renderProduct(reviews) {
             var p = productData;
             var images = p.images || [];
             if (images.length === 0) images = ['https://via.placeholder.com/400'];
-            
             var hasVideo = !!p.video;
-            
             var priceUSD = p.price || 0;
             var origPriceUSD = p.originalPrice || 0;
             var discount = origPriceUSD > priceUSD ? Math.round((1 - priceUSD/origPriceUSD)*100) : 0;
@@ -293,7 +284,6 @@
             var shippingRates = p.shippingRates || [];
             var isDigital = p.isPhysical === false || p.productType === 'digital' || p.productType === 'ticket';
             var rate = exchangeRates[userCurrency] || 1;
-            
             var displayPrice = convertPrice(priceUSD, userCurrency);
             var displayOrigPrice = convertPrice(origPriceUSD, userCurrency);
             var sym = userCurrencySymbol;
@@ -306,7 +296,6 @@
             
             html += '<div class="top-bar"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><span class="top-title">Product Details</span><button class="btn-icon' + (isWishlisted ? ' liked' : '') + '" onclick="toggleWishlist()" id="wishlistBtn"><i class="fas fa-heart"></i></button><button class="btn-icon" onclick="shareProduct()"><i class="fas fa-share-alt"></i></button></div>';
 
-            // Image/Video Gallery
             html += '<div class="image-gallery" id="gallery">';
             images.forEach(function(img, i) {
                 html += '<div class="gallery-slide' + (i===0?' active':'') + '"><img src="' + img + '" alt="Product" onerror="this.src=\'https://via.placeholder.com/400\'"></div>';
@@ -378,7 +367,6 @@
                 html += '</div>';
             }
 
-            // Reviews with images/videos
             html += '<div class="section-block"><div class="section-title"><i class="fas fa-star"></i> Reviews (' + reviews.length + ')</div>';
             if (reviews.length > 0) {
                 reviews.slice(0, 20).forEach(function(r) {
@@ -431,6 +419,7 @@
         window.changeQty = function(delta) { quantity = Math.max(1, quantity + delta); document.getElementById('qtyDisplay').textContent = quantity; };
 
         window.toggleWishlist = async function() {
+            if(!currentUser){window.location.href='login.html';return;}
             var btn = document.getElementById('wishlistBtn');
             if (isWishlisted) {
                 var allWishlist = await db.collection('wishlist').get();
@@ -452,7 +441,7 @@
         };
 
         window.addToCart = async function() {
-            if (!currentUser || !productData) return;
+            if (!currentUser || !productData) {window.location.href='login.html';return;}
             var btn = document.querySelector('.btn-cart'); btn.textContent = 'Adding...'; btn.disabled = true;
             var allCart = await db.collection('cart').get();
             var existing = allCart.docs.find(function(d) { var c = d.data(); return c.userId === currentUser.uid && c.productId === productId && c.variant === (selectedVariant?.name||null); });
@@ -472,15 +461,11 @@
             document.getElementById('reviewRating').value = rating;
         };
 
-        window.openReviewModal = function() {
-            document.getElementById('reviewModal').classList.add('show');
-            document.getElementById('reviewRating').value = 5;
-            document.querySelectorAll('#starRating i').forEach(function(s, i) { s.classList.toggle('active', i < 5); });
-        };
-
+        window.openReviewModal = function() { document.getElementById('reviewModal').classList.add('show'); reviewRating=5; document.querySelectorAll('#starRating i').forEach(function(s,i){s.classList.toggle('active',i<5);}); };
         window.closeReviewModal = function() { document.getElementById('reviewModal').classList.remove('show'); };
 
         window.submitReview = async function() {
+            if(!currentUser){window.location.href='login.html';return;}
             var rating = parseInt(document.getElementById('reviewRating').value);
             var comment = document.getElementById('reviewComment').value.trim();
             if (!comment) { showToast('Please write a comment', 'warning'); return; }
@@ -490,7 +475,6 @@
             var imageUrls = [];
             var videoUrl = null;
 
-            // Upload images
             for (var i = 0; i < imageFiles.length; i++) {
                 var fd = new FormData(); fd.append('file', imageFiles[i]); fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
                 try {
@@ -500,7 +484,6 @@
                 } catch(e) {}
             }
 
-            // Upload video
             if (videoFile) {
                 var fd = new FormData(); fd.append('file', videoFile); fd.append('upload_preset', CONFIG.cloudinaryPreset || 'connect');
                 try {
@@ -510,7 +493,6 @@
                 } catch(e) {}
             }
 
-            // Check if user actually purchased
             var allOrders = await db.collection('orders').get();
             var verifiedPurchase = allOrders.docs.some(function(d) {
                 var o = d.data();
@@ -518,20 +500,12 @@
             });
 
             await db.collection('reviews').add({
-                productId: productId,
-                storeId: productData.storeId,
-                userId: currentUser.uid,
-                userName: currentUser.displayName || 'Customer',
-                userPhoto: currentUser.photoURL || '',
-                rating: rating,
-                comment: comment,
-                images: imageUrls,
-                video: videoUrl,
-                verifiedPurchase: verifiedPurchase,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                productId: productId, storeId: productData.storeId, userId: currentUser.uid,
+                userName: currentUser.displayName || 'Customer', userPhoto: currentUser.photoURL || '',
+                rating: rating, comment: comment, images: imageUrls, video: videoUrl,
+                verifiedPurchase: verifiedPurchase, createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            // Update product rating
             var allReviews = await db.collection('reviews').get();
             var productReviews = allReviews.docs.map(function(d) { return d.data(); }).filter(function(r) { return r.productId === productId; });
             var avgRating = productReviews.reduce(function(s, r) { return s + (r.rating||0); }, 0) / productReviews.length;
