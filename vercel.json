@@ -14,8 +14,53 @@
             "dest": "/search.html?category=$slug"
         },
         {
+            "src": "/event/(?<slug>[^/]+)",
+            "dest": "/event-detail.html?id=$slug"
+        },
+        {
             "src": "/(.*)",
             "dest": "/$1"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                },
+                {
+                    "key": "X-Frame-Options",
+                    "value": "DENY"
+                },
+                {
+                    "key": "X-XSS-Protection",
+                    "value": "1; mode=block"
+                },
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=3600"
+                }
+            ]
+        },
+        {
+            "source": "/store/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=1800"
+                }
+            ]
+        },
+        {
+            "source": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|webp))",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=86400, immutable"
+                }
+            ]
         }
     ]
 }
