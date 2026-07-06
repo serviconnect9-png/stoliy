@@ -134,6 +134,9 @@
         .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
         .empty-state i { font-size: 40px; opacity: 0.3; margin-bottom: 8px; display: block; }
         .empty-state p { font-size: 13px; }
+
+        .loading-skeleton { background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         
         .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1A1A2E; color: #fff; padding: 12px 20px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease; }
         .toast.show { transform: translateX(-50%) translateY(0); }
@@ -201,8 +204,10 @@
         let storeUrl = '';
         let flashSales = [];
         let discountCodes = [];
+        let loadTimeout;
 
         const BASE_URL = (typeof CONFIG !== 'undefined' && CONFIG.baseUrl) ? CONFIG.baseUrl : window.location.origin;
+        const CACHE_DURATION = 45000; // 45 seconds cache
 
         function showToast(msg, type) {
             const t = document.querySelector('.toast'); if(t) t.remove();
@@ -213,6 +218,22 @@
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2000);
         }
+
+        function showRetryScreen() {
+            document.getElementById('appRoot').innerHTML = 
+                '<div style="text-align:center;padding:80px 20px;">' +
+                '<i class="fas fa-clock" style="font-size:48px;opacity:0.2;display:block;margin-bottom:12px;color:var(--text3);"></i>' +
+                '<h3 style="margin-bottom:4px;">Taking longer than expected</h3>' +
+                '<p style="color:var(--text2);font-size:13px;margin-bottom:16px;">Check your internet connection</p>' +
+                '<button onclick="location.reload()" style="padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:600;">🔄 Retry</button>' +
+                '<button onclick="clearCacheAndRetry()" style="padding:12px 28px;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:25px;cursor:pointer;font-weight:600;margin-left:8px;">Clear Cache & Retry</button>' +
+                '</div>';
+        }
+
+        window.clearCacheAndRetry = function() {
+            sessionStorage.removeItem('store_' + storeId);
+            location.reload();
+        };
 
         async function resolveStoreId() {
             if (storeId) return true;
@@ -243,9 +264,38 @@
         });
 
         async function loadStore() {
+            // Set 6-second timeout
+            loadTimeout = setTimeout(showRetryScreen, 6000);
+
+            // Check session cache first
+            const cacheKey = 'store_' + storeId;
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                try {
+                    const cacheData = JSON.parse(cached);
+                    if (Date.now() - cacheData.timestamp < CACHE_DURATION) {
+                        console.log('⚡ Using cached store data (' + Math.round((Date.now() - cacheData.timestamp)/1000) + 's old)');
+                        storeData = cacheData.storeData;
+                        products = cacheData.products;
+                        reviews = cacheData.reviews;
+                        events = cacheData.events;
+                        followersList = cacheData.followersList;
+                        flashSales = cacheData.flashSales;
+                        discountCodes = cacheData.discountCodes;
+                        isFollowing = userData ? (userData.following || []).includes(storeId) : false;
+                        clearTimeout(loadTimeout);
+                        renderStore();
+                        // Refresh in background
+                        refreshStoreData();
+                        return;
+                    }
+                } catch(e) { sessionStorage.removeItem(cacheKey); }
+            }
+
             try {
                 const storeDoc = await db.collection('stores').doc(storeId).get();
                 if (!storeDoc.exists) {
+                    clearTimeout(loadTimeout);
                     document.getElementById('appRoot').innerHTML = '<div class="empty-state" style="padding:80px;"><i class="fas fa-store-slash"></i><h3>Store not found</h3></div>';
                     return;
                 }
@@ -255,6 +305,11 @@
                 const slug = storeData.slug || (storeData.name || 'store').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
                 storeUrl = `${BASE_URL}/store/${slug}`;
                 
+                // Show store immediately with skeleton
+                clearTimeout(loadTimeout);
+                renderStoreBasic();
+                
+                // Load all data in parallel
                 const [prodSnap, revSnap, usersSnap, eventsSnap, flashSnap, discSnap] = await Promise.all([
                     db.collection('products').get(),
                     db.collection('reviews').get(),
@@ -271,22 +326,44 @@
                 flashSales = flashSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(f => f.storeId === storeId && f.active);
                 discountCodes = discSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(d => d.storeId === storeId && d.active);
                 
+                // Cache for next visit
+                try {
+                    sessionStorage.setItem(cacheKey, JSON.stringify({
+                        storeData, products, reviews, events, followersList, flashSales, discountCodes,
+                        timestamp: Date.now()
+                    }));
+                } catch(e) {}
+                
                 renderStore();
             } catch(e) {
-                document.getElementById('appRoot').innerHTML = '<div class="empty-state" style="padding:80px;"><i class="fas fa-exclamation-triangle"></i><h3>Error loading store</h3></div>';
+                clearTimeout(loadTimeout);
+                showRetryScreen();
             }
         }
 
-        function renderStore() {
+        async function refreshStoreData() {
+            try {
+                const [prodSnap, revSnap, flashSnap, discSnap] = await Promise.all([
+                    db.collection('products').get(),
+                    db.collection('reviews').get(),
+                    db.collection('flashSales').get(),
+                    db.collection('discountCodes').get()
+                ]);
+                products = prodSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.storeId === storeId && p.active !== false);
+                reviews = revSnap.docs.map(d => d.data()).filter(r => r.storeId === storeId);
+                flashSales = flashSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(f => f.storeId === storeId && f.active);
+                discountCodes = discSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(d => d.storeId === storeId && d.active);
+                try {
+                    sessionStorage.setItem('store_' + storeId, JSON.stringify({
+                        storeData, products, reviews, events, followersList, flashSales, discountCodes,
+                        timestamp: Date.now()
+                    }));
+                } catch(e) {}
+            } catch(e) {}
+        }
+
+        function renderStoreBasic() {
             const s = storeData;
-            const followersCount = followersList.length;
-            const storeRating = (s.rating || 0).toFixed(1);
-            const hasPromo = flashSales.length > 0 || discountCodes.length > 0;
-            
-            // Mark flash sale products
-            const flashProductIds = flashSales.map(f => f.productId);
-            products.forEach(p => { p.isFlashSale = flashProductIds.includes(p.id); p.flashData = flashSales.find(f => f.productId === p.id); });
-            
             document.getElementById('appRoot').innerHTML = `
                 <div class="top-bar">
                     <button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
@@ -294,7 +371,7 @@
                     <button class="btn-back" onclick="openShareModal()"><i class="fas fa-share-alt"></i></button>
                 </div>
                 ${s.banner ? `<img src="${s.banner}" class="store-banner" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
-                ${!s.banner || s.banner.includes('placeholder') ? '<div class="store-banner-placeholder" style="' + (s.banner ? 'display:none;' : '') + '"><i class="fas fa-store"></i></div>' : '<div class="store-banner-placeholder" style="display:none;"><i class="fas fa-store"></i></div>'}
+                ${!s.banner ? '<div class="store-banner-placeholder"><i class="fas fa-store"></i></div>' : '<div class="store-banner-placeholder" style="display:none;"><i class="fas fa-store"></i></div>'}
                 <div class="store-info">
                     <img src="${s.logo || 'https://via.placeholder.com/70'}" class="store-logo" onerror="this.src='https://via.placeholder.com/70'">
                     <div class="store-info-text">
@@ -302,10 +379,26 @@
                         <div class="store-category"><i class="fas fa-tag"></i> ${s.category || 'General Store'}</div>
                     </div>
                 </div>
+                <div style="text-align:center;padding:40px;color:var(--text3);">
+                    <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                    Loading products...
+                </div>`;
+        }
+
+        function renderStore() {
+            const s = storeData;
+            const followersCount = followersList.length;
+            const storeRating = (s.rating || 0).toFixed(1);
+            const hasPromo = flashSales.length > 0 || discountCodes.length > 0;
+            const flashProductIds = flashSales.map(f => f.productId);
+            products.forEach(p => { p.isFlashSale = flashProductIds.includes(p.id); p.flashData = flashSales.find(f => f.productId === p.id); });
+            
+            document.getElementById('appRoot').innerHTML = `
+                <div class="top-bar"><button class="btn-back" onclick="history.back()"><i class="fas fa-arrow-left"></i></button><span class="top-bar-title">${s.name || 'Store'}</span><button class="btn-back" onclick="openShareModal()"><i class="fas fa-share-alt"></i></button></div>
+                ${s.banner ? `<img src="${s.banner}" class="store-banner" onerror="this.style.display='none';">` : '<div class="store-banner-placeholder"><i class="fas fa-store"></i></div>'}
+                <div class="store-info"><img src="${s.logo || 'https://via.placeholder.com/70'}" class="store-logo" onerror="this.src='https://via.placeholder.com/70'"><div class="store-info-text"><div class="store-name">${s.name || 'Store'} ${s.verified ? '<i class="fas fa-check-circle verified-icon"></i>' : ''}</div><div class="store-category"><i class="fas fa-tag"></i> ${s.category || 'General Store'}</div></div></div>
                 <div class="action-row">
-                    <button class="btn-action btn-follow ${isFollowing ? 'following' : ''}" onclick="toggleFollow()" id="followBtn">
-                        <i class="fas ${isFollowing ? 'fa-user-check' : 'fa-user-plus'}"></i> ${isFollowing ? 'Following' : 'Follow'}
-                    </button>
+                    <button class="btn-action btn-follow ${isFollowing ? 'following' : ''}" onclick="toggleFollow()" id="followBtn"><i class="fas ${isFollowing ? 'fa-user-check' : 'fa-user-plus'}"></i> ${isFollowing ? 'Following' : 'Follow'}</button>
                     <button class="btn-action" onclick="openChatWithOwner()"><i class="fas fa-comment-dots"></i> Chat</button>
                     <button class="btn-action" onclick="openShareModal()"><i class="fas fa-share-alt"></i> Share</button>
                 </div>
@@ -322,8 +415,7 @@
                     <button class="tab" onclick="switchTab('reviews', this)"><i class="fas fa-star"></i> Reviews</button>
                     <button class="tab" onclick="switchTab('about', this)"><i class="fas fa-info-circle"></i> About</button>
                 </div>
-                <div class="tab-content" id="tabContent">${renderProducts()}</div>
-            `;
+                <div class="tab-content" id="tabContent">${renderProducts()}</div>`;
         }
 
         function renderProducts() {
@@ -343,33 +435,16 @@
 
         function renderPromo() {
             if (flashSales.length === 0 && discountCodes.length === 0) return '<div class="empty-state"><i class="fas fa-tags"></i><p>No promotions active</p></div>';
-            
             let html = '';
-            
-            // Flash Sales
             flashSales.forEach(f => {
                 var product = products.find(p => p.id === f.productId);
                 var endDate = f.endDate?.toDate ? f.endDate.toDate() : new Date();
                 var timeLeft = endDate > new Date() ? Math.ceil((endDate - new Date()) / 3600000) + 'h left' : 'Ending soon';
-                html += `<div class="promo-card" onclick="window.location.href='products.html?id=${f.productId}'" style="background:linear-gradient(135deg,#FF4D4F,#C62828);">
-                    <div class="promo-title">⚡ Flash Sale${product ? ': ' + product.name : ''}</div>
-                    <div class="promo-discount">$${f.salePrice || 0}</div>
-                    <div style="font-size:12px;">Was $${product?.price || 0}</div>
-                    <div class="promo-ends"><i class="fas fa-clock"></i> ${timeLeft}</div>
-                </div>`;
+                html += `<div class="promo-card" onclick="window.location.href='products.html?id=${f.productId}'" style="background:linear-gradient(135deg,#FF4D4F,#C62828);"><div class="promo-title">⚡ Flash Sale${product ? ': ' + product.name : ''}</div><div class="promo-discount">$${f.salePrice || 0}</div><div style="font-size:12px;">Was $${product?.price || 0}</div><div class="promo-ends"><i class="fas fa-clock"></i> ${timeLeft}</div></div>`;
             });
-            
-            // Discount Codes
             discountCodes.forEach(d => {
-                html += `<div class="promo-card" style="background:linear-gradient(135deg,#6C3CF0,#4A1FB8);">
-                    <div class="promo-title">🎫 Discount Code</div>
-                    <div class="promo-code">${d.code}</div>
-                    <div style="font-size:14px;margin-top:4px;">${d.type === 'percentage' ? d.value + '% OFF' : '$' + d.value + ' OFF'}</div>
-                    ${d.minimumPurchase ? '<div style="font-size:10px;opacity:0.8;">Min purchase: $' + d.minimumPurchase + '</div>' : ''}
-                    <div class="promo-ends">Use at checkout</div>
-                </div>`;
+                html += `<div class="promo-card" style="background:linear-gradient(135deg,#6C3CF0,#4A1FB8);"><div class="promo-title">🎫 Discount Code</div><div class="promo-code">${d.code}</div><div style="font-size:14px;margin-top:4px;">${d.type === 'percentage' ? d.value + '% OFF' : '$' + d.value + ' OFF'}</div>${d.minimumPurchase ? '<div style="font-size:10px;opacity:0.8;">Min purchase: $' + d.minimumPurchase + '</div>' : ''}<div class="promo-ends">Use at checkout</div></div>`;
             });
-            
             return '<div style="padding:0;">' + html + '</div>';
         }
 
@@ -378,18 +453,7 @@
             return events.map(e => {
                 const startDate = new Date(e.startDate);
                 const minPrice = e.ticketTypes && e.ticketTypes.length ? Math.min(...e.ticketTypes.map(t => t.price || 0)) : 0;
-                return `<div class="ticket-card-h" onclick="window.location.href='event-detail.html?id=${e.id}'">
-                    ${e.banner ? `<img src="${e.banner}" class="ticket-card-banner" onerror="this.style.background='linear-gradient(135deg,#6C3CF0,#4A1FB8)'">` : '<div class="ticket-card-banner"></div>'}
-                    <div class="ticket-card-body">
-                        <div class="ticket-card-name">${e.name || 'Event'}</div>
-                        <div class="ticket-card-meta">
-                            <span><i class="fas fa-calendar"></i> ${startDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</span>
-                            <span><i class="fas fa-clock"></i> ${startDate.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span>
-                            <span><i class="fas fa-map-marker-alt"></i> ${e.venue || e.platform || 'Online'}</span>
-                        </div>
-                        <div class="ticket-card-price">${minPrice === 0 ? 'FREE' : 'From $' + minPrice.toFixed(2)}</div>
-                    </div>
-                </div>`;
+                return `<div class="ticket-card-h" onclick="window.location.href='event-detail.html?id=${e.id}'">${e.banner ? `<img src="${e.banner}" class="ticket-card-banner" onerror="this.style.background='linear-gradient(135deg,#6C3CF0,#4A1FB8)'">` : '<div class="ticket-card-banner"></div>'}<div class="ticket-card-body"><div class="ticket-card-name">${e.name || 'Event'}</div><div class="ticket-card-meta"><span><i class="fas fa-calendar"></i> ${startDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</span><span><i class="fas fa-clock"></i> ${startDate.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span><span><i class="fas fa-map-marker-alt"></i> ${e.venue || e.platform || 'Online'}</span></div><div class="ticket-card-price">${minPrice === 0 ? 'FREE' : 'From $' + minPrice.toFixed(2)}</div></div></div>`;
             }).join('');
         }
 
@@ -400,8 +464,6 @@
 
         function renderAbout() {
             const s = storeData;
-            
-            // Social media links
             const socials = [];
             if (s.instagram) socials.push({ name: 'Instagram', icon: 'fab fa-instagram', link: s.instagram, class: 'instagram' });
             if (s.facebook) socials.push({ name: 'Facebook', icon: 'fab fa-facebook-f', link: s.facebook, class: 'facebook' });
@@ -414,24 +476,13 @@
             
             let socialHTML = '';
             if (socials.length > 0) {
-                socialHTML = `<div class="about-card"><h4><i class="fas fa-share-alt"></i> Follow Us On</h4><div class="social-links">` +
-                    socials.map(soc => `<a href="${soc.link}" target="_blank" rel="noopener" class="social-link ${soc.class}" title="${soc.name}"><i class="${soc.icon}"></i></a>`).join('') +
-                    `</div></div>`;
+                socialHTML = `<div class="about-card"><h4><i class="fas fa-share-alt"></i> Follow Us On</h4><div class="social-links">${socials.map(soc => `<a href="${soc.link}" target="_blank" rel="noopener" class="social-link ${soc.class}" title="${soc.name}"><i class="${soc.icon}"></i></a>`).join('')}</div></div>`;
             }
             
             return `<div class="about-card"><h4><i class="fas fa-store"></i> About ${s.name||'Store'}</h4><p>${s.description||'No description provided yet.'}</p></div>
-                <div class="about-card"><h4><i class="fas fa-truck"></i> Shipping & Policies</h4>
-                    <div class="info-row"><span>Shipping Time</span><span>${s.shippingDuration||'3-7 business days'}</span></div>
-                    <div class="info-row"><span>Return Policy</span><span>${s.returnPolicy||'14 days accepted'}</span></div>
-                    <div class="info-row"><span>Country</span><span>${s.country||'N/A'}</span></div>
-                </div>
+                <div class="about-card"><h4><i class="fas fa-truck"></i> Shipping & Policies</h4><div class="info-row"><span>Shipping Time</span><span>${s.shippingDuration||'3-7 business days'}</span></div><div class="info-row"><span>Return Policy</span><span>${s.returnPolicy||'14 days accepted'}</span></div><div class="info-row"><span>Country</span><span>${s.country||'N/A'}</span></div></div>
                 ${socialHTML}
-                <div class="about-card"><h4><i class="fas fa-info-circle"></i> Store Details</h4>
-                    <div class="info-row"><span>Category</span><span>${s.category||'N/A'}</span></div>
-                    <div class="info-row"><span>Joined</span><span>${s.createdAt?.toDate?s.createdAt.toDate().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'Recently'}</span></div>
-                    <div class="info-row"><span>Status</span><span>${s.verified?'✅ Verified Store':'⏳ Pending Verification'}</span></div>
-                    <div class="info-row"><span>Contact</span><span>${s.businessEmail||s.ownerEmail||'N/A'}</span></div>
-                </div>`;
+                <div class="about-card"><h4><i class="fas fa-info-circle"></i> Store Details</h4><div class="info-row"><span>Category</span><span>${s.category||'N/A'}</span></div><div class="info-row"><span>Joined</span><span>${s.createdAt?.toDate?s.createdAt.toDate().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'Recently'}</span></div><div class="info-row"><span>Status</span><span>${s.verified?'✅ Verified Store':'⏳ Pending Verification'}</span></div><div class="info-row"><span>Contact</span><span>${s.businessEmail||s.ownerEmail||'N/A'}</span></div></div>`;
         }
 
         window.switchTab = function(tab, btn) {
@@ -468,20 +519,10 @@
                     isFollowing = true; storeData.followers = (storeData.followers||0)+1;
                     btn.innerHTML = '<i class="fas fa-user-check"></i> Following'; btn.classList.add('following');
                     if (storeData.ownerId && storeData.ownerId !== currentUser.uid) {
-                        await db.collection('notifications').add({
-                            userId: storeData.ownerId, type: 'store_follow',
-                            message: (userData?.name||'Someone') + ' started following your store!',
-                            link: 'followers.html', read: false,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
+                        await db.collection('notifications').add({ userId: storeData.ownerId, type: 'store_follow', message: (userData?.name||'Someone') + ' started following your store!', link: 'followers.html', read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     }
                 }
-                if (userData) {
-                    if (!userData.following) userData.following = [];
-                    if (isFollowing) userData.following.push(storeId);
-                    else userData.following = userData.following.filter(f => f !== storeId);
-                    sessionStorage.setItem('userData', JSON.stringify(userData));
-                }
+                if (userData) { if (!userData.following) userData.following = []; if (isFollowing) userData.following.push(storeId); else userData.following = userData.following.filter(f => f !== storeId); sessionStorage.setItem('userData', JSON.stringify(userData)); }
             } catch(e) { console.error('Follow error:', e); }
         }
 
@@ -491,26 +532,14 @@
             document.getElementById('followersList').innerHTML = followersList.length === 0 ? '<div style="text-align:center;padding:30px;color:var(--text3);">No followers yet</div>' : followersList.map(f => `<div class="follower-item"><img src="${f.photoURL||'https://via.placeholder.com/40'}" onerror="this.src='https://via.placeholder.com/40'"><span class="follower-name">${f.name||'User'}</span></div>`).join('');
             modal.classList.add('show');
         }
-
         function closeFollowersModal() { document.getElementById('followersModal').classList.remove('show'); }
 
         function openShareModal() {
-            document.getElementById('shareOptions').innerHTML = `
-                <div class="share-option" onclick="shareTo('whatsapp')"><div class="share-icon whatsapp"><i class="fab fa-whatsapp"></i></div><span>WhatsApp</span></div>
-                <div class="share-option" onclick="shareTo('facebook')"><div class="share-icon facebook"><i class="fab fa-facebook-f"></i></div><span>Facebook</span></div>
-                <div class="share-option" onclick="shareTo('x')"><div class="share-icon x"><i class="fab fa-x-twitter"></i></div><span>X</span></div>
-                <div class="share-option" onclick="shareTo('telegram')"><div class="share-icon telegram"><i class="fab fa-telegram-plane"></i></div><span>Telegram</span></div>
-                <div class="share-option" onclick="shareTo('messenger')"><div class="share-icon messenger"><i class="fab fa-facebook-messenger"></i></div><span>Messenger</span></div>
-                <div class="share-option" onclick="shareTo('email')"><div class="share-icon email"><i class="fas fa-envelope"></i></div><span>Email</span></div>
-                <div class="share-option" onclick="shareTo('instagram')"><div class="share-icon instagram"><i class="fab fa-instagram"></i></div><span>Instagram</span></div>
-                <div class="share-option" onclick="shareTo('copy')"><div class="share-icon copy"><i class="fas fa-link"></i></div><span>Copy Link</span></div>`;
+            document.getElementById('shareOptions').innerHTML = `<div class="share-option" onclick="shareTo('whatsapp')"><div class="share-icon whatsapp"><i class="fab fa-whatsapp"></i></div><span>WhatsApp</span></div><div class="share-option" onclick="shareTo('facebook')"><div class="share-icon facebook"><i class="fab fa-facebook-f"></i></div><span>Facebook</span></div><div class="share-option" onclick="shareTo('x')"><div class="share-icon x"><i class="fab fa-x-twitter"></i></div><span>X</span></div><div class="share-option" onclick="shareTo('telegram')"><div class="share-icon telegram"><i class="fab fa-telegram-plane"></i></div><span>Telegram</span></div><div class="share-option" onclick="shareTo('messenger')"><div class="share-icon messenger"><i class="fab fa-facebook-messenger"></i></div><span>Messenger</span></div><div class="share-option" onclick="shareTo('email')"><div class="share-icon email"><i class="fas fa-envelope"></i></div><span>Email</span></div><div class="share-option" onclick="shareTo('instagram')"><div class="share-icon instagram"><i class="fab fa-instagram"></i></div><span>Instagram</span></div><div class="share-option" onclick="shareTo('copy')"><div class="share-icon copy"><i class="fas fa-link"></i></div><span>Copy Link</span></div>`;
             document.getElementById('shareModal').classList.add('show');
         }
-
         window.shareTo = function(platform) {
-            const title = storeData.name || 'Check out this store on Stoliy';
-            const url = storeUrl;
-            let shareUrl = '';
+            const title = storeData.name || 'Check out this store on Stoliy'; const url = storeUrl; let shareUrl = '';
             switch(platform) {
                 case 'whatsapp': shareUrl = `https://wa.me/?text=${encodeURIComponent(title+': '+url)}`; break;
                 case 'facebook': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`; break;
@@ -518,23 +547,19 @@
                 case 'telegram': shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`; break;
                 case 'messenger': shareUrl = `https://www.facebook.com/dialog/send?link=${encodeURIComponent(url)}&app_id=0`; break;
                 case 'email': shareUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent('Check out: '+url)}`; break;
-                case 'instagram': navigator.clipboard.writeText(url).then(() => showToast('Link copied! Share on Instagram', 'success')); closeShareModal(); return;
+                case 'instagram': navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success')); closeShareModal(); return;
                 case 'copy': navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success')); closeShareModal(); return;
             }
             if (shareUrl) { window.open(shareUrl, '_blank'); closeShareModal(); }
         };
-
         function closeShareModal() { document.getElementById('shareModal').classList.remove('show'); }
 
         document.getElementById('followersModal').addEventListener('click', function(e) { if (e.target === this) closeFollowersModal(); });
         document.getElementById('shareModal').addEventListener('click', function(e) { if (e.target === this) closeShareModal(); });
 
-        window.toggleFollow = toggleFollow;
-        window.showFollowers = showFollowers;
-        window.closeFollowersModal = closeFollowersModal;
-        window.openShareModal = openShareModal;
-        window.closeShareModal = closeShareModal;
-        window.openChatWithOwner = openChatWithOwner;
+        window.toggleFollow = toggleFollow; window.showFollowers = showFollowers;
+        window.closeFollowersModal = closeFollowersModal; window.openShareModal = openShareModal;
+        window.closeShareModal = closeShareModal; window.openChatWithOwner = openChatWithOwner;
     })();
     </script>
 </body>
